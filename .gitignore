@@ -38,3 +38,6 @@ cs/obj/*
 .vscode/*
 /cs/tests/obj
 /cs/tests/.vs/test/v15
+/cs/tests/test/bin/Debug/netcoreapp2.1
+/cs/tests/test/obj/Debug/netcoreapp2.1/test.csproj.FileListAbsolute.txt
+*.pdb
