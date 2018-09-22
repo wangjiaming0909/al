@@ -9,7 +9,9 @@ namespace test
     {
         static void Main(string[] args)
         {
-            SubscribeTest.test();
+            //SubscribeTest.test();
+            //castTest.test();
+            castTest.OfTypeTest();
         }
     }
 }

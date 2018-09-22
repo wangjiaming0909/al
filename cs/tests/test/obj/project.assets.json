@@ -739,7 +739,7 @@
       ]
     },
     "System.Runtime/4.3.0": {
-      "sha512": "JufQi0vPQ0xGnAczR13AUFglDyVYt4Kqnz1AZaiKZ5+GICq0/1MH/mO/eAJHt/mHW1zjKBJd7kV26SrxddAhiw==",
+      "sha512": "fzzjOvG1o3KdftQNMtkKcPkisZVbGXEclngSkzPdc8xw5r8MgDTM6Cfc0/mGaW5ubZolefX/pz+tpFym5qrQBA==",
       "type": "package",
       "path": "system.runtime/4.3.0",
       "files": [
@@ -974,6 +974,7 @@
       "netcoreapp2.1": {
         "dependencies": {
           "Microsoft.NETCore.App": {
+            "suppressParent": "All",
             "target": "Package",
             "version": "[2.1.0, )",
             "autoReferenced": true
