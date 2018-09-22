@@ -36,3 +36,4 @@
 cs/bin/*
 cs/obj/*
 .vscode/*
+/cs/tests/obj
