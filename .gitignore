@@ -33,6 +33,6 @@
 
 # C# compile files
 # vscode files
-*/tests/.vs/*
-*/tests/test/obj/
 */tests/test/bin/*
+*/tests/test/obj/Debug/**
+**/.vs/**
