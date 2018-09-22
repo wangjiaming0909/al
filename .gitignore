@@ -37,3 +37,4 @@ cs/bin/*
 cs/obj/*
 .vscode/*
 /cs/tests/obj
+/cs/tests/.vs/test/v15
