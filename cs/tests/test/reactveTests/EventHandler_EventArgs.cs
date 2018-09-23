@@ -5,6 +5,17 @@ using System.Text;
 
 namespace test.reactveTests
 {
+    public class Customized_Delegate_FromEventPattern
+    {
+        public delegate void D(EventArgs args);
+        public event D EatingShit;
+
+        protected virtual void OnEatingShit(EventArgs e)
+        {
+            //EatingShit?.Invoke(this, e);
+        }
+    }
+
     public class Customized_Delegate
     {
         public delegate void D(EventArgs args);
