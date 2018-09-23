@@ -11,7 +11,9 @@ namespace test
         {
             //SubscribeTest.test();
             //castTest.test();
-            castTest.OfTypeTest();
+            //castTest.OfTypeTest();
+            //TestEvent.testEvent();
+            EventHandler_EventArgs.test();
         }
     }
 }
