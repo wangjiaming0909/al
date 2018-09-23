@@ -13,7 +13,10 @@ namespace test
             //castTest.test();
             //castTest.OfTypeTest();
             //TestEvent.testEvent();
-            EventHandler_EventArgs.test();
+            //EventHandler_EventArgs.test();
+            //Customized_Delegate.test();
+            //EventHandler_EventArgs.TestWithFromEvent();
+            Customized_Delegate.TestWithFromEvent();
         }
     }
 }

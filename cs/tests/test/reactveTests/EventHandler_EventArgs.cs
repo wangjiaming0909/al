@@ -5,6 +5,36 @@ using System.Text;
 
 namespace test.reactveTests
 {
+    public class Customized_Delegate
+    {
+        public delegate void D(EventArgs args);
+        static public event D EatingShit;
+        static public void OnEatingShit(EventArgs args)
+        {
+            Console.WriteLine("Eating shit " + args.ToString());
+        }
+        public static void test()
+        {
+            EatingShit += OnEatingShit;
+            Handler(new MyEventArgs("1", "2", 3));
+        }
+
+        public static void Handler(EventArgs args)
+        {
+            EatingShit?.Invoke(args);
+        }
+
+        public static void TestWithFromEvent()
+        {
+            IObservable<EventArgs> observable = Observable.FromEvent<D, EventArgs>(
+                handler => { EatingShit += handler; },
+                handler => { EatingShit -= handler; });
+            //subscribe之后, 这个事件就被注册了, 当这个事件发生时,就会调用我subscribe的这个OnNext
+            observable.Subscribe((args) => Console.WriteLine("subscribe: " + args.ToString()));
+            Handler(new MyEventArgs("1", "2", 3));
+        }
+        
+    }
     public class EventHandler_EventArgs
     {
         static MyEventArgs args = new MyEventArgs("1", "2", 3);
@@ -28,8 +58,22 @@ namespace test.reactveTests
             Handler(args);
         }
 
+        public static void TestWithFromEvent()
+        {
+            var ob = Observable.FromEvent<EventHandler, EventArgs>(
+                handler =>
+                {
+                    EatingShit += handler;
+                },
+                handler =>
+                {
+                    EatingShit -= handler;
+                }
+            );
+            //ob.Subscribe()
+        }
 
-
+        
 
         
 
