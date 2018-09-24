@@ -15,8 +15,8 @@ namespace test
             //TestEvent.testEvent();
             //EventHandler_EventArgs.test();
             //Customized_Delegate.test();
-            //EventHandler_EventArgs.TestWithFromEvent();
-            Customized_Delegate.TestWithFromEvent();
+            EventHandler_EventArgs.TestWithFromEventPattern();
+            //Customized_Delegate.TestWithFromEvent();
         }
     }
 }

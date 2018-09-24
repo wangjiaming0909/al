@@ -7,13 +7,18 @@ namespace test.reactveTests
 {
     public class Customized_Delegate_FromEventPattern
     {
-        public delegate void D(EventArgs args);
-        public event D EatingShit;
+        //public delegate void D(EventArgs args);
+        //public event D EatingShit;
 
-        protected virtual void OnEatingShit(EventArgs e)
-        {
-            //EatingShit?.Invoke(this, e);
-        }
+        //protected virtual void OnEatingShit(EventArgs e)
+        //{
+        //    EatingShit?.Invoke(e);
+        //}
+
+        //public void Test()
+        //{
+        //    IObservable<EventArgs> observable = Observable.FromEventPattern<>
+        //}
     }
 
     public class Customized_Delegate
@@ -69,9 +74,11 @@ namespace test.reactveTests
             Handler(args);
         }
 
-        public static void TestWithFromEvent()
+        public static void TestWithFromEventPattern()
         {
-            var ob = Observable.FromEvent<EventHandler, EventArgs>(
+            //参数与 FromEvent是不一样的, FromEvent只能是delegate的参数就是EventArgs
+            //但是这儿, Event
+            var ob = Observable.FromEventPattern<EventHandler, EventArgs>(
                 handler =>
                 {
                     EatingShit += handler;
@@ -81,7 +88,11 @@ namespace test.reactveTests
                     EatingShit -= handler;
                 }
             );
-            //ob.Subscribe()
+            IDisposable disposable =  ob.Subscribe((param) => Console.WriteLine(param.Sender.ToString() + " " + param.EventArgs.ToString()), () => Console.WriteLine("complsted"));
+            Handler(new MyEventArgs("1", "2", 3));
+            Handler(new MyEventArgs("4", "5", 6));
+            disposable.Dispose();
+            Handler(new MyEventArgs("7", "8", 9));
         }
 
         
