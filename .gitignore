@@ -36,3 +36,5 @@
 */tests/test/bin/*
 */tests/test/obj/Debug/**
 **/.vs/**
+/cpp/test/Debug/test.tlog
+/cpp/test/Debug
