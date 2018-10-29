@@ -36,3 +36,5 @@
 */tests/test/bin/*
 */tests/test/obj/Debug/**
 **/.vs/**
+/cs/tests/ConsoleApplication1/Debug
+/cs/tests/Debug
