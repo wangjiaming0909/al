@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Text;
+using Newtonsoft.Json.Bson;
 
 namespace test
 {
@@ -12,6 +13,13 @@ namespace test
         {
             _number_of_conenctions = numberOfConnections;
             _stages = new LinkedList<Stage>();
+        }
+
+        public void Read()
+        {
+            //JsonReaderWriterFactory.CreateJsonReader()
+            //BsonReader reader = new BsonReader()
+            //bson
         }
         
     }
