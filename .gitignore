@@ -36,5 +36,11 @@
 */tests/test/bin/*
 */tests/test/obj/Debug/**
 **/.vs/**
+/cpp/test/Debug/test.tlog
+/cpp/test/Debug
+/cpp/test/x64/Debug/test.tlog
+/cpp/test/x64/Debug/test_boost.tlog
+/cpp/test/x64/Debug
+/cpp/test_cpp/x64/Debug
 /cs/tests/ConsoleApplication1/Debug
 /cs/tests/Debug
