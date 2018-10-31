@@ -29,10 +29,20 @@ private:
 
 
 class parent {
-
+public:
+	parent() { std::cout << "parent" << std::endl; }
+	~parent() { std::cout << "~parent" << std::endl; }
 };
 
+std::ostream& operator<<(std::ostream& os, const parent& p) {
+	os << "parent";
+	return os;
+}
+
 class son : public parent {
+public:
+	son() { std::cout << "son" << std::endl; }
+	~son() { std::cout << "~son" << std::endl; }
 	friend std::ostream& operator<<(std::ostream& os, const son& s) {
 		os << "son";
 		return os;

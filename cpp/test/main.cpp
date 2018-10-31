@@ -29,6 +29,9 @@ void test_weak_ptr() {
 	weak_ptr<class_without_default_constructor[]> w_ptr_arr{ s_ptr_arr };
 	//weak_ptr<class_without_default_constructor[]>::element_type element{ 1 };//its class_without_default_constructor type
 	assert(typeid(weak_ptr<class_without_default_constructor[]>::element_type) == typeid(class_without_default_constructor));
+	assert(s_ptr.use_count() == 1L);
+	assert(w_ptr.expired() == false);
+	assert(w_ptr.owner_before(s_ptr) == false);
 
 	//at compile time, we can know that son is the drived class of parent, or compiler will complain: negative subscript
 	detail::sp_assert_convertible<share_from_me, enable_shared_from_this<share_from_me>>();
@@ -39,12 +42,21 @@ void test_weak_ptr() {
 	weak_ptr<son> w_ptr_son{ sp_son};
 	assert(sp_son.use_count() == 1L);
 	weak_ptr<parent> w_ptr_parent{ w_ptr_son };
+	assert(w_ptr_parent.lock().get() == w_ptr_son.lock().get());
+	//sp_son.reset();//if reset the shared_ptr, all the weak_ptr will points to null
+	w_ptr_son.reset(); assert(w_ptr_son.lock() == NULL);
+	shared_ptr<parent> sp_son_from_w_ptr = w_ptr_parent.lock();
+	assert(sp_son.use_count() == 2L);
+	print(*sp_son_from_w_ptr);
+#define reset_of_weak_ptr
+	//construct a new shared_ptr, then swap with the weak_ptr
+	sp_son_from_w_ptr.reset();//weak_ptr reset
+	assert(sp_son.use_count() == 1L);
+#define reset_of_shared_ptr
+	//when you do reset, shared_ptr only swap the ptr with an empty shared_ptr
+	//and the deletion or decrease of the ref_count is done by shared_count
 	sp_son.reset();
-	print(*w_ptr_son);
-
-	assert(s_ptr.use_count() == 1L);
-	assert(w_ptr.expired() == false);
-	assert(w_ptr.owner_before(s_ptr) == false);
+	assert(sp_son.get() == NULL);
 }
 
 void test_enable_share_from_this() {
@@ -65,7 +77,7 @@ void test_my_sp_convertable() {
 }
 
 int main() {
-	
+	test_weak_ptr();
 }
 
 void test_shared_ptr() {
