@@ -33,5 +33,8 @@ class parent {
 };
 
 class son : public parent {
-
+	friend std::ostream& operator<<(std::ostream& os, const son& s) {
+		os << "son";
+		return os;
+	}
 };

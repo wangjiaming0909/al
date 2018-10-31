@@ -39,6 +39,8 @@ void test_weak_ptr() {
 	weak_ptr<son> w_ptr_son{ sp_son};
 	assert(sp_son.use_count() == 1L);
 	weak_ptr<parent> w_ptr_parent{ w_ptr_son };
+	sp_son.reset();
+	print(*w_ptr_son);
 
 	assert(s_ptr.use_count() == 1L);
 	assert(w_ptr.expired() == false);
