@@ -5,12 +5,19 @@
 #include <cassert>
 #include "shared_from_this_test.h"
 #include "my_sp_convetable.h"
+#include <map>
 
 using namespace boost;
+using std::string;
 
 template <typename T>
 inline void print(const T &t) {
 	std::cout << t << std::endl;
+}
+
+template <typename T>
+inline void deletion(const T* t, string message) {
+	std::cout << *t << " message: " << message << std::endl;
 }
 
 void void_void(class_without_default_constructor* p) {
@@ -44,7 +51,8 @@ void test_weak_ptr() {
 	weak_ptr<parent> w_ptr_parent{ w_ptr_son };
 	assert(w_ptr_parent.lock().get() == w_ptr_son.lock().get());
 	//sp_son.reset();//if reset the shared_ptr, all the weak_ptr will points to null
-	w_ptr_son.reset(); assert(w_ptr_son.lock() == NULL);
+	w_ptr_son.reset(); 
+	assert(w_ptr_son.lock() == NULL);//if weak_ptr points to a null, .lock() will return null share_ptr<T>
 	shared_ptr<parent> sp_son_from_w_ptr = w_ptr_parent.lock();
 	assert(sp_son.use_count() == 2L);
 	print(*sp_son_from_w_ptr);
@@ -57,6 +65,13 @@ void test_weak_ptr() {
 	//and the deletion or decrease of the ref_count is done by shared_count
 	sp_son.reset();
 	assert(sp_son.get() == NULL);
+	sp_son.reset(new son(), std::bind(deletion<son>, std::placeholders::_1, "deletion"));
+	sp_son.reset();
+	print("reset ended...");
+	//w_ptr.lock()
+
+	//son o_son;
+	//weak_ptr<son> &wk_son = o_son;
 }
 
 void test_enable_share_from_this() {
@@ -76,9 +91,7 @@ void test_my_sp_convertable() {
 	//char tmp3[my_sp_convertable<int, std::string>::value ? 1 : -1];
 }
 
-int main() {
-	test_weak_ptr();
-}
+
 
 void test_shared_ptr() {
 	shared_ptr<std::string> str_ptr{ new std::string("123") };
@@ -95,4 +108,26 @@ void test_shared_ptr() {
 	print(str_ptr);
 	print(*str_ptr);
 	print(*str_ptr_swap);
+}
+
+void test_enable_shared_from_this() {
+	//using enable_shared_from_me: 
+	//1, first the object must be a heap object not a stack object
+	//2, the object must be managed by a shared_ptr first, then invoke the share_from_me(here f) to get the shared_ptr
+	//so that the returned the shared_ptr will manage the life cycle of the object, no need to worry that the object will be released some where 
+	share_from_me *share_f_me = new share_from_me(1);
+	shared_ptr<share_from_me> sp_me{ share_f_me };
+	shared_ptr<share_from_me> me_ptr = share_f_me->f();
+	assert(me_ptr.use_count() == 2L);
+	//now we can reset the origin shared_ptr sp_me
+	sp_me.reset();
+	assert(me_ptr.use_count() == 1L);
+	me_ptr.reset();
+	assert(me_ptr.use_count() == 0L);
+	//assert(share_f_me == NULL);
+}
+
+int main() {
+	test_enable_shared_from_this();
+	//test_weak_ptr();
 }
