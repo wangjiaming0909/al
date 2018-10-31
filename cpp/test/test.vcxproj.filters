@@ -23,5 +23,8 @@
     <ClInclude Include="shared_from_this_test.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="my_sp_convetable.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

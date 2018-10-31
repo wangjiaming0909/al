@@ -4,6 +4,7 @@
 #include <string>
 #include <cassert>
 #include "shared_from_this_test.h"
+#include "my_sp_convetable.h"
 
 using namespace boost;
 
@@ -51,8 +52,19 @@ void test_enable_share_from_this() {
 	assert(p.use_count() == 2L);
 }
 
+long size(parent*);
+char size(son*);
+
 int main() {
-	test_weak_ptr();
+	//compile susccess means that son and parent has the relationship
+	char tmp[my_sp_convertable<son, parent>::value ? 1 : -1];
+	char tmp2[my_sp_convertable<share_from_me, enable_shared_from_this<share_from_me>>::value ? 1 : -1];
+	//print(typeid(my_sp_convertable<son, parent>::yes).name());
+	//char tmp3[my_sp_convertable<int, std::string>::value ? 1 : -1];
+	
+	//print(typeid(my_sp_convertable<son, parent>::yes).raw_name());
+	//print(my_sp_convertable<son, parent>::value);
+	//test_weak_ptr();
 }
 
 void test_shared_ptr() {
