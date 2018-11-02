@@ -145,6 +145,8 @@
   <ItemGroup>
     <ClInclude Include="my_sp_convetable.h" />
     <ClInclude Include="shared_from_this_test.h" />
+    <ClInclude Include="template.h" />
+    <ClInclude Include="util.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

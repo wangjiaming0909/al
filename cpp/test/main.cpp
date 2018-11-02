@@ -5,14 +5,13 @@
 #include <cassert>
 #include "shared_from_this_test.h"
 #include "my_sp_convetable.h"
+#include "util.h"
+#include "template.h"
 
 using namespace boost;
 using std::string;
 
-template <typename T>
-inline void print(const T &t) {
-	std::cout << t << std::endl;
-}
+
 
 template <typename T>
 inline void deletion(const T* t, string message) {
@@ -145,7 +144,8 @@ public:
 class incomlete_class;
 
 int main() {
-	print(sizeof(complete_class));
+	template_test::test_template();
+	//print(sizeof(complete_class));
 	//sizeof(incomlete_class);
 
 	//test_scoped_enum();
