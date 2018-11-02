@@ -5,7 +5,6 @@
 #include <cassert>
 #include "shared_from_this_test.h"
 #include "my_sp_convetable.h"
-#include <map>
 
 using namespace boost;
 using std::string;
@@ -127,7 +126,29 @@ void test_enable_shared_from_this() {
 	//assert(share_f_me == NULL);
 }
 
+void test_scoped_enum() {
+	enum color{red, green};
+	enum class scoped_color{green, red};
+	print(red);
+	print(green);
+	scoped_color g = scoped_color::green;
+	scoped_color r = scoped_color::red;
+
+}
+
+class complete_class {
+public:
+	virtual void print() = 0;
+	int a;
+};
+
+class incomlete_class;
+
 int main() {
-	test_enable_shared_from_this();
+	print(sizeof(complete_class));
+	//sizeof(incomlete_class);
+
+	//test_scoped_enum();
+	//test_enable_shared_from_this();
 	//test_weak_ptr();
 }
