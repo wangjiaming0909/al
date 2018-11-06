@@ -140,6 +140,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="001_two_sum.h" />
+    <ClInclude Include="002_add_two_numbers.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp" />
