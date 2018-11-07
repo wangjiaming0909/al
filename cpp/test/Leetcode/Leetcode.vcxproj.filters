@@ -21,6 +21,9 @@
     <ClInclude Include="002_add_two_numbers.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="003_longest_substring_without_repeating_characters.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="main.cpp">
