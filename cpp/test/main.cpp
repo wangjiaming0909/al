@@ -1,4 +1,4 @@
-#include <iostream>
+﻿#include <iostream>
 #include <boost\shared_ptr.hpp>
 #include <boost\enable_shared_from_this.hpp>
 #include <string>
@@ -162,12 +162,50 @@ test_reference ::~test_reference ()
 
 long getsize();
 const int a = 5;
-int main() {
+const int* const int_ptr = &a;
+void test_decltype() {
 	//getsize didn't defined yet, but it compiles well, and the type of s is long
 	decltype(getsize()) s;
 	//b is const int, you must initialize it when define it 
 	//you can't change the value, because it's a const int
 	decltype(a) b = 12;
+	//int_ptr has 顶层const, 并且顶层const被保存了
+	//so, you have to initialize the int_ptr2 when defined it
+	//decltype(int_ptr) int_ptr2;
+	decltype(int_ptr) int_ptr2 = 0;
+	//底层const也被保存了, 不可以改变指针指向的地址处的值
+	//*int_ptr = 2;
+	int i = 0;
+	int& ref_int = i;
+	//int&
+	decltype(ref_int) dec_ref_int = i;
+	//not a const int&
+	//decltype(ref_int) dec_ref_int2 = 0;
+	const int& const_ref_int = 0;
+
+	//两个括号，还是引用
+	//int&
+	decltype((i)) ref_ref_int = i;
+	const int& c_ref_int = i;
+	//const int&
+	decltype(c_ref_int) c_ref_int2 = 0;
+	const int c_int = 2;
+	//const int&
+	decltype((c_int)) c_int2 = 0;
+	//const int&
+	decltype((c_ref_int)) c_ref_int3 = 0;
+
+	int i_int2 = 10;
+	int* int_ptr = &i_int2;
+	//解引用返回引用类型
+	decltype(*int_ptr) ref_int3 = i_int2;
+	//const int*
+	const int* const const_int_ptr = &i_int2;
+	//解引用返回const int&, 顶层const加不加都一样
+	decltype(*const_int_ptr) const_ref_int3 = i_int2;
+}
+
+int main() {
 	//template_test::test_template();
 	//print(sizeof(complete_class));
 	//sizeof(incomlete_class);
