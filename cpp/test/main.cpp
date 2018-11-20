@@ -143,8 +143,32 @@ public:
 
 class incomlete_class;
 
+class test_reference {
+public:
+	test_reference (string& str);
+	~test_reference ();
+
+private:
+	string & str_;
+};
+
+test_reference ::test_reference (string& str) : str_(str) {
+
+}
+
+test_reference ::~test_reference ()
+{
+}
+
+long getsize();
+const int a = 5;
 int main() {
-	template_test::test_template();
+	//getsize didn't defined yet, but it compiles well, and the type of s is long
+	decltype(getsize()) s;
+	//b is const int, you must initialize it when define it 
+	//you can't change the value, because it's a const int
+	decltype(a) b = 12;
+	//template_test::test_template();
 	//print(sizeof(complete_class));
 	//sizeof(incomlete_class);
 
