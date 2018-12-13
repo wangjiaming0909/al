@@ -32,8 +32,21 @@ int lengthOfLongestSubstring(string s) {
 	return max_len;
 }
 
+int lengthOfLongestSubstring2(string s) {
+	vector<int> dict(256, -1);
+	int maxLen = 0, start = -1;
+	for (int i = 0; i != s.length(); i++) {
+		if (dict[s[i]] > start)
+			start = dict[s[i]];
+		dict[s[i]] = i;
+		maxLen = std::max(maxLen, i - start);
+	}
+	return maxLen;
+}
+
 void test_lengthOfLongestSubstring() {
 	string s = "w";
-	int ret = lengthOfLongestSubstring(s);
+	//int ret = lengthOfLongestSubstring(s);
+	int ret = lengthOfLongestSubstring2(s);
 	assert(ret == 1);
 }
