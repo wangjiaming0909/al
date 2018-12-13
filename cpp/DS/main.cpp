@@ -5,5 +5,8 @@
 using namespace std;
 
 int main() {
-	test_string();
+	cout << 123 << endl;
+
+	char a[16];
+	cin >> a;
 }
