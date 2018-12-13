@@ -1,8 +1,9 @@
 #include <iostream>
+#include <string>
+#include "testString.h"
 
 using namespace std;
 
 int main() {
-
-	cout << 12 << endl;
+	test_string();
 }
