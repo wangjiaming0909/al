@@ -5,6 +5,8 @@
 #include <string>
 #include <unordered_set>
 #include <cassert>
+#include <iostream>
+using namespace std;
 
 using std::string;
 using std::vector;
@@ -44,9 +46,25 @@ int lengthOfLongestSubstring2(string s) {
 	return maxLen;
 }
 
+int lengthOfLongestSubstring3(string s) {
+	size_t i = 0, j = 0;
+	unordered_map<char, size_t> char_set{};
+	size_t longestLength = 0;
+	for (; j < s.size(); j++) {
+		if (char_set.count(s[j]) != 0) {
+			i = std::max(char_set[s[j]], i);
+		}
+		longestLength = std::max(longestLength, j - i + 1);
+		char_set.insert(std::pair<char, size_t>(s[j], j));
+	}
+	return longestLength;
+}
+
 void test_lengthOfLongestSubstring() {
-	string s = "w";
+	string s = "wsdafaczqwasda";
 	//int ret = lengthOfLongestSubstring(s);
-	int ret = lengthOfLongestSubstring2(s);
-	assert(ret == 1);
+	int ret = lengthOfLongestSubstring3(s);
+
+	cout << ret << endl;
+
 }
