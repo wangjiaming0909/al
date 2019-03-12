@@ -46,3 +46,7 @@
 /cs/tests/Debug
 /cs/tests/test/obj/Release/netcoreapp2.1
 /cpp/test/Leetcode/x64/Debug
+/cpp/DS/Debug
+/cpp/test/Leetcode/Debug/Leetcode.tlog
+/cpp/test/Leetcode/Debug
+/cpp/thread_pool/Debug

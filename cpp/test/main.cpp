@@ -205,6 +205,13 @@ void test_decltype() {
 	decltype(*const_int_ptr) const_ref_int3 = i_int2;
 }
 
+class test_const_ref {
+public:
+	const int& getdata() const { return data; }
+private:
+	int data;
+};
+
 int main() {
 	//template_test::test_template();
 	//print(sizeof(complete_class));
