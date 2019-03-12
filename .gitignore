@@ -46,6 +46,7 @@
 /cs/tests/Debug
 /cs/tests/test/obj/Release/netcoreapp2.1
 /cpp/test/Leetcode/x64/Debug
+<<<<<<< HEAD
 /cpp/DS/Debug
 /cpp/test/Leetcode/Debug/Leetcode.tlog
 /cpp/test/Leetcode/Debug
@@ -128,3 +129,9 @@ cpp/recipes/recipes.dir/Debug/recipes.tlog/link.command.1.tlog
 cpp/recipes/recipes.dir/Debug/recipes.tlog/link.read.1.tlog
 cpp/recipes/recipes.dir/Debug/recipes.tlog/link.write.1.tlog
 cpp/recipes/recipes.dir/Debug/recipes.tlog/recipes.lastbuildstate
+=======
+/cpp/DS/x64/Debug
+/cpp/test/Leetcode/Debug
+/cpp/thread_pool/Debug
+/cpp/thread_pool/x64/Debug
+>>>>>>> refs/remotes/origin/master
