@@ -1,11 +1,12 @@
 #include <iostream>
-#include "a.h"
+#include "bytebuf/bytebuf.h"
 
 using namespace std;
 
 int main()
 {
     cout << "Hello World!" << endl;
-	A(1).print();
+    bytebuf buf{};
+    cout << buf.capacity() << endl;
     return 0;
 }
