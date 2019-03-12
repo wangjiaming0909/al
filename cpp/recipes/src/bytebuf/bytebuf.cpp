@@ -1,4 +1,5 @@
 #include "bytebuf.h"
+#include <exception>
 
 bytebuf::bytebuf(unsigned int capacity) 
     : capacity_(capacity > MAX_CAPACITY ? MAX_CAPACITY : capacity)
@@ -27,8 +28,8 @@ void bytebuf::peek(T* dest)
 template <typename T>
 void bytebuf::write(const T& source)
 {
-    if(this->writableBytes < sizeof(T)) throw std::out_of_range("Not enough bytes to write...");
-    memcpy(&buf_[writeIndex_], source, sizeof(T));
+    if(this->writableBytes() < sizeof(T)) throw std::out_of_range("Not enough bytes to write...");
+    memcpy(&buf_[writeIndex_], &source, sizeof(T));
     writeIndex_ += sizeof(T);
 }
 

@@ -2,7 +2,8 @@
 #define _BYTE_BUF_H_
 
 #include <vector>
-#include <exception>
+#include <cstdint>
+#include <stdexcept>
 
 class bytebuf
 {
