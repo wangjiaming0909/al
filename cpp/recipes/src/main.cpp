@@ -2,6 +2,7 @@
 #include "bytebuf/bytebuf.h"
 #include "cassert"
 #include <cstring>
+#include "buffer/buffer.h"
 
 using namespace std;
 
