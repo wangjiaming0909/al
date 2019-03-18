@@ -1,6 +1,5 @@
 #include "bytebuf/bytebuf.h"
 #include <exception>
-#include "boost/assert.hpp"
 
 bytebuf::bytebuf(unsigned int capacity) 
     : capacity_(capacity > MAX_CAPACITY ? MAX_CAPACITY : capacity)
