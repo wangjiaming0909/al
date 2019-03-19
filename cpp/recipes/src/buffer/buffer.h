@@ -5,8 +5,10 @@
 #include <cstdlib>
 #include <cassert>
 #include <cstring>
+#include <iostream>
 
-#define DEFAULT_CHUNK_SIZE 128
+#define LOG(level) std::cout << (level)
+#define WARNING "WARNING"
 
 enum class buffer_eol_style{
     BUFFER_EOL_LF, //'\n'
@@ -16,20 +18,31 @@ enum class buffer_eol_style{
 };
 
 class buffer;
+class buffer_chain;
 
 class buffer_iter{
     friend class buffer;
 protected:
-    buffer_iter(buffer* buffer_ptr, size_t offset_of_buffer, size_t chunk_number, size_t offset_of_chunk);
+    buffer_iter(
+        buffer* buffer_ptr, 
+        buffer_chain* chunk, 
+        size_t offset_of_buffer, 
+        size_t chunk_number, 
+        size_t offset_of_chunk);
 public:
     //the position from the start of buffer
     size_t pos() const {return offset_of_buffer_;}
     const buffer* get_buffer() const {return buffer_;}
+
+    //manipulates the {pos_}, success returns 0, error returns -1
+    //! any rearranging of the buffer could invalidate all iter
+    //TODO add operators for iter
 private:
-    buffer*     buffer_;
-    size_t      offset_of_buffer_;
-    size_t      chunk_number_;
-    size_t      offset_of_chunk_;
+    buffer*             buffer_;
+    size_t              offset_of_buffer_;
+    size_t              chunk_number_;
+    size_t              offset_of_chunk_;
+    buffer_chain*       chunk_;
 };
 
 struct buffer_iovec{
@@ -37,19 +50,32 @@ struct buffer_iovec{
     size_t      iob_len;
 };
 
-class buffer_chunk{
+class buffer_chain{
 public:
-    buffer_chunk(size_t capacity = DEFAULT_CHUNK_SIZE);
-    ~buffer_chunk();
-    buffer_chunk(const buffer_chunk& other);
-    buffer_chunk& operator= (const buffer_chunk& other);
+    buffer_chain(size_t capacity = DEFAULT_CHUNK_SIZE);
+    ~buffer_chain();
+    buffer_chain(const buffer_chain& other);
+    //* note that if(this->capacity_ > other.capacity_), 
+    //* this function will not change the capacity of this
+    buffer_chain& operator= (const buffer_chain& other);
 
 public:
-    size_t chunk_capacity() const { return capacity_; }
-    void* data() { return data_; }
+    size_t chain_capacity() const { return capacity_; }
+    void* buffer() { return buffer_; }
+    void set_next_chain(buffer_chain* next) {next_ = next;}
+
 private:
-    size_t      capacity_;
-    void*       data_;
+    // 内存分配策略: precondition(given_capacity > 0)
+    //    如果capacity > MAXIMUM_CHUNK_SIZE / 2, 直接分配内存
+    //    如果capacity < MAXIMUM_CHUNK_SIZE / 2, 那么以 1024 的偶数倍递增
+    size_t calculate_actual_capacity(size_t given_capacity);
+public:
+    static const size_t DEFAULT_CHUNK_SIZE = 1024;
+    static const size_t MAXIMUM_CHUNK_SIZE = __INT32_MAX__;
+private:
+    void*               buffer_;
+    size_t              capacity_;
+    buffer_chain*       next_;
 };
 
 //** 1, lock or not lock
@@ -117,18 +143,13 @@ public:
     //if {eol_len_out} is non-NULL, it is set to the length of the EOL string
     buffer_iter search_eol(const buffer_iter* start, size_t* eol_len_out, buffer_eol_style eol_style);
 
-    //manipulates the {pos_}, success returns 0, error returns -1
-    //! any rearranging of the buffer could invalidate all iter
-    //set the {pos_} to {pos}
-    int set_pos(const Iter& pos);
-    //add the {pos_} by position
-    int add_pos(size_t position);
-
     //inspecting data without cpoying, returns bytes that returned
     int peek(size_t len, Iter* start, std::vector<const buffer_iovec*> vec_out);
 private:
-    Iter                            pos_;
-    std::vector<buffer_chunk*>      chain_;
+    buffer_chain*                   first_chain_;
+    buffer_chain*                   last_chain_;
+    buffer_chain*                   last_chain_with_data_;//最后一个有数据的chain
+    size_t                          total_len_;
 };
 
 template <typename T>
