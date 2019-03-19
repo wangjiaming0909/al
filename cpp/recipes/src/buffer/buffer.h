@@ -6,6 +6,7 @@
 #include <cassert>
 #include <cstring>
 #include <iostream>
+#include <list>
 
 #define LOG(level) std::cout << (level)
 #define WARNING "WARNING"
@@ -25,10 +26,10 @@ class buffer_iter{
 protected:
     buffer_iter(
         buffer* buffer_ptr, 
-        buffer_chain* chunk, 
+        buffer_chain* chain, 
         size_t offset_of_buffer, 
-        size_t chunk_number, 
-        size_t offset_of_chunk);
+        size_t chain_number, 
+        size_t offset_of_chain);
 public:
     //the position from the start of buffer
     size_t pos() const {return offset_of_buffer_;}
@@ -37,12 +38,15 @@ public:
     //manipulates the {pos_}, success returns 0, error returns -1
     //! any rearranging of the buffer could invalidate all iter
     //TODO add operators for iter
+    //{forward_step} can't be negative
+    //如果向前forward 这么多之后，已经超出了整个buffer 现存的所有数据的iter, 返回最后的iter, 即back()
+    buffer_iter& operator+(size_t forward_steps);
 private:
     buffer*             buffer_;
     size_t              offset_of_buffer_;
-    size_t              chunk_number_;
-    size_t              offset_of_chunk_;
-    buffer_chain*       chunk_;
+    size_t              chain_number_;
+    size_t              offset_of_chain_;
+    buffer_chain*       chain_;
 };
 
 struct buffer_iovec{
@@ -55,14 +59,20 @@ public:
     buffer_chain(size_t capacity = DEFAULT_CHUNK_SIZE);
     ~buffer_chain();
     buffer_chain(const buffer_chain& other);
+    buffer_chain(const buffer_chain& other, size_t data_len);
     //* note that if(this->capacity_ > other.capacity_), 
     //* this function will not change the capacity of this
     buffer_chain& operator= (const buffer_chain& other);
+    int set_offset(size_t offset);
+    size_t get_offset() const {return off_;}
 
 public:
     size_t chain_capacity() const { return capacity_; }
     void* buffer() { return buffer_; }
+    const void* buffer() const {return buffer_;}
     void set_next_chain(buffer_chain* next) {next_ = next;}
+    buffer_chain* next() { return next_; }
+    const buffer_chain* next() const {return next_;}
 
 private:
     // 内存分配策略: precondition(given_capacity > 0)
@@ -75,6 +85,7 @@ public:
 private:
     void*               buffer_;
     size_t              capacity_;
+    size_t              off_;//offset into chain, the total number of bytes stored in the chain
     buffer_chain*       next_;
 };
 
@@ -85,14 +96,14 @@ class buffer
 public:
     using Iter = buffer_iter;
 public:
-    buffer(/* args */);
-    ~buffer();
+    buffer();
+    ~buffer() = default;
     buffer(const buffer& other);
     buffer(const buffer&& other);
-    //copy {dataLen} data to {this} from {other}
-    buffer(const buffer& other, size_t dataLen);
-    //copy {dataLen} data to {this} from {start} to {start + dataLen} in {other}
-    buffer(const buffer& other, size_t dataLen, Iter* start);
+    //copy {data_len} data to {this} from {other}
+    buffer(const buffer& other, size_t data_len);
+    //copy {data_len} data to {this} from {start} to {start + data_len} in {other}
+    buffer(const buffer& other, size_t data_len, Iter* start);
     buffer& operator=(const buffer& other);
 
 public:
@@ -101,24 +112,29 @@ public:
     //* return number of bytes stored in the first chunk
     size_t first_chunk_length();
 
+    buffer_chain& first() { return chains_.front(); }
+    const buffer_chain& first() const { return chains_.front();}
+    buffer_chain& last() { return chains_.back(); }
+    const buffer_chain& last() const { return chains_.back(); }
+
     //* add the data to the end of the buffer
     template <typename T>
     int append(const T& data);
-    int append(const buffer& other, size_t dataLen);
-    //append {dataLen} bytes from other, start from {start}
-    int append(const buffer& other, size_t dataLen, Iter* start);
+    int append(const buffer& other, size_t data_len);
+    //append {data_len} bytes from other, start from {start}
+    int append(const buffer& other, size_t data_len, Iter* start);
     int append_printf(const char* fmt, ...);
     int append_vprintf(const char* fmt, va_list ap);
 
     template <typename T>
     int prepend(const T& data);
-    int prepend(const buffer& other, size_t dataLen);
-    //prepend {dataLen} bytes from other, start from {start}
-    int prepend(const buffer& other, size_t dataLen, Iter* start);
+    int prepend(const buffer& other, size_t data_len);
+    //prepend {data_len} bytes from other, start from {start}
+    int prepend(const buffer& other, size_t data_len, Iter* start);
 
     //alters the last chunk of the memory in the buffer, 
-    //or add a chunk so that the buffer is large enough to add dataLen bytes without any allocation
-    int expand(size_t dataLen);
+    //or add a chunk so that the buffer is large enough to add data_len bytes without any allocation
+    int expand(size_t data_len);
 
     //"linearizes" the first size bytes of this, to ensure that they are all contiguous and occupying the same chunk of memory
     //if size is negative, the function lineratizes the entire buffer
@@ -128,12 +144,12 @@ public:
     unsigned char* pullup(size_t size);
 
     //remove the first datalen bytes to the {data}
-    //if total length is small than dataLen, all data will be copied
+    //if total length is small than data_len, all data will be copied
     //error returns -1, success will return bytes that copied
-    int remove(/*out*/void* data, size_t dataLen);
+    int remove(/*out*/void* data, size_t data_len);
     //behave the same as remove but do not return the removed data, just remove the first {len} bytes
     int drain(size_t len);
-    int copy_out_from(void* data, size_t dataLen, Iter* start);
+    int copy_out_from(void* data, size_t data_len, Iter* start);
     char* read_line(size_t *n_read_out, buffer_eol_style eol_style);
 
     //search
@@ -145,11 +161,16 @@ public:
 
     //inspecting data without cpoying, returns bytes that returned
     int peek(size_t len, Iter* start, std::vector<const buffer_iovec*> vec_out);
+
+    buffer_chain* last_chain_with_data() { return last_chain_with_data_; }
+    bool is_last_chain_with_data(const buffer_chain* current_chain) const;
+    size_t total_len() const { return total_len_; }
 private:
-    buffer_chain*                   first_chain_;
-    buffer_chain*                   last_chain_;
+    // bi-direactional linked list
+    std::list<buffer_chain>         chains_;
     buffer_chain*                   last_chain_with_data_;//最后一个有数据的chain
     size_t                          total_len_;
+
 };
 
 template <typename T>
