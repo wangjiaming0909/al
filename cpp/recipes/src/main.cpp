@@ -77,6 +77,8 @@ int main()
     indexOfSlash = buf.find(100);
     assert(indexOfSlash == -1);
 
-    cout << "Hello World!" << endl;
+    buffer buf2{};
+    cout << buf2.total_len() ;
+
     return 0;
 }

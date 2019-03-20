@@ -18,13 +18,15 @@ buffer_iter::buffer_iter( buffer* buffer_ptr
 //TODO UT
 buffer_iter& buffer_iter::operator+(size_t forward_steps)
 {
+    if(forward_steps == 0) return *this;
+
     size_t maximum_steps_can_forward = buffer_->total_len() - this->offset_of_buffer_;
     if(forward_steps > maximum_steps_can_forward)
     {
         chain_ = buffer_->last_chain_with_data();
         offset_of_chain_ = chain_->get_offset();
         offset_of_buffer_ = buffer_->total_len();
-        chain_number_ = 0;
+        chain_number_ = 0;//!
         return *this;
     }
 
@@ -53,10 +55,10 @@ buffer_chain::buffer_chain(size_t capacity)
     , next_(0)
     , off_(0)
 {
-    if(capacity <= 0) 
+    if(capacity == 0) 
     {
-        LOG(WARNING) << "capacity_ is nonpositive";
-        capacity_ = DEFAULT_CHUNK_SIZE;
+        LOG(WARNING) << "capacity_ is 0";
+        capacity_ = DEFAULT_CHAIN_SIZE;
     }
     else
     {
@@ -114,7 +116,7 @@ buffer_chain& buffer_chain::operator= (const buffer_chain& other)
 
 int buffer_chain::set_offset(size_t offset)
 {
-    if(offset < 0 || offset > capacity_) return -1;
+    if(offset > capacity_) return -1;
     off_ = offset;
     return 0;
 }
@@ -122,9 +124,9 @@ int buffer_chain::set_offset(size_t offset)
 size_t buffer_chain::calculate_actual_capacity(size_t given_capacity)
 {
     size_t to_alloc = 0;
-    if(given_capacity < MAXIMUM_CHUNK_SIZE / 2)
+    if(given_capacity < MAXIMUM_CHAIN_SIZE / 2)
     {
-        to_alloc = DEFAULT_CHUNK_SIZE;
+        to_alloc = DEFAULT_CHAIN_SIZE;
         while(to_alloc < given_capacity){
             to_alloc <<= 1;
         }
@@ -151,9 +153,10 @@ buffer::buffer(const buffer& other)
     this->total_len_ = other.total_len_;
 }
 
+//TODO UT
 buffer::buffer(const buffer& other, size_t data_len) 
 {
-    if(other.total_len_ == 0 || data_len <= 0) 
+    if(other.total_len_ == 0 || data_len == 0) 
     {
         buffer{};
         return;
@@ -186,7 +189,7 @@ buffer::buffer(const buffer& other, size_t data_len)
     total_len_ = data_len;
 }
 
-buffer::buffer(const buffer& other, size_t data_len, Iter* start)
+buffer::buffer(const buffer& other, size_t data_len, const Iter* start)
 {
 
 }
@@ -206,12 +209,7 @@ size_t buffer::first_chunk_length()
 
 }
 
-
-int buffer::append(const buffer& other, size_t data_len)
-{
-
-}
-int buffer::append(const buffer& other, size_t data_len, Iter* start)
+int buffer::append(const buffer& other, size_t data_len, const Iter* start)
 {
 
 }
@@ -224,12 +222,7 @@ int buffer::append_vprintf(const char* fmt, va_list ap)
 
 }
 
-int buffer::prepend(const buffer& other, size_t data_len)
-{
-
-}
-
-int buffer::prepend(const buffer& other, size_t data_len, Iter* start)
+int buffer::prepend(const buffer& other, size_t data_len, const Iter* start)
 {
 
 }
@@ -254,7 +247,7 @@ int buffer::drain(size_t len)
 
 }
 
-int buffer::copy_out_from(void* data, size_t data_len, Iter* start)
+int buffer::copy_out_from(void* data, size_t data_len, const Iter* start)
 {
 
 }
@@ -274,12 +267,12 @@ buffer_iter buffer::search_range(const char* what, size_t len, const Iter* start
 
 }
 
-buffer_iter buffer::search_eol(const buffer_iter* start, size_t* eol_len_out, buffer_eol_style eol_style)
+buffer_iter buffer::search_eol(size_t* eol_len_out, buffer_eol_style eol_style, const Iter* start)
 {
 
 }
 
-int buffer::peek(size_t len, Iter* start, std::vector<const buffer_iovec*> vec_out)
+int buffer::peek(std::vector<const buffer_iovec*> vec_out, size_t len, const Iter* start)
 {
 
 }

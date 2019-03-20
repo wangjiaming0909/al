@@ -56,10 +56,12 @@ struct buffer_iovec{
 
 class buffer_chain{
 public:
-    buffer_chain(size_t capacity = DEFAULT_CHUNK_SIZE);
+    using Iter = buffer_iter;
+    buffer_chain(size_t capacity = DEFAULT_CHAIN_SIZE);
     ~buffer_chain();
     buffer_chain(const buffer_chain& other);
     buffer_chain(const buffer_chain& other, size_t data_len);
+    buffer_chain(const buffer_chain& other, size_t data_len, const Iter& start);
     //* note that if(this->capacity_ > other.capacity_), 
     //* this function will not change the capacity of this
     buffer_chain& operator= (const buffer_chain& other);
@@ -76,12 +78,12 @@ public:
 
 private:
     // 内存分配策略: precondition(given_capacity > 0)
-    //    如果capacity > MAXIMUM_CHUNK_SIZE / 2, 直接分配内存
-    //    如果capacity < MAXIMUM_CHUNK_SIZE / 2, 那么以 1024 的偶数倍递增
+    //    如果capacity > MAXIMUM_CHAIN_SIZE / 2, 直接分配内存
+    //    如果capacity < MAXIMUM_CHAIN_SIZE / 2, 那么以 1024 的偶数倍递增
     size_t calculate_actual_capacity(size_t given_capacity);
 public:
-    static const size_t DEFAULT_CHUNK_SIZE = 1024;
-    static const size_t MAXIMUM_CHUNK_SIZE = __INT32_MAX__;
+    static const size_t DEFAULT_CHAIN_SIZE = 1024;
+    static const size_t MAXIMUM_CHAIN_SIZE = __INT32_MAX__;
 private:
     void*               buffer_;
     size_t              capacity_;
@@ -103,7 +105,7 @@ public:
     //copy {data_len} data to {this} from {other}
     buffer(const buffer& other, size_t data_len);
     //copy {data_len} data to {this} from {start} to {start + data_len} in {other}
-    buffer(const buffer& other, size_t data_len, Iter* start);
+    buffer(const buffer& other, size_t data_len, const Iter* start = 0);
     buffer& operator=(const buffer& other);
 
 public:
@@ -120,17 +122,17 @@ public:
     //* add the data to the end of the buffer
     template <typename T>
     int append(const T& data);
-    int append(const buffer& other, size_t data_len);
+    // int append(const buffer& other, size_t data_len);
     //append {data_len} bytes from other, start from {start}
-    int append(const buffer& other, size_t data_len, Iter* start);
+    int append(const buffer& other, size_t data_len, const Iter* start = 0);
     int append_printf(const char* fmt, ...);
     int append_vprintf(const char* fmt, va_list ap);
 
     template <typename T>
     int prepend(const T& data);
-    int prepend(const buffer& other, size_t data_len);
+    // int prepend(const buffer& other, size_t data_len);
     //prepend {data_len} bytes from other, start from {start}
-    int prepend(const buffer& other, size_t data_len, Iter* start);
+    int prepend(const buffer& other, size_t data_len, const Iter* start = 0);
 
     //alters the last chunk of the memory in the buffer, 
     //or add a chunk so that the buffer is large enough to add data_len bytes without any allocation
@@ -149,7 +151,7 @@ public:
     int remove(/*out*/void* data, size_t data_len);
     //behave the same as remove but do not return the removed data, just remove the first {len} bytes
     int drain(size_t len);
-    int copy_out_from(void* data, size_t data_len, Iter* start);
+    int copy_out_from(void* data, size_t data_len, const Iter* start = 0);
     char* read_line(size_t *n_read_out, buffer_eol_style eol_style);
 
     //search
@@ -157,10 +159,10 @@ public:
     buffer_iter search_range(const char* what, size_t len, const Iter* start = 0, const Iter* end = 0);
     //detect line_endings as read_line, but do not copy out the line, returns a iter to the start of the end-of-line character(s)
     //if {eol_len_out} is non-NULL, it is set to the length of the EOL string
-    buffer_iter search_eol(const buffer_iter* start, size_t* eol_len_out, buffer_eol_style eol_style);
+    buffer_iter search_eol(size_t* eol_len_out, buffer_eol_style eol_style, const Iter* start);
 
     //inspecting data without cpoying, returns bytes that returned
-    int peek(size_t len, Iter* start, std::vector<const buffer_iovec*> vec_out);
+    int peek(std::vector<const buffer_iovec*> vec_out, size_t len, const Iter* start = 0);
 
     buffer_chain* last_chain_with_data() { return last_chain_with_data_; }
     bool is_last_chain_with_data(const buffer_chain* current_chain) const;
