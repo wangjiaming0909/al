@@ -10,6 +10,9 @@
 
 #define LOG(level) std::cout << (level)
 #define WARNING "WARNING"
+#define ASSERT_CHAIN_FULL(chain) \
+        assert(chain->chain_capacity() == chain->get_offset() && "current chain should be full");
+
 
 enum class buffer_eol_style{
     BUFFER_EOL_LF, //'\n'
@@ -23,6 +26,7 @@ class buffer_chain;
 
 class buffer_iter{
     friend class buffer;
+    friend class buffer_chain;
 protected:
     buffer_iter(
         buffer* buffer_ptr, 
@@ -30,9 +34,12 @@ protected:
         size_t offset_of_buffer, 
         size_t chain_number, 
         size_t offset_of_chain);
+    
+    buffer_iter(const buffer_iter& other) = default;
+    buffer_iter& operator=(const buffer_iter& other) = default;
 public:
     //the position from the start of buffer
-    size_t pos() const {return offset_of_buffer_;}
+    size_t offset() const {return offset_of_chain_;}
     const buffer* get_buffer() const {return buffer_;}
 
     //manipulates the {pos_}, success returns 0, error returns -1
@@ -41,6 +48,9 @@ public:
     //{forward_step} can't be negative
     //如果向前forward 这么多之后，已经超出了整个buffer 现存的所有数据的iter, 返回最后的iter, 即back()
     buffer_iter& operator+(size_t forward_steps);
+
+public:
+    static const buffer_iter NULL_ITER;
 private:
     buffer*             buffer_;
     size_t              offset_of_buffer_;
@@ -57,11 +67,11 @@ struct buffer_iovec{
 class buffer_chain{
 public:
     using Iter = buffer_iter;
-    buffer_chain(size_t capacity = DEFAULT_CHAIN_SIZE);
+    buffer_chain(buffer* parent = 0, size_t capacity = DEFAULT_CHAIN_SIZE);
     ~buffer_chain();
     buffer_chain(const buffer_chain& other);
-    buffer_chain(const buffer_chain& other, size_t data_len);
-    buffer_chain(const buffer_chain& other, size_t data_len, const Iter& start);
+    buffer_chain(const buffer_chain& other, size_t data_len, const Iter* start = 0);
+    buffer_chain(const buffer_chain&& other);
     //* note that if(this->capacity_ > other.capacity_), 
     //* this function will not change the capacity of this
     buffer_chain& operator= (const buffer_chain& other);
@@ -70,11 +80,13 @@ public:
 
 public:
     size_t chain_capacity() const { return capacity_; }
-    void* buffer() { return buffer_; }
-    const void* buffer() const {return buffer_;}
+    void* get_buffer() { return buffer_; }
+    const void* get_buffer() const {return buffer_;}
     void set_next_chain(buffer_chain* next) {next_ = next;}
     buffer_chain* next() { return next_; }
     const buffer_chain* next() const {return next_;}
+    Iter begin();
+    Iter end();
 
 private:
     // 内存分配策略: precondition(given_capacity > 0)
@@ -89,6 +101,7 @@ private:
     size_t              capacity_;
     size_t              off_;//offset into chain, the total number of bytes stored in the chain
     buffer_chain*       next_;
+    buffer*             parent_;
 };
 
 //** 1, lock or not lock
@@ -118,6 +131,9 @@ public:
     const buffer_chain& first() const { return chains_.front();}
     buffer_chain& last() { return chains_.back(); }
     const buffer_chain& last() const { return chains_.back(); }
+    Iter begin();
+    Iter end();
+    Iter iter_of_chain(const buffer_chain& chain);
 
     //* add the data to the end of the buffer
     template <typename T>
@@ -167,6 +183,10 @@ public:
     buffer_chain* last_chain_with_data() { return last_chain_with_data_; }
     bool is_last_chain_with_data(const buffer_chain* current_chain) const;
     size_t total_len() const { return total_len_; }
+
+private:
+    //validate {iter}, if {iter} is in current {chain_}, return true, otherwise return false
+    bool validate_iter(const Iter& iter) const ;
 private:
     // bi-direactional linked list
     std::list<buffer_chain>         chains_;
