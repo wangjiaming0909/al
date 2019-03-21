@@ -97,6 +97,7 @@ private:
 public:
     static const size_t DEFAULT_CHAIN_SIZE = 1024;
     static const size_t MAXIMUM_CHAIN_SIZE = __INT32_MAX__;
+    static const size_t MAXIMUM_SIZE_WHEN_EXPAND = 4096;
 private:
     void*               buffer_;
     size_t              capacity_;
@@ -107,6 +108,7 @@ private:
 
 //** 1, lock or not lock
 
+//! linked list of chains, every chain 的内部, (前)后可能存在空白部分
 class buffer
 {
 public:
@@ -194,6 +196,7 @@ private:
 	//? 2, 直接 add一个新的chunk (之前的chunk之后的可用空间就浪费了)
 	//? 3, 将当前最后一个chunk中数据考出来, new 一个chunk(大小是之前的off + datalen),把考出来的数据, 考进去
     buffer_chain* expand_if_needed(size_t data_len);
+    buffer_chain* free_trailing_empty_chains();
 private:
     // bi-direactional linked list
     std::list<buffer_chain>         chains_;
@@ -204,6 +207,10 @@ private:
 template <typename T>
 int buffer::append(const T& data)
 {
+    auto chain = expand_if_needed(sizeof(T));
+    if(chain == 0) return -1;
+    memcpy(chain->get_buffer(), &data, sizeof(T));
+    return 0;
 }
 
 template <typename T>

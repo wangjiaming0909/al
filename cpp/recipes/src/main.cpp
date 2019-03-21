@@ -6,7 +6,7 @@ using namespace std;
 
 int main()
 {
-    bytebuf_test::run_tests();
+    // bytebuf_test::run_tests();
     buffer_test::run_tests();
     cout << "Hello World!" << endl;
     return 0;

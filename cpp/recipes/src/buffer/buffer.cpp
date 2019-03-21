@@ -42,6 +42,7 @@ buffer_iter& buffer_iter::operator+(size_t forward_steps)
     {
         remain_steps -= steps_can_forward_in_current_chain;
         chain_ = chain_->next();
+        steps_can_forward_in_current_chain = chain_->get_offset();
         chain_number_++;
         this->offset_of_chain_ = 0;
     }
@@ -68,13 +69,15 @@ buffer_chain::buffer_chain(buffer* parent, size_t capacity)
         capacity_ = this->calculate_actual_capacity(capacity);
     }
 
-    buffer_ = static_cast<void*>(new char[capacity_]);
+    // buffer_ = static_cast<void*>(new char[capacity_]);
+    buffer_ = ::calloc(capacity_, 1);
     assert(buffer_ != nullptr && ("new operator error size:" + capacity_));
 }
 
 buffer_chain::~buffer_chain()
 {
-    delete[] buffer_;
+    if(buffer_ != 0) 
+        free(buffer_);
 }
 
 buffer_chain::buffer_chain(const buffer_chain&& other)
@@ -117,7 +120,7 @@ buffer_chain& buffer_chain::operator= (const buffer_chain& other)
         this->buffer_ = static_cast<void*>(new char[capacity_]);
     }
 
-    ::memcpy(this->buffer_, other.buffer_, other.capacity_);
+    ::memcpy(this->buffer_, other.buffer_, other.off_);
     this->next_ = other.next_;
     this->off_ = other.off_;
     this->parent_ = other.parent_;
@@ -194,10 +197,10 @@ buffer::buffer(const buffer& other, size_t data_len)
 
     while(!other.is_last_chain_with_data(current_chain) && current_chain->get_offset() < remain_to_copy)
     {
-        ASSERT_CHAIN_FULL(current_chain)
+        // ASSERT_CHAIN_FULL(current_chain)// 并不一定是full了
         chains_.push_back(*current_chain);
         this->last_chain_with_data_ = &chains_.back();
-        remain_to_copy -= current_chain->chain_capacity();
+        remain_to_copy -= current_chain->get_offset();
         current_chain = current_chain->next();
     }
 
@@ -393,11 +396,52 @@ buffer_chain* buffer::expand_if_needed(size_t data_len)
     {
         assert(chains_.empty() && "chains_ should be empty");
         chains_.push_back(buffer_chain{this, data_len});
-        last_chain_with_data_ = &chains_.back();
-        return last_chain_with_data_;
+        return &chains_.back();
     }
 
     //检查是否值得扩展
-    // if()
+    buffer_chain* lc = last_chain_with_data_;
+    if (lc->chain_free_space() < lc->chain_capacity() / 8 || //(比例上)当前chain 的剩余空间 只有 capacity 的 1/8, resize 需要拷贝较多内存
+        lc->get_offset() > buffer_chain::MAXIMUM_SIZE_WHEN_EXPAND ||  // (绝对值上)chain 中已经存了 4096 个字节了
+        data_len >= (buffer_chain::MAXIMUM_CHAIN_SIZE - lc->get_offset())) //即便进行扩展，可能扩展之后的空闲内存还是塞不下 data_len
+    {
+        //因此不进行扩展，so 看lc->next 的吧
+        if(lc->next() && lc->next()->chain_free_space() > data_len)
+        {
+            //存在, 并且有足够的空间塞下 data_len
+            assert(lc->next()->get_offset() == 0 && "lc->next() should be empty");
+            return lc->next();
+        } else {
+            //要么是根本不存在next, 要么是next 不够(虽然是空的)
+            free_trailing_empty_chains();
+            chains_.push_back(buffer_chain{this, data_len});
+        }
+    } else {
+        //now we can resize lc 
+        size_t length_needed = lc->get_offset() + data_len;
+        buffer_chain chain_newed{this, length_needed};
+        chain_newed = *lc;
+        chains_.pop_back();
+        chains_.push_back(chain_newed);
+        last_chain_with_data_ = &chains_.back();
+    }
+    return &chains_.back();
+}
 
+buffer_chain* buffer::free_trailing_empty_chains()
+{
+    buffer_chain* chain = last_chain_with_data_;
+    if(chain == 0)
+    {
+        chains_.clear(); return 0;
+    }
+    assert(chain->get_offset() > 0);
+    
+    auto iter = chains_.begin();
+    while(&*iter != chain) iter = iter++;
+    assert(&*(++iter) == chain);
+    auto back_iter = chains_.end();
+    while(back_iter != iter) back_iter--;
+    chains_.pop_back();
+    return chain;
 }
