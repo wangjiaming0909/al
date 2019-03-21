@@ -8,6 +8,8 @@ void test_construct_buffer(){
     assert(buf.total_len() == 0);
     buf.append(1);
     assert(buf.total_len() == 4);
+    buf.append(2);//expand if need has problem
+    assert(buf.total_len() == 8);
 }
 
 void run_tests(){

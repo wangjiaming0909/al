@@ -71,13 +71,15 @@ public:
     ~buffer_chain();
     buffer_chain(const buffer_chain& other);
     buffer_chain(const buffer_chain& other, size_t data_len, const Iter* start = 0);
-    buffer_chain(const buffer_chain&& other);
+    buffer_chain(buffer_chain&& other);
     //* note that if(this->capacity_ > other.capacity_), 
     //* this function will not change the capacity of this
     buffer_chain& operator= (const buffer_chain& other);
     int set_offset(size_t offset);
     size_t get_offset() const {return off_;}
     size_t chain_free_space() const {return capacity_ - off_;}
+    template <typename T>
+    int append(const T& data);
 
 public:
     size_t chain_capacity() const { return capacity_; }
@@ -205,11 +207,22 @@ private:
 };
 
 template <typename T>
+int buffer_chain::append(const T& data)
+{
+    if(this->chain_free_space() < sizeof(data)) return -1;
+    memcpy(buffer_, &data, sizeof(T));
+    off_ += sizeof(T);
+    return 0;
+}
+
+template <typename T>
 int buffer::append(const T& data)
 {
     auto chain = expand_if_needed(sizeof(T));
     if(chain == 0) return -1;
-    memcpy(chain->get_buffer(), &data, sizeof(T));
+    chain->append(data);
+    this->total_len_ += sizeof(T);
+    last_chain_with_data_ = chain;
     return 0;
 }
 

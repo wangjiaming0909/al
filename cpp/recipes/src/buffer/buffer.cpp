@@ -80,9 +80,14 @@ buffer_chain::~buffer_chain()
         free(buffer_);
 }
 
-buffer_chain::buffer_chain(const buffer_chain&& other)
+buffer_chain::buffer_chain(buffer_chain&& other)
 {
-
+    buffer_ = other.buffer_;
+    other.buffer_ = 0;
+    capacity_ = other.capacity_;
+    off_ = other.off_;
+    next_ = other.next_;
+    parent_ = other.parent_;
 }
 
 buffer_chain::buffer_chain(const buffer_chain& other)
@@ -401,7 +406,7 @@ buffer_chain* buffer::expand_if_needed(size_t data_len)
 
     //检查是否值得扩展
     buffer_chain* lc = last_chain_with_data_;
-    if (lc->chain_free_space() < lc->chain_capacity() / 8 || //(比例上)当前chain 的剩余空间 只有 capacity 的 1/8, resize 需要拷贝较多内存
+    if (lc->chain_free_space() < (lc->chain_capacity() / 8) || //(比例上)当前chain 的剩余空间 只有 capacity 的 1/8, resize 需要拷贝较多内存
         lc->get_offset() > buffer_chain::MAXIMUM_SIZE_WHEN_EXPAND ||  // (绝对值上)chain 中已经存了 4096 个字节了
         data_len >= (buffer_chain::MAXIMUM_CHAIN_SIZE - lc->get_offset())) //即便进行扩展，可能扩展之后的空闲内存还是塞不下 data_len
     {
