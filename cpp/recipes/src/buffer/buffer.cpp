@@ -151,6 +151,9 @@ size_t buffer_chain::calculate_actual_capacity(size_t given_capacity)
     }
     else
     {
+#ifdef MINIMUM_CHAIN_SIZE
+        given_capacity = given_capacity < MINIMUM_CHAIN_SIZE ? MINIMUM_CHAIN_SIZE : given_capacity;
+#endif
         to_alloc = given_capacity;
     }
     return to_alloc;
@@ -189,10 +192,11 @@ buffer::buffer(const buffer& other, size_t data_len)
     size_t remain_to_copy = data_len;
     const buffer_chain* current_chain = &other.first();
 
-    while(!this->is_last_chain_with_data(current_chain) && current_chain->get_offset() < remain_to_copy)
+    while(!other.is_last_chain_with_data(current_chain) && current_chain->get_offset() < remain_to_copy)
     {
         ASSERT_CHAIN_FULL(current_chain)
         chains_.push_back(*current_chain);
+        this->last_chain_with_data_ = &chains_.back();
         remain_to_copy -= current_chain->chain_capacity();
         current_chain = current_chain->next();
     }
@@ -223,6 +227,7 @@ buffer::buffer(const buffer& other, size_t data_len, const Iter* start)
     {
         ASSERT_CHAIN_FULL(current_chain)
         chains_.push_back(buffer_chain{*current_chain, bytes_can_copy_in_current_chain, &start_iter_in_current_chain});
+        this->last_chain_with_data_ = &chains_.back();
 
         remain_to_copy -= bytes_can_copy_in_current_chain;
         current_chain = current_chain->next();
@@ -234,6 +239,7 @@ buffer::buffer(const buffer& other, size_t data_len, const Iter* start)
     assert(current_chain != 0 && "current should not be nullptr");
     buffer_chain last_chain{*current_chain, remain_to_copy};
     chains_.push_back(last_chain);
+    this->last_chain_with_data_ = &chains_.back();
     total_len_ = data_len;
 }
 
@@ -244,7 +250,7 @@ buffer::Iter buffer::begin()
 
 buffer::Iter buffer::end()
 {
-    return Iter{this, &(this->chains_.back()), this->total_len_, 0, this->chains_.back().get_offset()};
+    return Iter{this, last_chain_with_data_, this->total_len_, 0, last_chain_with_data_->get_offset()};
 }
 
 buffer::Iter buffer::iter_of_chain(const buffer_chain& chain)
@@ -378,4 +384,20 @@ bool buffer::validate_iter(const Iter& iter) const
     }
     assert(current_chain == nullptr && "any other conditions???");
     return false;
+}
+
+buffer_chain* buffer::expand_if_needed(size_t data_len)
+{
+    //no data in buffer at all
+    if(last_chain_with_data_ == 0)
+    {
+        assert(chains_.empty() && "chains_ should be empty");
+        chains_.push_back(buffer_chain{this, data_len});
+        last_chain_with_data_ = &chains_.back();
+        return last_chain_with_data_;
+    }
+
+    //检查是否值得扩展
+    // if()
+
 }

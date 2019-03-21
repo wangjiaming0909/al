@@ -77,6 +77,7 @@ public:
     buffer_chain& operator= (const buffer_chain& other);
     int set_offset(size_t offset);
     size_t get_offset() const {return off_;}
+    size_t chain_free_space() const {return capacity_ - off_;}
 
 public:
     size_t chain_capacity() const { return capacity_; }
@@ -127,10 +128,6 @@ public:
     //* return number of bytes stored in the first chunk
     size_t first_chunk_length();
 
-    buffer_chain& first() { return chains_.front(); }
-    const buffer_chain& first() const { return chains_.front();}
-    buffer_chain& last() { return chains_.back(); }
-    const buffer_chain& last() const { return chains_.back(); }
     Iter begin();
     Iter end();
     Iter iter_of_chain(const buffer_chain& chain);
@@ -187,18 +184,26 @@ public:
 private:
     //validate {iter}, if {iter} is in current {chain_}, return true, otherwise return false
     bool validate_iter(const Iter& iter) const ;
+    buffer_chain& first() { return chains_.front(); }
+    const buffer_chain& first() const { return chains_.front();}
+    buffer_chain& last() { return chains_.back(); }
+    const buffer_chain& last() const { return chains_.back(); }
+    //if {last_chain_with_data} has enough space for data_len, return directly
+    //if not enough, expand it:
+	//? 1, 把当前的最后一个chunk resize 一下, 使其后面没有空余空间, 然后直接 往最后 添加(插入, 因此可能之后还有空的chunk)一个 chunk就行
+	//? 2, 直接 add一个新的chunk (之前的chunk之后的可用空间就浪费了)
+	//? 3, 将当前最后一个chunk中数据考出来, new 一个chunk(大小是之前的off + datalen),把考出来的数据, 考进去
+    buffer_chain* expand_if_needed(size_t data_len);
 private:
     // bi-direactional linked list
     std::list<buffer_chain>         chains_;
     buffer_chain*                   last_chain_with_data_;//最后一个有数据的chain
     size_t                          total_len_;
-
 };
 
 template <typename T>
 int buffer::append(const T& data)
 {
-
 }
 
 template <typename T>
