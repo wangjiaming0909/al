@@ -404,6 +404,12 @@ buffer_chain* buffer::expand_if_needed(size_t data_len)
         return &chains_.back();
     }
 
+    //if {last_chain_with_data_} has enough space for {data_len} then do nothing
+    if (last_chain_with_data_->chain_free_space() >= data_len)
+    {
+        return last_chain_with_data_;
+    }
+
     //检查是否值得扩展
     buffer_chain* lc = last_chain_with_data_;
     if (lc->chain_free_space() < (lc->chain_capacity() / 8) || //(比例上)当前chain 的剩余空间 只有 capacity 的 1/8, resize 需要拷贝较多内存

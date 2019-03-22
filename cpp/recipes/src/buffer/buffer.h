@@ -210,8 +210,8 @@ template <typename T>
 int buffer_chain::append(const T& data)
 {
     if(this->chain_free_space() < sizeof(data)) return -1;
-    memcpy(buffer_, &data, sizeof(T));
-    off_ += sizeof(T);
+    memcpy(buffer_ + this->off_, &data, sizeof(T));
+    this->off_ += sizeof(T);
     return 0;
 }
 
