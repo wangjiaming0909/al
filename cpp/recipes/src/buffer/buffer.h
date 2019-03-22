@@ -199,6 +199,7 @@ private:
 	//? 3, 将当前最后一个chunk中数据考出来, new 一个chunk(大小是之前的off + datalen),把考出来的数据, 考进去
     buffer_chain* expand_if_needed(size_t data_len);
     buffer_chain* free_trailing_empty_chains();
+    buffer_chain* update_last_chain_with_data(const buffer& other);
 private:
     // bi-direactional linked list
     std::list<buffer_chain>         chains_;

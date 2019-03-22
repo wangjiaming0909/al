@@ -93,7 +93,7 @@ buffer_chain::buffer_chain(buffer_chain&& other)
 buffer_chain::buffer_chain(const buffer_chain& other)
 {
     this->capacity_ = other.capacity_;
-    this->buffer_ = static_cast<void*>(new char[capacity_]);
+    this->buffer_ = ::calloc(capacity_, 1);
     assert(this->buffer_ != nullptr && ("new operator error size: " + this->capacity_));
 
     ::memcpy(this->buffer_, other.buffer_, this->capacity_);
@@ -178,7 +178,7 @@ buffer::buffer()
 buffer::buffer(const buffer& other)
 {
     this->chains_ = other.chains_;
-    this->last_chain_with_data_ = other.last_chain_with_data_;
+    update_last_chain_with_data(other);
     this->total_len_ = other.total_len_;
 }
 
@@ -455,4 +455,18 @@ buffer_chain* buffer::free_trailing_empty_chains()
     while(back_iter != iter) back_iter--;
     chains_.pop_back();
     return chain;
+}
+
+buffer_chain* buffer::update_last_chain_with_data(const buffer& other)
+{
+    auto start = chains_.begin();
+    auto end = chains_.end();
+    auto other_start = other.chains_.begin();
+    auto other_end = other.chains_.end();
+    for (; 
+        start != end && 
+        other_start != other_end && 
+        (&*other_start != other.last_chain_with_data_); 
+        start++, other_start++);
+    last_chain_with_data_ = &*start;
 }

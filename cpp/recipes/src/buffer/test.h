@@ -32,6 +32,14 @@ void test_construct_and_append_buffer(){
     auto dummy = dummy_class();
     buf.append(dummy);
     assert(buf.total_len() == (37 + sizeof(dummy_class)));
+
+    buffer buf2 = buf;
+    assert(buf2.total_len() == (37 + sizeof(dummy_class)));
+}
+
+void test_buffer_begin_end()
+{
+
 }
 
 void run_tests(){
