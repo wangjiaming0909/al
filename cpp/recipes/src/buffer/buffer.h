@@ -128,9 +128,9 @@ public:
 
 public:
     //* return number of bytes stored in the buffer
-    size_t buffer_length();
+    size_t buffer_length() {return total_len_;}
     //* return number of bytes stored in the first chunk
-    size_t first_chunk_length();
+    size_t first_chain_length();
 
     Iter begin();
     Iter end();

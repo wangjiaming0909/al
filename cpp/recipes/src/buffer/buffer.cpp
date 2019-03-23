@@ -286,14 +286,10 @@ buffer& buffer::operator=(const buffer& other)
 
 }
 
-size_t buffer::buffer_length()
+size_t buffer::first_chain_length()
 {
-
-}
-
-size_t buffer::first_chunk_length()
-{
-
+    if(chains_.size() == 0 || chains_.front().get_offset() == 0) return 0;
+    return chains_.front().get_offset();
 }
 
 int buffer::append(const buffer& other, size_t data_len, const Iter* start)
@@ -450,7 +446,7 @@ buffer_chain* buffer::free_trailing_empty_chains()
     
     auto iter = chains_.begin();
     while(&*iter != chain) iter = iter++;
-    assert(&*(++iter) == chain);
+    assert(&*(++iter) == chain);//!WRONG
     auto back_iter = chains_.end();
     while(back_iter != iter) back_iter--;
     chains_.pop_back();
