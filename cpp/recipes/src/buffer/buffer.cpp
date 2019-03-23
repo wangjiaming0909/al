@@ -444,12 +444,18 @@ buffer_chain* buffer::free_trailing_empty_chains()
     }
     assert(chain->get_offset() > 0);
     
-    auto iter = chains_.begin();
-    while(&*iter != chain) iter = iter++;
-    assert(&*(++iter) == chain);//!WRONG
+    auto start_iter = chains_.begin();
+    while(&*start_iter != chain) 
+    {
+        ++start_iter;
+    }
+
     auto back_iter = chains_.end();
-    while(back_iter != iter) back_iter--;
-    chains_.pop_back();
+    --back_iter;
+    while(back_iter != start_iter) {
+        chains_.pop_back();
+        --back_iter;
+    }
     return chain;
 }
 

@@ -41,6 +41,11 @@ void test_construct_and_append_buffer(){
     assert(buf3.buffer_length() == 1024);
     buf3.append(1);
     assert(buf3.buffer_length() == (1024 + 4));
+
+    buffer_iter iter = buf.begin();
+    auto* it = &(iter + 4);
+    buffer buf4{buf, 1024, it};
+    assert(buf4.buffer_length() == (1024 + 37 - 4));
 }
 
 void test_buffer_begin_end()
