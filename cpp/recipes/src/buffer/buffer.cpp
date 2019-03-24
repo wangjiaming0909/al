@@ -84,6 +84,7 @@ buffer_chain::buffer_chain(buffer_chain&& other)
 {
     buffer_ = other.buffer_;
     other.buffer_ = 0;
+
     capacity_ = other.capacity_;
     off_ = other.off_;
     next_ = other.next_;
@@ -106,23 +107,25 @@ buffer_chain::buffer_chain(const buffer_chain& other, size_t data_len, const Ite
 {
     if(data_len > (other.off_ - (start ? start->offset_of_chain_ : 0)))
     {
-        buffer_chain{other}; return;
+        ::new(this)buffer_chain{other}; return;
     }
 
-    buffer_chain{other.parent_, data_len};
+    ::new(this)buffer_chain(other.parent_, data_len);
     memcpy(this->buffer_, other.buffer_ + (start ? start->offset_of_chain_ : 0), data_len);
-    this->buffer_ = other.buffer_;
     this->next_ = other.next_;
     this->off_ = data_len;
 }
 
 buffer_chain& buffer_chain::operator= (const buffer_chain& other)
 {
+    if(this == &other) return *this;
+
     if(this->capacity_ < other.capacity_)
     {
-        delete[] this->buffer_;
+        if(buffer_ != 0) 
+            free(buffer_);
         this->capacity_ = other.capacity_;
-        this->buffer_ = static_cast<void*>(new char[capacity_]);
+        this->buffer_ = ::calloc(capacity_, 1);
     }
 
     ::memcpy(this->buffer_, other.buffer_, other.off_);
@@ -187,13 +190,13 @@ buffer::buffer(const buffer& other, size_t data_len)
 {
     if(other.total_len_ == 0 || data_len == 0) 
     {
-        buffer{}; return;
+        ::new(this)buffer{}; return;
     }
 
     //copy all
     if(data_len >= other.total_len())
     {
-        buffer{other}; return;
+        ::new(this)buffer{other}; return;
     }
 
     //partially copy
@@ -221,7 +224,7 @@ buffer::buffer(const buffer& other, size_t data_len, const Iter* start)
 {
     if(start == 0 || !other.validate_iter(*start) || data_len == 0 || other.total_len_ == 0) 
     {
-        buffer{}; return;
+        ::new(this)buffer{}; return;
     }
 
     buffer_chain* current_chain = start->chain_;
@@ -229,8 +232,9 @@ buffer::buffer(const buffer& other, size_t data_len, const Iter* start)
     Iter start_iter_in_current_chain = *start;
     size_t maximum_bytes_can_copy_out = other.total_len_ - start->offset_of_buffer_;
     size_t remain_to_copy = data_len > maximum_bytes_can_copy_out ? maximum_bytes_can_copy_out : data_len;
+    bool start_from_front = false;// if the start_iter has been used, so next time we need to read from front of next chain
 
-    while(  !is_last_chain_with_data(current_chain) && 
+    while(  !other.is_last_chain_with_data(current_chain) && 
             bytes_can_copy_in_current_chain < remain_to_copy)
     {
         ASSERT_CHAIN_FULL(current_chain)
@@ -241,12 +245,16 @@ buffer::buffer(const buffer& other, size_t data_len, const Iter* start)
         current_chain = current_chain->next();
         bytes_can_copy_in_current_chain = current_chain->get_offset();
         start_iter_in_current_chain = current_chain->begin();
+        start_from_front = true;
     }
 
     //get to the last chain or current chain can cover {remain_to_copy}
     assert(current_chain != 0 && "current should not be nullptr");
-    buffer_chain last_chain{*current_chain, remain_to_copy};
-    chains_.push_back(last_chain);
+
+    if(start_from_front)
+        chains_.push_back(buffer_chain{*current_chain, remain_to_copy});
+    else
+        chains_.push_back(buffer_chain{*current_chain, remain_to_copy, &start_iter_in_current_chain});
     this->last_chain_with_data_ = &chains_.back();
     total_len_ = data_len;
 }
@@ -369,21 +377,24 @@ inline bool buffer::is_last_chain_with_data(const buffer_chain* current_chain) c
 
 bool buffer::validate_iter(const Iter& iter) const 
 {
+    //validate buffer
     if(iter.buffer_ != this)
     {
         return false;
     }
 
+    //find the chain
     const buffer_chain* current_chain = &*this->chains_.begin();
     while(current_chain != nullptr && current_chain != iter.chain_)
     {
         current_chain = current_chain->next();
     }
 
+    //validate the chain
     if(current_chain == iter.chain_)
     {
-        if( iter.offset_of_chain_ < current_chain->get_offset() && 
-            iter.buffer_ == current_chain->get_buffer())
+        if( iter.chain_->get_offset() == current_chain->get_offset() && 
+            iter.chain_->get_buffer() == current_chain->get_buffer())
             return true;
     }
     assert(current_chain == nullptr && "any other conditions???");

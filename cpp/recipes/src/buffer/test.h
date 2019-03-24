@@ -1,6 +1,8 @@
 #include "buffer/buffer.h"
 #include <cassert>
 #include <string> 
+#include <iostream>
+using namespace std;
 
 namespace buffer_test{
 
@@ -45,7 +47,17 @@ void test_construct_and_append_buffer(){
     buffer_iter iter = buf.begin();
     auto* it = &(iter + 4);
     buffer buf4{buf, 1024, it};
-    assert(buf4.buffer_length() == (1024 + 37 - 4));
+    assert(buf4.buffer_length() == 1024);
+    auto iter_in_buf4 = buf4.begin();
+    char* data = static_cast<char*>(iter_in_buf4.chain().get_buffer());
+    int* int_2 = reinterpret_cast<int*>(data);
+    assert(*int_2 == 2);
+    char* char_2 = reinterpret_cast<char*>(data + 4);
+    char* actual = "abcd";
+    for(int i = 0; i < strlen(char_2); i++)
+    {
+        assert(char_2[i] == actual[i]);
+    }
 }
 
 void test_buffer_begin_end()

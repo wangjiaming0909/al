@@ -48,6 +48,7 @@ public:
     //{forward_step} can't be negative
     //如果向前forward 这么多之后，已经超出了整个buffer 现存的所有数据的iter, 返回最后的iter, 即back()
     buffer_iter& operator+(size_t forward_steps);
+    buffer_chain& chain() {return *chain_;}
 
 public:
     static const buffer_iter NULL_ITER;
