@@ -17,7 +17,6 @@ buffer_iter::buffer_iter( buffer* buffer_ptr
 
 const buffer_iter buffer_iter::NULL_ITER = buffer_iter{0, 0, 0, 0, 0};
 
-//TODO UT
 buffer_iter& buffer_iter::operator+(size_t forward_steps)
 {
     if(forward_steps == 0) return *this;
@@ -185,7 +184,6 @@ buffer::buffer(const buffer& other)
     this->total_len_ = other.total_len_;
 }
 
-//TODO UT
 buffer::buffer(const buffer& other, size_t data_len) 
 {
     if(other.total_len_ == 0 || data_len == 0) 
@@ -216,6 +214,9 @@ buffer::buffer(const buffer& other, size_t data_len)
     //even it is the last_chain_with_data, it can also cover the remain_to_copy
     buffer_chain last_chain{*current_chain, remain_to_copy};
     chains_.push_back(last_chain);
+    //update {next chain} of 倒数第二个 chain, 因为刚刚新添加一个chain
+    if(last_chain_with_data_)
+        last_chain_with_data_->set_next_chain(&chains_.back());
     last_chain_with_data_ = &chains_.back();
     total_len_ = data_len;
 }
@@ -237,7 +238,6 @@ buffer::buffer(const buffer& other, size_t data_len, const Iter* start)
     while(  !other.is_last_chain_with_data(current_chain) && 
             bytes_can_copy_in_current_chain < remain_to_copy)
     {
-        ASSERT_CHAIN_FULL(current_chain)
         chains_.push_back(buffer_chain{*current_chain, bytes_can_copy_in_current_chain, &start_iter_in_current_chain});
         this->last_chain_with_data_ = &chains_.back();
 
@@ -291,7 +291,12 @@ buffer::Iter buffer::iter_of_chain(const buffer_chain& chain)
 
 buffer& buffer::operator=(const buffer& other)
 {
-
+    if(this == &other) return *this;
+    if(other.buffer_length() == 0) 
+        return *this;
+    chains_ = other.chains_;
+    total_len_ = other.total_len_;
+    update_last_chain_with_data(other);
 }
 
 size_t buffer::first_chain_length()
@@ -302,6 +307,10 @@ size_t buffer::first_chain_length()
 
 int buffer::append(const buffer& other, size_t data_len, const Iter* start)
 {
+    if(start == 0 || other.validate_iter(*start) || other.total_len_ == 0 || data_len == 0)
+    {
+        return -1;
+    }
 
 }
 int buffer::append_printf(const char* fmt, ...)
@@ -314,11 +323,6 @@ int buffer::append_vprintf(const char* fmt, va_list ap)
 }
 
 int buffer::prepend(const buffer& other, size_t data_len, const Iter* start)
-{
-
-}
-
-int buffer::expand(size_t data_len)
 {
 
 }

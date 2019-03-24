@@ -95,7 +95,7 @@ public:
 private:
     // 内存分配策略: precondition(given_capacity > 0)
     //    如果capacity > MAXIMUM_CHAIN_SIZE / 2, 直接分配内存
-    //    如果capacity < MAXIMUM_CHAIN_SIZE / 2, 那么以 1024 的偶数倍递增
+    //    如果capacity < MAXIMUM_CHAIN_SIZE / 2, 那么以 1024 的2 的幂次倍递增
     size_t calculate_actual_capacity(size_t given_capacity);
 public:
     static const size_t DEFAULT_CHAIN_SIZE = 1024;
@@ -129,11 +129,13 @@ public:
 
 public:
     //* return number of bytes stored in the buffer
-    size_t buffer_length() {return total_len_;}
+    size_t buffer_length() const {return total_len_;}
     //* return number of bytes stored in the first chunk
     size_t first_chain_length();
 
+    //begin and end 只是第一个个最后一个的iter
     Iter begin();
+    //end 不是 STL 中的最后一个的下一个, 只是最后一个
     Iter end();
     Iter iter_of_chain(const buffer_chain& chain);
 
@@ -151,10 +153,6 @@ public:
     // int prepend(const buffer& other, size_t data_len);
     //prepend {data_len} bytes from other, start from {start}
     int prepend(const buffer& other, size_t data_len, const Iter* start = 0);
-
-    //alters the last chunk of the memory in the buffer, 
-    //or add a chunk so that the buffer is large enough to add data_len bytes without any allocation
-    int expand(size_t data_len);
 
     //"linearizes" the first size bytes of this, to ensure that they are all contiguous and occupying the same chunk of memory
     //if size is negative, the function lineratizes the entire buffer
@@ -185,6 +183,7 @@ public:
     buffer_chain* last_chain_with_data() { return last_chain_with_data_; }
     bool is_last_chain_with_data(const buffer_chain* current_chain) const;
     size_t total_len() const { return total_len_; }
+    size_t chain_number() const {return this->chains_.size();}
 
 private:
     //validate {iter}, if {iter} is in current {chain_}, return true, otherwise return false
@@ -193,6 +192,8 @@ private:
     const buffer_chain& first() const { return chains_.front();}
     buffer_chain& last() { return chains_.back(); }
     const buffer_chain& last() const { return chains_.back(); }
+    //alters the last chunk of the memory in the buffer, 
+    //or add a chunk so that the buffer is large enough to add data_len bytes without any allocation
     //if {last_chain_with_data} has enough space for data_len, return directly
     //if not enough, expand it:
 	//? 1, 把当前的最后一个chunk resize 一下, 使其后面没有空余空间, 然后直接 往最后 添加(插入, 因此可能之后还有空的chunk)一个 chunk就行
@@ -212,7 +213,7 @@ template <typename T>
 int buffer_chain::append(const T& data)
 {
     if(this->chain_free_space() < sizeof(data)) return -1;
-    memcpy(buffer_ + this->off_, &data, sizeof(T));
+    memcpy(static_cast<char*>(buffer_) + this->off_, &data, sizeof(T));
     this->off_ += sizeof(T);
     return 0;
 }

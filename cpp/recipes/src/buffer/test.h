@@ -18,6 +18,15 @@ private:
     char    buffer_[DUMMY_CLASS_SIZE];
 };
 
+template <unsigned int N>
+struct SizableClass{
+    SizableClass()
+    {
+        memset(buffer_, 0, N);
+    }
+    char buffer_[N];
+};
+
 void test_construct_and_append_buffer(){
     buffer buf{};
     assert(buf.buffer_length() == 0);
@@ -44,6 +53,7 @@ void test_construct_and_append_buffer(){
     buf3.append(1);
     assert(buf3.buffer_length() == (1024 + 4));
 
+    //copy constructor
     buffer_iter iter = buf.begin();
     auto* it = &(iter + 4);
     buffer buf4{buf, 1024, it};
@@ -58,6 +68,31 @@ void test_construct_and_append_buffer(){
     {
         assert(char_2[i] == actual[i]);
     }
+
+
+    assert(buf.chain_number() == 1);
+    auto sizable_900 = SizableClass<900>();
+    buf.append(sizable_900);
+    assert(buf.chain_number() == 1);
+    assert(buf.buffer_length() == (37 + 1024 + 900));
+    buf.append(SizableClass<100>());
+    assert(buf.chain_number() == 2);
+    assert(buf.buffer_length() == (37 + 1024 + 900 + 100));
+    buf.append(SizableClass<1024>());
+    assert(buf.chain_number() == 2);
+    assert(buf.buffer_length() == (37 + 1024 + 900 + 100 + 1024));
+
+    buffer buf5{buf, buf.buffer_length() - 100, &(buf.begin() + 24)};
+}
+
+void test_operator_equal()
+{
+    buffer buf1{};
+    buf1.append(SizableClass<64>());
+    assert(buf1.buffer_length() == 64);
+    buffer buf2{};
+    buf2 = buf1;
+    assert(buf2.buffer_length() == 64);
 }
 
 void test_buffer_begin_end()
@@ -67,5 +102,6 @@ void test_buffer_begin_end()
 
 void run_tests(){
     test_construct_and_append_buffer();
+    test_operator_equal();
 }
 }
