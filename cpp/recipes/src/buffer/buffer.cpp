@@ -204,7 +204,7 @@ buffer::buffer(const buffer& other, size_t data_len)
     while(!other.is_last_chain_with_data(current_chain) && current_chain->get_offset() < remain_to_copy)
     {
         // ASSERT_CHAIN_FULL(current_chain)// 并不一定是full了
-        chains_.push_back(*current_chain);
+        push_back(*current_chain);
         this->last_chain_with_data_ = &chains_.back();
         remain_to_copy -= current_chain->get_offset();
         current_chain = current_chain->next();
@@ -213,7 +213,7 @@ buffer::buffer(const buffer& other, size_t data_len)
     //get to the last_chain_with_data or current_chain can cover remain_to_copy
     //even it is the last_chain_with_data, it can also cover the remain_to_copy
     buffer_chain last_chain{*current_chain, remain_to_copy};
-    chains_.push_back(last_chain);
+    push_back(last_chain);
     //update {next chain} of 倒数第二个 chain, 因为刚刚新添加一个chain
     if(last_chain_with_data_)
         last_chain_with_data_->set_next_chain(&chains_.back());
@@ -238,7 +238,8 @@ buffer::buffer(const buffer& other, size_t data_len, const Iter* start)
     while(  !other.is_last_chain_with_data(current_chain) && 
             bytes_can_copy_in_current_chain < remain_to_copy)
     {
-        chains_.push_back(buffer_chain{*current_chain, bytes_can_copy_in_current_chain, &start_iter_in_current_chain});
+        push_back(buffer_chain{*current_chain, bytes_can_copy_in_current_chain, &start_iter_in_current_chain});
+
         this->last_chain_with_data_ = &chains_.back();
 
         remain_to_copy -= bytes_can_copy_in_current_chain;
@@ -252,11 +253,33 @@ buffer::buffer(const buffer& other, size_t data_len, const Iter* start)
     assert(current_chain != 0 && "current should not be nullptr");
 
     if(start_from_front)
-        chains_.push_back(buffer_chain{*current_chain, remain_to_copy});
+        push_back(buffer_chain{*current_chain, remain_to_copy});
     else
-        chains_.push_back(buffer_chain{*current_chain, remain_to_copy, &start_iter_in_current_chain});
+        push_back(buffer_chain{*current_chain, remain_to_copy, &start_iter_in_current_chain});
+
     this->last_chain_with_data_ = &chains_.back();
     total_len_ = data_len;
+}
+
+buffer_chain* buffer::push_back(const buffer_chain&& chain)
+{
+    return push_back(chain);
+}
+
+buffer_chain* buffer::push_back(const buffer_chain& chain)
+{
+    if(chains_.size() == 0) 
+    {
+        chains_.push_back(chain);
+    } 
+    else 
+    {
+        auto& last_chain = chains_.back();
+        chains_.push_back(chain);
+        last_chain.set_next_chain(&chains_.back());
+    }
+
+    return &chains_.back();
 }
 
 buffer::Iter buffer::begin()
@@ -411,7 +434,7 @@ buffer_chain* buffer::expand_if_needed(size_t data_len)
     if(last_chain_with_data_ == 0)
     {
         assert(chains_.empty() && "chains_ should be empty");
-        chains_.push_back(buffer_chain{this, data_len});
+        push_back(buffer_chain{this, data_len});
         return &chains_.back();
     }
 
@@ -436,9 +459,7 @@ buffer_chain* buffer::expand_if_needed(size_t data_len)
         } else {
             //要么是根本不存在next, 要么是next 不够(虽然是空的)
             free_trailing_empty_chains();
-            auto& last_chain = chains_.back();
-            chains_.push_back(buffer_chain{this, data_len});
-            last_chain.set_next_chain(&chains_.back());
+            push_back(buffer_chain{this, data_len});
         }
     } else {
         //now we can resize lc 
@@ -447,9 +468,7 @@ buffer_chain* buffer::expand_if_needed(size_t data_len)
         chain_newed = *lc;
         chains_.pop_back();
         //pop_back 之后，取得最后一一个chain, 再将现在的最后一个chain 的next 设置为之后加入的新chain
-        auto& last_chain = chains_.back();
-        chains_.push_back(chain_newed);
-        last_chain.set_next_chain(&chains_.back());
+        push_back(chain_newed);
         last_chain_with_data_ = &chains_.back();
     }
     return &chains_.back();

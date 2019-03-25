@@ -189,6 +189,8 @@ public:
     size_t chain_number() const {return this->chains_.size();}
 
 private:
+    buffer_chain* push_back(const buffer_chain&& chain);
+    buffer_chain* push_back(const buffer_chain& chain);
     //validate {iter}, if {iter} is in current {chain_}, return true, otherwise return false
     bool validate_iter(const Iter& iter) const ;
     buffer_chain& first() { return chains_.front(); }
