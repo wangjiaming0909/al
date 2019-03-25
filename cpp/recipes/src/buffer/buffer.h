@@ -12,7 +12,9 @@
 #define WARNING "WARNING"
 #define ASSERT_CHAIN_FULL(chain) \
         assert(chain->chain_capacity() == chain->get_offset() && "current chain should be full");
-
+#ifndef TESTING
+#define TESTING 1
+#endif
 
 enum class buffer_eol_style{
     BUFFER_EOL_LF, //'\n'
@@ -107,6 +109,7 @@ private:
     size_t              off_;//offset into chain, the total number of bytes stored in the chain
     buffer_chain*       next_;
     buffer*             parent_;
+
 };
 
 //** 1, lock or not lock
@@ -207,6 +210,11 @@ private:
     std::list<buffer_chain>         chains_;
     buffer_chain*                   last_chain_with_data_;//最后一个有数据的chain
     size_t                          total_len_;
+
+#ifdef TESTING
+public:
+  const std::list<buffer_chain> &get_chains() const { return this->chains_; }
+#endif 
 };
 
 template <typename T>

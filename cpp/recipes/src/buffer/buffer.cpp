@@ -276,7 +276,7 @@ buffer::Iter buffer::iter_of_chain(const buffer_chain& chain)
 
     while(current_chain != 0 && current_chain != &chain)
     {
-        ASSERT_CHAIN_FULL(current_chain)
+        // ASSERT_CHAIN_FULL(current_chain)
         offset_of_buffer += current_chain->chain_capacity();
         current_chain = current_chain->next();
     }
@@ -436,7 +436,9 @@ buffer_chain* buffer::expand_if_needed(size_t data_len)
         } else {
             //要么是根本不存在next, 要么是next 不够(虽然是空的)
             free_trailing_empty_chains();
+            auto& last_chain = chains_.back();
             chains_.push_back(buffer_chain{this, data_len});
+            last_chain.set_next_chain(&chains_.back());
         }
     } else {
         //now we can resize lc 
@@ -444,7 +446,10 @@ buffer_chain* buffer::expand_if_needed(size_t data_len)
         buffer_chain chain_newed{this, length_needed};
         chain_newed = *lc;
         chains_.pop_back();
+        //pop_back 之后，取得最后一一个chain, 再将现在的最后一个chain 的next 设置为之后加入的新chain
+        auto& last_chain = chains_.back();
         chains_.push_back(chain_newed);
+        last_chain.set_next_chain(&chains_.back());
         last_chain_with_data_ = &chains_.back();
     }
     return &chains_.back();
@@ -453,6 +458,7 @@ buffer_chain* buffer::expand_if_needed(size_t data_len)
 buffer_chain* buffer::free_trailing_empty_chains()
 {
     buffer_chain* chain = last_chain_with_data_;
+    //no data at all
     if(chain == 0)
     {
         chains_.clear(); return 0;
@@ -469,6 +475,7 @@ buffer_chain* buffer::free_trailing_empty_chains()
     --back_iter;
     while(back_iter != start_iter) {
         chains_.pop_back();
+        chains_.back().set_next_chain(0);
         --back_iter;
     }
     return chain;

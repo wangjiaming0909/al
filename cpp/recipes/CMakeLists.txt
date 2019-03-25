@@ -10,6 +10,7 @@ add_executable(${PROJECT_NAME} ${SRC_DIR})
 set( CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -ggdb -O0 -Wfatal-errors " )
 include_directories("src")
 include_directories("C:\\Users\\Jiaming\\Desktop\\boost_1_69_0")
+ADD_DEFINITIONS(-DTESTING)
 
 
 

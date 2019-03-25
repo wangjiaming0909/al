@@ -77,9 +77,13 @@ void test_construct_and_append_buffer(){
     assert(buf.buffer_length() == (37 + 1024 + 900));
     buf.append(SizableClass<100>());
     assert(buf.chain_number() == 2);
+    const auto& chains = buf.get_chains();
+    assert(chains.front().next() == &chains.back());
+
     assert(buf.buffer_length() == (37 + 1024 + 900 + 100));
     buf.append(SizableClass<1024>());
     assert(buf.chain_number() == 2);
+    assert(chains.front().next() == &chains.back());
     assert(buf.buffer_length() == (37 + 1024 + 900 + 100 + 1024));
 
     buffer buf5{buf, buf.buffer_length() - 100, &(buf.begin() + 24)};
