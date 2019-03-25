@@ -277,6 +277,7 @@ buffer_chain* buffer::push_back(const buffer_chain& chain)
         auto& last_chain = chains_.back();
         chains_.push_back(chain);
         last_chain.set_next_chain(&chains_.back());
+        chains_.back().set_next_chain(0);
     }
 
     return &chains_.back();
@@ -335,6 +336,39 @@ int buffer::append(const buffer& other, size_t data_len, const Iter* start)
         return -1;
     }
 
+    free_trailing_empty_chains();
+
+    buffer_chain* current_chain = start->chain_;
+    size_t bytes_can_copy_in_current_chain = current_chain->get_offset() - start->offset_of_chain_;
+    Iter start_iter_in_current_chain = *start;
+    size_t maximum_bytes_can_copy_out = other.total_len_ - start->offset_of_buffer_;
+    size_t remain_to_copy = data_len > maximum_bytes_can_copy_out ? maximum_bytes_can_copy_out : data_len;
+    bool start_from_front = false;// if the start_iter has been used, so next time we need to read from front of next chain
+
+    while(  !other.is_last_chain_with_data(current_chain) && 
+            bytes_can_copy_in_current_chain < remain_to_copy)
+    {
+        push_back(buffer_chain{*current_chain, bytes_can_copy_in_current_chain, &start_iter_in_current_chain});
+
+        this->last_chain_with_data_ = &chains_.back();
+
+        remain_to_copy -= bytes_can_copy_in_current_chain;
+        current_chain = current_chain->next();
+        bytes_can_copy_in_current_chain = current_chain->get_offset();
+        start_iter_in_current_chain = current_chain->begin();
+        start_from_front = true;
+    }
+
+    //get to the last chain or current chain can cover {remain_to_copy}
+    assert(current_chain != 0 && "current should not be nullptr");
+
+    if(start_from_front)
+        push_back(buffer_chain{*current_chain, remain_to_copy});
+    else
+        push_back(buffer_chain{*current_chain, remain_to_copy, &start_iter_in_current_chain});
+
+    this->last_chain_with_data_ = &chains_.back();
+    total_len_ = data_len;
 }
 int buffer::append_printf(const char* fmt, ...)
 {

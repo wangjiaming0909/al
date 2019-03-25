@@ -2,6 +2,9 @@
 #include <cassert>
 #include <string> 
 #include <iostream>
+#include <cstdlib>
+#include <ctime>
+
 using namespace std;
 
 namespace buffer_test{
@@ -12,7 +15,8 @@ class dummy_class
 public:
     dummy_class()
     {
-        memset(buffer_, 0, DUMMY_CLASS_SIZE);
+        std::srand(std::time(0));
+        memset(buffer_, std::rand() / (RAND_MAX), DUMMY_CLASS_SIZE);
     }
 private:
     char    buffer_[DUMMY_CLASS_SIZE];
@@ -82,6 +86,7 @@ void test_construct_and_append_buffer(){
     assert(buf.chain_number() == 2);
     const auto& chains = buf.get_chains();
     assert(chains.front().next() == &chains.back());
+    assert(chains.back().next() == 0);
 
     assert(buf.buffer_length() == (length + 900 + 100));
     buf.append(SizableClass<1024>());
@@ -94,6 +99,7 @@ void test_construct_and_append_buffer(){
     assert(buf5.chain_number() == 2);
     const auto& first_chain_of_buf5 = buf5.get_chains().front();
     assert(first_chain_of_buf5.next() == &buf5.get_chains().back());
+    assert(buf5.get_chains().back().next() == 0);
     assert((double)first_chain_of_buf5.get_offset() > (first_chain_of_buf5.chain_capacity() * 7 / 8.0));
 }
 
@@ -105,6 +111,27 @@ void test_operator_equal()
     buffer buf2{};
     buf2 = buf1;
     assert(buf2.buffer_length() == 64);
+}
+
+void test_append_buffer()
+{
+    buffer buf1{};
+    buf1.append(SizableClass<64>());
+    assert(buf1.buffer_length() == 64);
+    buffer buf2{};
+    buf2.append(SizableClass<64>());
+    assert(buf2.buffer_length() == 64);
+    buf2.append(buf1, 64);
+    assert(buf2.buffer_length() == 64 * 2);
+
+    buf1.append(SizableClass<4>());
+    assert(buf1.buffer_length() == (64 + 4));
+
+    buf2.append(buf1, 4, &(buf1.begin() + 64));
+    assert(buf2.buffer_length() == buf2.buffer_length());
+
+    int ret = memcmp(buf1.last_chain_with_data()->get_buffer(), buf2.last_chain_with_data()->get_buffer(), buf2.buffer_length());
+    assert(ret == 0);
 }
 
 void test_buffer_begin_end()

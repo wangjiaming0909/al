@@ -69,6 +69,7 @@ struct buffer_iovec{
 
 class buffer_chain{
 public:
+    friend class buffer;
     using Iter = buffer_iter;
     buffer_chain(buffer* parent = 0, size_t capacity = DEFAULT_CHAIN_SIZE);
     ~buffer_chain();
@@ -109,7 +110,6 @@ private:
     size_t              off_;//offset into chain, the total number of bytes stored in the chain
     buffer_chain*       next_;
     buffer*             parent_;
-
 };
 
 //** 1, lock or not lock
@@ -223,7 +223,7 @@ template <typename T>
 int buffer_chain::append(const T& data)
 {
     if(this->chain_free_space() < sizeof(data)) return -1;
-    memcpy(static_cast<char*>(buffer_) + this->off_, &data, sizeof(T));
+    ::memcpy(static_cast<char*>(buffer_) + this->off_, &data, sizeof(T));
     this->off_ += sizeof(T);
     return 0;
 }
@@ -231,12 +231,13 @@ int buffer_chain::append(const T& data)
 template <typename T>
 int buffer::append(const T& data)
 {
-    auto chain = expand_if_needed(sizeof(T));
+    size_t size_needed = sizeof(T);
+    auto chain = expand_if_needed(size_needed);
     if(chain == 0) return -1;
     chain->append(data);
-    this->total_len_ += sizeof(T);
+    this->total_len_ += size_needed;
     last_chain_with_data_ = chain;
-    return 0;
+    return size_needed;
 }
 
 template <typename T>
