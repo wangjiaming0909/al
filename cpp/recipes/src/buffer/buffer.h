@@ -7,6 +7,7 @@
 #include <cstring>
 #include <iostream>
 #include <list>
+#include <future>
 
 #define LOG(level) std::cout << (level)
 #define WARNING "WARNING"
