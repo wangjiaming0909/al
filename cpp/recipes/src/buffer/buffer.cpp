@@ -57,6 +57,7 @@ buffer_chain::buffer_chain(buffer* parent, size_t capacity)
     , off_(0)
     , next_(0)
     , parent_(parent)
+    , misalign_(0)
 {
     if(capacity == 0) 
     {
@@ -88,22 +89,28 @@ buffer_chain::buffer_chain(buffer_chain&& other)
     off_ = other.off_;
     next_ = other.next_;
     parent_ = other.parent_;
+    misalign_ = other.misalign_;
 }
 
+//other 原来是什么样，复制后的对象也是什么样，capacity, misalign的大小都是一样的
+//TODO align it??
 buffer_chain::buffer_chain(const buffer_chain& other)
 {
-    this->capacity_ = other.capacity_;
-    this->buffer_ = ::calloc(capacity_, 1);
-    assert(this->buffer_ != nullptr && ("new operator error size: " + this->capacity_));
+    capacity_ = other.capacity_;
+    buffer_ = ::calloc(capacity_, 1);
+    assert(buffer_ != nullptr && ("new operator error size: " + capacity_));
 
-    ::memcpy(this->buffer_, other.buffer_, this->capacity_);
-    this->next_ = other.next_;
-    this->off_ = other.off_;
-    this->parent_ = other.parent_;
+    ::memcpy(this->buffer_, other.buffer_, other.off_);
+    next_ = other.next_;
+    off_ = other.off_;
+    parent_ = other.parent_;
+    misalign_ = other.misalign_;
 }
 
 buffer_chain::buffer_chain(const buffer_chain& other, size_t data_len, const Iter* start)
 {
+    //TODO validating start??? is start before other?
+    //TODO add misalign_
     if(data_len > (other.off_ - (start ? start->offset_of_chain_ : 0)))
     {
         ::new(this)buffer_chain{other}; return;

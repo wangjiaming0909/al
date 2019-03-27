@@ -82,6 +82,7 @@ public:
     buffer_chain& operator= (const buffer_chain& other);
     int set_offset(size_t offset);
     size_t get_offset() const {return off_;}
+    size_t size() const { return off_ - misalign_; }
     size_t chain_free_space() const {return capacity_ - off_;}
     template <typename T>
     int append(const T& data);
@@ -111,6 +112,7 @@ private:
     size_t              off_;//offset into chain, the total number of bytes stored in the chain
     buffer_chain*       next_;
     buffer*             parent_;
+    size_t              misalign_;
 };
 
 //** 1, lock or not lock
