@@ -266,6 +266,7 @@ buffer_chain* buffer::push_back(const buffer_chain&& chain)
     return push_back(chain);
 }
 
+//push_back与data没有关系, 仅仅是向chains_中添加节点
 buffer_chain* buffer::push_back(const buffer_chain& chain)
 {
     if(chains_.size() == 0) 
@@ -349,7 +350,7 @@ int buffer::append(const buffer& other, size_t data_len, Iter start)
     while(  !other.is_last_chain_with_data(current_chain) && 
             bytes_can_copy_in_current_chain < remain_to_copy)
     {
-        push_back(buffer_chain{*current_chain, bytes_can_copy_in_current_chain, &start_iter_in_current_chain});
+        append(buffer_chain{*current_chain, bytes_can_copy_in_current_chain, &start_iter_in_current_chain});
 
         this->last_chain_with_data_ = &chains_.back();
         total_len_ += bytes_can_copy_in_current_chain;
@@ -365,13 +366,29 @@ int buffer::append(const buffer& other, size_t data_len, Iter start)
     assert(current_chain != 0 && "current should not be nullptr");
 
     if(start_from_front)
-        push_back(buffer_chain{*current_chain, remain_to_copy});
+        append(buffer_chain{*current_chain, remain_to_copy});
     else
-        push_back(buffer_chain{*current_chain, remain_to_copy, &start_iter_in_current_chain});
+        append(buffer_chain{*current_chain, remain_to_copy, &start_iter_in_current_chain});
 
-    this->last_chain_with_data_ = &chains_.back();
     total_len_ += total_bytes_going_to_copy;
+    return total_bytes_going_to_copy;
 }
+
+int buffer::append(const buffer_chain &chain)
+{
+    auto* current_chain = expand_if_needed(chain.off_);
+    assert(current_chain->chain_free_space() >= chain.off_);
+    ::memcpy(last_chain_with_data_->buffer_, chain.buffer_, chain.off_);
+    current_chain->off_ += chain.off_;
+    last_chain_with_data_ = current_chain;
+    return chain.off_;
+}
+
+int buffer::append(const buffer_chain &&chain)
+{
+    return append(chain);
+}
+
 int buffer::append_printf(const char* fmt, ...)
 {
 

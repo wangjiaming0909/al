@@ -121,17 +121,33 @@ void test_append_buffer()
     buffer buf2{};
     buf2.append(SizableClass<64>());
     assert(buf2.buffer_length() == 64);
-    buf2.append(buf1, 64, buf1.begin());
+    //capacity: 1024 and off_: 64 and add 64bytes
+    buf2.append(buf1, 64, buf1.begin());//here append will append 64 bytes into the first chain in buf2, won't new a chain and append behind
     assert(buf2.buffer_length() == 64 * 2);
+    assert(buf2.get_chains().size() == 1);
 
     buf1.append(SizableClass<4>());
     assert(buf1.buffer_length() == (64 + 4));
 
-    buf2.append(buf1, 4, buf1.begin() + 64);
-    assert(buf2.buffer_length() == buf2.buffer_length());
+    //capacity: 1024, off_: 128 and add 4 bytes
+    size_t length = buf2.buffer_length();
+    buf2.append(buf1, 4, buf1.begin() + 64); //the same as the first append
+    assert(buf2.buffer_length() == length + 4);
+    assert(buf2.get_chains().size() == 1);
 
     int ret = memcmp(buf1.last_chain_with_data()->get_buffer(), buf2.last_chain_with_data()->get_buffer(), buf2.buffer_length());
     assert(ret == 0);
+
+    buffer buf3{};
+    buf3.append(SizableClass<850>());
+    length = buf2.buffer_length();
+    buf2.append(buf3, buf3.buffer_length(), buf3.begin());
+    assert(buf2.buffer_length() == length + 850);
+
+    length = buf2.buffer_length();
+    buf2.append(buf1, buf1.buffer_length(), buf1.begin());
+    assert(buf2.buffer_length() == length + buf1.buffer_length());
+    assert(buf2.get_chains().size() == 2);
 }
 
 void test_buffer_begin_end()

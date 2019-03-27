@@ -149,7 +149,11 @@ public:
     // int append(const buffer& other, size_t data_len);
     //append {data_len} bytes from other, start from {start}
     int append(const buffer& other, size_t data_len, Iter start);
-    int append_printf(const char* fmt, ...);
+    //append a whole chain into the buffer
+    //it could resize the last_chain_with_data due to the memory allocation strategy
+    int append(const buffer_chain &chain);
+    int append(const buffer_chain &&chain);
+    int append_printf(const char *fmt, ...);
     int append_vprintf(const char* fmt, va_list ap);
 
     template <typename T>
@@ -157,6 +161,7 @@ public:
     // int prepend(const buffer& other, size_t data_len);
     //prepend {data_len} bytes from other, start from {start}
     int prepend(const buffer& other, size_t data_len, Iter start);
+
 
     //"linearizes" the first size bytes of this, to ensure that they are all contiguous and occupying the same chunk of memory
     //if size is negative, the function lineratizes the entire buffer
