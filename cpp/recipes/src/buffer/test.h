@@ -65,10 +65,10 @@ void test_construct_and_append_buffer(){
     buffer buf4{buf, 1024, it};
     assert(buf4.buffer_length() == 1024);
     auto&& iter_in_buf4 = buf4.begin();
-    char* data = static_cast<char*>(iter_in_buf4.chain().get_buffer());
-    int* int_2 = reinterpret_cast<int*>(data);
+    const char* data = static_cast<const char*>(iter_in_buf4.chain().get_buffer());
+    const int* int_2 = reinterpret_cast<const int*>(data);
     assert(*int_2 == 2);
-    char* char_2 = reinterpret_cast<char*>(data + 4);
+    const char* char_2 = reinterpret_cast<const char*>(data + 4);
     char* actual = "abcd";
     for(int i = 0; i < strlen(char_2); i++)
     {
@@ -121,13 +121,13 @@ void test_append_buffer()
     buffer buf2{};
     buf2.append(SizableClass<64>());
     assert(buf2.buffer_length() == 64);
-    buf2.append(buf1, 64);
+    buf2.append(buf1, 64, buf1.begin());
     assert(buf2.buffer_length() == 64 * 2);
 
     buf1.append(SizableClass<4>());
     assert(buf1.buffer_length() == (64 + 4));
 
-    buf2.append(buf1, 4, &(buf1.begin() + 64));
+    buf2.append(buf1, 4, buf1.begin() + 64);
     assert(buf2.buffer_length() == buf2.buffer_length());
 
     int ret = memcmp(buf1.last_chain_with_data()->get_buffer(), buf2.last_chain_with_data()->get_buffer(), buf2.buffer_length());
@@ -142,5 +142,6 @@ void test_buffer_begin_end()
 void run_tests(){
     test_construct_and_append_buffer();
     test_operator_equal();
+    test_append_buffer();
 }
 }

@@ -32,15 +32,15 @@ class buffer_iter{
     friend class buffer_chain;
 protected:
     buffer_iter(
-        buffer* buffer_ptr, 
-        buffer_chain* chain, 
+        const buffer* buffer_ptr, 
+        const buffer_chain* chain, 
         size_t offset_of_buffer, 
         size_t chain_number, 
         size_t offset_of_chain);
     
+public:
     buffer_iter(const buffer_iter& other) = default;
     buffer_iter& operator=(const buffer_iter& other) = default;
-public:
     //the position from the start of buffer
     size_t offset() const {return offset_of_chain_;}
     const buffer* get_buffer() const {return buffer_;}
@@ -51,16 +51,16 @@ public:
     //{forward_step} can't be negative
     //如果向前forward 这么多之后，已经超出了整个buffer 现存的所有数据的iter, 返回最后的iter, 即back()
     buffer_iter& operator+(size_t forward_steps);
-    buffer_chain& chain() {return *chain_;}
+    const buffer_chain& chain() {return *chain_;}
 
 public:
     static const buffer_iter NULL_ITER;
 private:
-    buffer*             buffer_;
+    const buffer*             buffer_;
     size_t              offset_of_buffer_;
     size_t              chain_number_;
     size_t              offset_of_chain_;
-    buffer_chain*       chain_;
+    const buffer_chain*       chain_;
 };
 
 struct buffer_iovec{
@@ -93,10 +93,10 @@ public:
     void set_next_chain(buffer_chain* next) {next_ = next;}
     buffer_chain* next() { return next_; }
     const buffer_chain* next() const {return next_;}
-    Iter begin();
-    Iter end();
+    Iter begin() const ;
+    Iter end() const ;
 
-private:
+  private:
     // 内存分配策略: precondition(given_capacity > 0)
     //    如果capacity > MAXIMUM_CHAIN_SIZE / 2, 直接分配内存
     //    如果capacity < MAXIMUM_CHAIN_SIZE / 2, 那么以 1024 的2 的幂次倍递增
@@ -148,7 +148,7 @@ public:
     int append(const T& data);
     // int append(const buffer& other, size_t data_len);
     //append {data_len} bytes from other, start from {start}
-    int append(const buffer& other, size_t data_len, const Iter* start = 0);
+    int append(const buffer& other, size_t data_len, Iter start);
     int append_printf(const char* fmt, ...);
     int append_vprintf(const char* fmt, va_list ap);
 
@@ -156,7 +156,7 @@ public:
     int prepend(const T& data);
     // int prepend(const buffer& other, size_t data_len);
     //prepend {data_len} bytes from other, start from {start}
-    int prepend(const buffer& other, size_t data_len, const Iter* start = 0);
+    int prepend(const buffer& other, size_t data_len, Iter start);
 
     //"linearizes" the first size bytes of this, to ensure that they are all contiguous and occupying the same chunk of memory
     //if size is negative, the function lineratizes the entire buffer
@@ -184,7 +184,7 @@ public:
     //inspecting data without cpoying, returns bytes that returned
     int peek(std::vector<const buffer_iovec*> vec_out, size_t len, const Iter* start = 0);
 
-    buffer_chain* last_chain_with_data() { return last_chain_with_data_; }
+    const buffer_chain* last_chain_with_data() const { return last_chain_with_data_; }
     bool is_last_chain_with_data(const buffer_chain* current_chain) const;
     size_t total_len() const { return total_len_; }
     size_t chain_number() const {return this->chains_.size();}
