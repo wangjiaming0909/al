@@ -94,18 +94,18 @@ buffer_chain::buffer_chain(buffer_chain&& other)
 }
 
 //// other 原来是什么样，复制后的对象也是什么样，capacity, misalign的大小都是一样的
-buffer_chain::buffer_chain(const buffer_chain& other)
-{
-    capacity_ = calculate_actual_capacity(other.size());
-    buffer_ = ::calloc(capacity_, 1);
-    assert(buffer_ != nullptr && ("new operator error size: " + capacity_));
+// buffer_chain::buffer_chain(const buffer_chain& other)
+// {
+//     capacity_ = calculate_actual_capacity(other.size());
+//     buffer_ = ::calloc(capacity_, 1);
+//     assert(buffer_ != nullptr && ("new operator error size: " + capacity_));
 
-    ::memcpy(buffer_, other.buffer_ + other.misalign_, other.size());
-    misalign_ = 0;
-    next_ = other.next_;
-    off_ = other.size();
-    parent_ = other.parent_;
-}
+//     ::memcpy(buffer_, other.buffer_ + other.misalign_, other.size());
+//     misalign_ = 0;
+//     next_ = other.next_;
+//     off_ = other.size();
+//     parent_ = other.parent_;
+// }
 
 buffer_chain::buffer_chain(const buffer_chain& other, size_t data_len, Iter start)
 {
