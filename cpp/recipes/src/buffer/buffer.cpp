@@ -412,7 +412,16 @@ int buffer::prepend(const buffer& other, size_t data_len, Iter start)
 
 unsigned char* buffer::pullup(size_t size)
 {
+    //如果size 比 total_len_ 大, 那么将不能保证第一个node可以达到size的大小,因此返回nullptr
+    if(size == 0 || size > total_len_)
+        return nullptr;
 
+    if(size < 0) //传递负值,表示全部align到第一个节点
+        size = total_len_;
+
+    buffer_chain& fisrt_chain = chains_.front();
+    //如果第一个chain的大小已经满足size了,那么直接返回
+    // if(fisrt_chain.)
 }
 
 int buffer::remove(/*out*/void* data, size_t data_len)
