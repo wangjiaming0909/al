@@ -74,6 +74,7 @@ public:
     using Iter = buffer_iter;
     buffer_chain(buffer* parent = 0, size_t capacity = DEFAULT_CHAIN_SIZE);
     ~buffer_chain();
+    //copy data from other, align the data when copying, and the capacity will be the same as other
     buffer_chain(const buffer_chain& other);
     buffer_chain(const buffer_chain& other, size_t data_len, Iter start);
     buffer_chain(buffer_chain&& other);
