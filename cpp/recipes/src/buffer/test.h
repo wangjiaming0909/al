@@ -31,6 +31,36 @@ struct SizableClass{
     char buffer_[N];
 };
 
+void test_buffer_chain_constructor()
+{
+    buffer buf1{};
+    buf1.append(SizableClass<64>());
+    const buffer_chain& chain1 = buf1.get_chains().front();
+    buffer_chain chain2{chain1};
+    assert(chain2.next() == 0);
+    assert(chain2.size() == 64);
+    assert(chain2.get_offset() == 64);
+    int ret = chain2.set_misalign(4);
+    assert(ret == 4);
+    assert(chain2.size() == 64 - 4);
+
+    //copy constructor
+
+    // buffer_chain chain3{chain2, 16, chain2.begin()};
+    // assert(chain3.get_misalign() == 4);
+    // assert(chain3.size() == 64 - 4);
+    //expceted exception
+    try {//iter不是chain2的iter
+        buffer_chain chain4{chain2, 16, chain1.begin()};
+    }catch(std::exception& e){}
+
+    try {//iter达到末尾了,没有可以复制的内容了
+        buffer_chain chain4{chain2, 16, chain2.end() + 1};
+    }catch(std::exception& e){}
+    //TODO 没有测到iter在misalign_之前时的情况, 因为好像不能获得这个iter
+    
+}
+
 void test_construct_and_append_buffer(){
     buffer buf{};
     assert(buf.buffer_length() == 0);
@@ -159,5 +189,6 @@ void run_tests(){
     test_construct_and_append_buffer();
     test_operator_equal();
     test_append_buffer();
+    // test_buffer_chain_constructor();
 }
 }

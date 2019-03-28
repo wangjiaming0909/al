@@ -75,7 +75,7 @@ public:
     buffer_chain(buffer* parent = 0, size_t capacity = DEFAULT_CHAIN_SIZE);
     ~buffer_chain();
     buffer_chain(const buffer_chain& other);
-    buffer_chain(const buffer_chain& other, size_t data_len, const Iter* start = 0);
+    buffer_chain(const buffer_chain& other, size_t data_len, Iter start);
     buffer_chain(buffer_chain&& other);
     //* note that if(this->capacity_ > other.capacity_), 
     //* this function will not change the capacity of this
@@ -87,6 +87,16 @@ public:
     template <typename T>
     int append(const T& data);
 
+#ifdef TESTING
+public:
+    size_t get_misalign()const {return misalign_;}
+    int set_misalign(size_t misalign) 
+    {
+        if(misalign < misalign_ || misalign > off_) return -1;
+        misalign_ = misalign;
+        return misalign_;
+    }
+#endif
 public:
     size_t chain_capacity() const { return capacity_; }
     void* get_buffer() { return buffer_; }
@@ -94,6 +104,7 @@ public:
     void set_next_chain(buffer_chain* next) {next_ = next;}
     buffer_chain* next() { return next_; }
     const buffer_chain* next() const {return next_;}
+    //begin will return the first byte in chain(beyond the misalign_)
     Iter begin() const ;
     Iter end() const ;
 
@@ -139,7 +150,7 @@ public:
     //* return number of bytes stored in the first chunk
     size_t first_chain_length();
 
-    //begin and end 只是第一个个最后一个的iter
+    //begin and end 只是第一个个最后一个的iter, (除去misalign)
     Iter begin();
     //end 不是 STL 中的最后一个的下一个, 只是最后一个
     Iter end();

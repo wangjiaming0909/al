@@ -1,4 +1,5 @@
 #include "buffer/buffer.h"
+#include <exception>
 
 
 buffer_iter::buffer_iter( const buffer* buffer_ptr
@@ -92,32 +93,41 @@ buffer_chain::buffer_chain(buffer_chain&& other)
     misalign_ = other.misalign_;
 }
 
-//other 原来是什么样，复制后的对象也是什么样，capacity, misalign的大小都是一样的
+//// other 原来是什么样，复制后的对象也是什么样，capacity, misalign的大小都是一样的
 //TODO align it??
 buffer_chain::buffer_chain(const buffer_chain& other)
 {
-    capacity_ = other.capacity_;
+    capacity_ = calculate_actual_capacity(other.size());
     buffer_ = ::calloc(capacity_, 1);
     assert(buffer_ != nullptr && ("new operator error size: " + capacity_));
 
-    ::memcpy(this->buffer_, other.buffer_, other.off_);
+    ::memcpy(this->buffer_, other.buffer_ + other.misalign_, other.size());
+    misalign_ = 0;
     next_ = other.next_;
-    off_ = other.off_;
+    off_ = other.size();
     parent_ = other.parent_;
-    misalign_ = other.misalign_;
 }
 
-buffer_chain::buffer_chain(const buffer_chain& other, size_t data_len, const Iter* start)
+buffer_chain::buffer_chain(const buffer_chain& other, size_t data_len, Iter start)
 {
-    //TODO validating start??? is start before other?
-    //TODO add misalign_
-    if(data_len > (other.off_ - (start ? start->offset_of_chain_ : 0)))
+    //check if start is in the chain {other}, and within the range of other
+    if(start.chain_ != &other 
+        || start.offset_of_chain_ >= other.off_
+        || start.offset_of_chain_ < other.misalign_) //TODO < or <= 
     {
+        throw std::exception();
+    }
+    //TODO add misalign_
+
+    //想要拷贝的字节数大于现有的字节数(现有是指从chain的最后到iter, 不是chain.size())
+    if(data_len > (other.off_ - start.offset_of_chain_))
+    {
+        //TODO 貌似不正确
         ::new(this)buffer_chain{other}; return;
     }
 
     ::new(this)buffer_chain(other.parent_, data_len);
-    memcpy(this->buffer_, other.buffer_ + (start ? start->offset_of_chain_ : 0), data_len);
+    memcpy(this->buffer_, other.buffer_ + start.offset_of_chain_, data_len);
     this->next_ = other.next_;
     this->off_ = data_len;
 }
@@ -148,7 +158,7 @@ int buffer_chain::set_offset(size_t offset)
 
 buffer_chain::Iter buffer_chain::begin() const
 {
-    return Iter{this->parent_, this, this->parent_->iter_of_chain(*this).offset_of_buffer_, 0, 0};
+    return Iter{this->parent_, this, this->parent_->iter_of_chain(*this).offset_of_buffer_, 0, misalign_};
 }
 
 buffer_chain::Iter buffer_chain::end() const
@@ -219,7 +229,7 @@ buffer::buffer(const buffer& other, size_t data_len)
 
     //get to the last_chain_with_data or current_chain can cover remain_to_copy
     //even it is the last_chain_with_data, it can also cover the remain_to_copy
-    buffer_chain last_chain{*current_chain, remain_to_copy};
+    buffer_chain last_chain{*current_chain, remain_to_copy, current_chain->begin()};
     push_back(last_chain);
     //update {next chain} of 倒数第二个 chain, 因为刚刚新添加一个chain
     if(last_chain_with_data_)
@@ -245,7 +255,7 @@ buffer::buffer(const buffer& other, size_t data_len, const Iter* start)
     while(  !other.is_last_chain_with_data(current_chain) && 
             bytes_can_copy_in_current_chain < remain_to_copy)
     {
-        push_back(buffer_chain{*current_chain, bytes_can_copy_in_current_chain, &start_iter_in_current_chain});
+        push_back(buffer_chain{*current_chain, bytes_can_copy_in_current_chain, start_iter_in_current_chain});
 
         this->last_chain_with_data_ = &chains_.back();
 
@@ -260,9 +270,9 @@ buffer::buffer(const buffer& other, size_t data_len, const Iter* start)
     assert(current_chain != 0 && "current should not be nullptr");
 
     if(start_from_front)
-        push_back(buffer_chain{*current_chain, remain_to_copy});
+        push_back(buffer_chain{*current_chain, remain_to_copy, current_chain->begin()});
     else
-        push_back(buffer_chain{*current_chain, remain_to_copy, &start_iter_in_current_chain});
+        push_back(buffer_chain{*current_chain, remain_to_copy, start_iter_in_current_chain});
 
     this->last_chain_with_data_ = &chains_.back();
     total_len_ = data_len;
@@ -293,7 +303,7 @@ buffer_chain* buffer::push_back(const buffer_chain& chain)
 
 buffer::Iter buffer::begin()
 {
-    return Iter{this, &(this->chains_.front()), 0, 0, 0};
+    return Iter{this, &(this->chains_.front()), 0, 0, this->chains_.front().misalign_};
 }
 
 buffer::Iter buffer::end()
@@ -357,7 +367,7 @@ int buffer::append(const buffer& other, size_t data_len, Iter start)
     while(  !other.is_last_chain_with_data(current_chain) && 
             bytes_can_copy_in_current_chain < remain_to_copy)
     {
-        append(buffer_chain{*current_chain, bytes_can_copy_in_current_chain, &start_iter_in_current_chain});
+        append(buffer_chain{*current_chain, bytes_can_copy_in_current_chain, start_iter_in_current_chain});
 
         this->last_chain_with_data_ = &chains_.back();
         total_len_ += bytes_can_copy_in_current_chain;
@@ -373,9 +383,9 @@ int buffer::append(const buffer& other, size_t data_len, Iter start)
     assert(current_chain != 0 && "current should not be nullptr");
 
     if(start_from_front)
-        append(buffer_chain{*current_chain, remain_to_copy});
+        append(buffer_chain{*current_chain, remain_to_copy, current_chain->begin()});
     else
-        append(buffer_chain{*current_chain, remain_to_copy, &start_iter_in_current_chain});
+        append(buffer_chain{*current_chain, remain_to_copy, start_iter_in_current_chain});
 
     total_len_ += total_bytes_going_to_copy;
     return total_bytes_going_to_copy;
