@@ -240,6 +240,7 @@ buffer::buffer(const buffer& other, size_t data_len)
 
 buffer::buffer(const buffer& other, size_t data_len, const Iter* start)
 {
+    //TODO vcalidate start
     if(start == 0 || !other.validate_iter(*start) || data_len == 0 || other.total_len_ == 0) 
     {
         ::new(this)buffer{}; return;
@@ -544,11 +545,12 @@ buffer_chain* buffer::expand_if_needed(size_t data_len)
         //now we can resize lc 
         size_t length_needed = lc->get_offset() + data_len;
         buffer_chain chain_newed{this, length_needed};
-        chain_newed = *lc;
+        //! lc 一定是最后一个chain么?? 为什么pop_back()
+        chain_newed = *lc;//copy from lc into chain_newed
         chains_.pop_back();
-        //pop_back 之后，取得最后一一个chain, 再将现在的最后一个chain 的next 设置为之后加入的新chain
-        push_back(chain_newed);
-        last_chain_with_data_ = &chains_.back();
+        //pop_back 之后，取得最后一个chain, 再将现在的最后一个chain 的next 设置为之后加入的新chain
+        last_chain_with_data_ = push_back(std::move(chain_newed));
+        // last_chain_with_data_ = &chains_.back();
     }
     return &chains_.back();
 }
