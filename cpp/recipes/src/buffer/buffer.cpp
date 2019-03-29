@@ -399,7 +399,8 @@ int buffer::append(const buffer& other, size_t data_len, Iter start)
     while(  !other.is_last_chain_with_data(current_chain) && 
             bytes_can_copy_in_current_chain < remain_to_copy)
     {
-        append(buffer_chain{*current_chain, bytes_can_copy_in_current_chain, start_iter_in_current_chain});
+        buffer_chain _chain{*current_chain, bytes_can_copy_in_current_chain, start_iter_in_current_chain};
+        append(_chain);
 
         this->last_chain_with_data_ = &chains_.back();
         total_len_ += bytes_can_copy_in_current_chain;
@@ -433,6 +434,7 @@ int buffer::append(const buffer_chain &chain)//TODO copy too much
 {
     auto* current_chain = expand_if_needed(chain.size());
     assert(current_chain->chain_free_space() >= chain.size());
+    //TODO check if that current_chain is the same as last_chain_with_data
     ::memcpy(current_chain->buffer_ + last_chain_with_data_->off_, chain.buffer_ + chain.misalign_, chain.size());
     current_chain->off_ += chain.size();
     last_chain_with_data_ = current_chain;
@@ -582,7 +584,8 @@ buffer_chain* buffer::expand_if_needed(size_t data_len)
         } else {
             //要么是根本不存在next, 要么是next 不够(虽然是空的)
             free_trailing_empty_chains();
-            push_back(buffer_chain{this, data_len});
+            buffer_chain _chain{this, data_len};
+            push_back(_chain);
         }
     } else {
         //now we can resize lc 
