@@ -87,6 +87,9 @@ public:
     size_t chain_free_space() const {return capacity_ - off_;}
     template <typename T>
     int append(const T& data);
+    //chain.size 必须要小于this 的free space
+    size_t append(const buffer_chain& chain);
+    size_t append(const buffer_chain& chain, size_t len, Iter start);
 
 #ifdef TESTING
 public:
@@ -109,6 +112,16 @@ public:
     Iter begin() const ;
     Iter end() const ;
     bool validate_iter(Iter it) const ;
+    bool operator==(const buffer_chain& other) const
+    {
+        return buffer_ == other.buffer_ &&
+                    capacity_ == other.capacity_ &&
+                    ::strncmp(static_cast<const char*>(buffer_), static_cast<const char*>(other.buffer_), capacity_) == 0 &&
+                    off_ == other.off_ &&
+                    next_ == other.next_ &&
+                    parent_ == other.parent_ &&
+                    misalign_ == other.misalign_;
+    }
 
   private:
     // 内存分配策略: precondition(given_capacity > 0)

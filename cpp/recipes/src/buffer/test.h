@@ -180,11 +180,6 @@ void test_append_buffer()
     assert(buf2.get_chains().size() == 2);
 }
 
-void test_buffer_begin_end()
-{
-
-}
-
 void test_buffer_append_chain()
 {
     buffer buf1{};
@@ -202,11 +197,49 @@ void test_buffer_append_chain()
     assert(buf1.chain_number() == 2);
 }
 
+void test_pullup()
+{
+    const size_t default_size = buffer_chain::DEFAULT_CHAIN_SIZE;
+    buffer buf1{};
+    buf1.append(SizableClass<default_size - 1>());
+    const auto* first_chain = &buf1.get_chains().front();
+    const auto* next_chain = first_chain->next();
+    assert(first_chain->chain_capacity() == default_size);
+    assert(buf1.buffer_length() == default_size - 1);
+    assert(buf1.chain_number() == 1);
+    buf1.append(1);
+    assert(buf1.buffer_length() == default_size - 1 + sizeof (int));
+    assert(buf1.chain_number() == 2);
+
+    //the existed data in first chain is enough
+    auto* p = buf1.pullup(default_size - 1);
+    first_chain = &buf1.get_chains().front();
+    next_chain = first_chain->next();
+    assert(first_chain->chain_capacity() == default_size);
+    assert(buf1.buffer_length() == default_size - 1 + sizeof (int));
+    assert(buf1.chain_number() == 2);
+    assert(p == first_chain->get_buffer());
+    assert(::memcmp(p, first_chain->get_buffer(), first_chain->chain_capacity()) == 0);
+
+    //the existed data in first chain is not enough, but the first chain is big enough
+    p = buf1.pullup(default_size);
+    //第一个chain已经满了
+    first_chain = &buf1.get_chains().front();
+    next_chain = first_chain->next();
+    assert(first_chain->get_misalign() == 0);
+    assert(first_chain->size() == first_chain->chain_capacity());
+    assert(first_chain->get_offset() == first_chain->chain_capacity());
+    //第二个chain的 misalign会向后移动一格
+    assert(next_chain->get_misalign() == 1);
+    assert(::memcmp(static_cast<const char*>(first_chain->get_buffer()) + default_size - 1, next_chain->get_buffer(), 1 ) == 0);
+}
+
 void run_tests(){
     test_construct_and_append_buffer();
     test_operator_equal();
     test_append_buffer();
     test_buffer_chain_constructor();
     test_buffer_append_chain();
+    test_pullup();
 }
 }

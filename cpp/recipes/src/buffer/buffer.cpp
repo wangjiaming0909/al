@@ -85,13 +85,18 @@ buffer_chain::~buffer_chain()
 buffer_chain::buffer_chain(buffer_chain&& other)
 {
     buffer_ = other.buffer_;
-    other.buffer_ = 0;
-
     capacity_ = other.capacity_;
     off_ = other.off_;
     next_ = other.next_;
     parent_ = other.parent_;
     misalign_ = other.misalign_;
+
+    other.buffer_ = 0;
+    other.capacity_ = 0;
+    other.off_ = 0;
+    other.next_ = 0;
+    other.parent_ = 0;
+    other.misalign_ = 0;
 }
 
 //// other 原来是什么样，复制后的对象也是什么样，capacity, misalign的大小都是一样的
@@ -150,7 +155,27 @@ buffer_chain& buffer_chain::operator= (const buffer_chain& other)
     misalign_ = 0;
 }
 
-bool buffer_chain::validate_iter(Iter it) const 
+size_t buffer_chain::append(const buffer_chain& chain)
+{
+    size_t size = chain.size();//防止自己append给自己，先记下size
+    if(size > chain_free_space()) return 0;
+    ::memcpy(buffer_ + off_, chain.buffer_ + chain.misalign_, size);
+    off_ += size;
+    return size;
+}
+
+size_t buffer_chain::append(const buffer_chain& chain, size_t len, Iter start)
+{
+    if(len > chain.size() || !chain.validate_iter(start) || len > chain.off_ - start.offset_of_chain_)
+    {
+        return 0;
+    }
+    ::memcpy(buffer_ + off_, chain.buffer_ + start.offset_of_chain_, len);
+    off_ += len;
+    return len;
+}
+
+bool buffer_chain::validate_iter(Iter it) const
 {
     if( it.chain_ != this || 
         it.offset_of_chain_ >= this->off_ || 
@@ -494,9 +519,49 @@ unsigned char* buffer::pullup(size_t size)
     if(size < 0) //传递负值,表示全部align到第一个节点
         size = total_len_;
 
-    buffer_chain& fisrt_chain = chains_.front();
+    buffer_chain* first_chain = &chains_.front();
     //如果第一个chain的大小已经满足size了,那么直接返回
-    // if(fisrt_chain.)
+    if(first_chain->size() >= size)
+        return static_cast<unsigned char*>(first_chain->buffer_ + first_chain->misalign_);
+
+    //第一个chain不够
+    size_t remain_to_pullup = size - first_chain->size();
+
+    //如果first_chain的free size可以塞下多出来的部分, 那么就可以不移动任何元素，直接拷贝多出来的部分
+    if(first_chain->chain_free_space() >= remain_to_pullup)
+    {
+//        buffer_chain& next_chain = *first_chain.next();
+//        ::memcpy(first_chain.off_, next_chain.buffer_ + next_chain.misalign_, remain_to_pullup);
+//        first_chain.off_ += remain_to_pullup;
+//        next_chain.misalign_ += remain_to_pullup;
+    }
+    else//并不能塞下多出来的部分,重新分配一个chain, 保证第一个chain size >= size
+    {
+        buffer_chain chain{this, size};
+        chain = *first_chain;//此处做了align, 设置了chain的next
+        chains_.pop_front();
+        chains_.push_front(std::move(chain));
+    }
+
+    first_chain = &chains_.front();
+    buffer_chain *current_chain = first_chain->next();
+    while(current_chain != 0 && remain_to_pullup >= current_chain->size())
+    {
+        first_chain->append(*current_chain);
+        first_chain->next_ = current_chain->next_;
+        chains_.erase(chains_.begin()++);
+        current_chain = first_chain->next_;
+    }
+
+    //current_chain == 0 或者 只需要 current_chain 中的一部分
+    if(remain_to_pullup != 0)//还有一部分需要拷贝
+    {
+        first_chain->append(*current_chain, remain_to_pullup, current_chain->begin());
+        current_chain->misalign_ += remain_to_pullup;
+    }
+
+    last_chain_with_data_ = current_chain ? current_chain : first_chain;
+    return static_cast<unsigned char*>(first_chain->buffer_ + first_chain->misalign_);
 }
 
 int buffer::remove(/*out*/void* data, size_t data_len)
