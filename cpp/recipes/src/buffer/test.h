@@ -204,12 +204,18 @@ void test_pullup()
     buf1.append(SizableClass<default_size - 1>());
     const auto* first_chain = &buf1.get_chains().front();
     const auto* next_chain = first_chain->next();
+    assert(next_chain == 0);
     assert(first_chain->chain_capacity() == default_size);
     assert(buf1.buffer_length() == default_size - 1);
     assert(buf1.chain_number() == 1);
+    assert(buf1.last_chain_with_data() == first_chain);
     buf1.append(1);
+    next_chain = first_chain->next();
     assert(buf1.buffer_length() == default_size - 1 + sizeof (int));
     assert(buf1.chain_number() == 2);
+    assert(next_chain != 0);
+    assert(next_chain->size() == sizeof (int));
+    assert(buf1.last_chain_with_data() == next_chain);
 
     //the existed data in first chain is enough
     auto* p = buf1.pullup(default_size - 1);
@@ -222,9 +228,10 @@ void test_pullup()
     assert(::memcmp(p, first_chain->get_buffer(), first_chain->chain_capacity()) == 0);
 
     //the existed data in first chain is not enough, but the first chain is big enough
-    p = buf1.pullup(default_size);
+    buffer buf2 = buf1;
+    p = buf2.pullup(default_size);
     //第一个chain已经满了
-    first_chain = &buf1.get_chains().front();
+    first_chain = &buf2.get_chains().front();
     next_chain = first_chain->next();
     assert(first_chain->get_misalign() == 0);
     assert(first_chain->size() == first_chain->chain_capacity());
@@ -232,6 +239,15 @@ void test_pullup()
     //第二个chain的 misalign会向后移动一格
     assert(next_chain->get_misalign() == 1);
     assert(::memcmp(static_cast<const char*>(first_chain->get_buffer()) + default_size - 1, next_chain->get_buffer(), 1 ) == 0);
+
+    //the first chain is not enough, keep the next chain, remain one byte in the next chain
+    buffer buf3 = buf1;
+    p = buf3.pullup(default_size + sizeof (int) - 1);
+    first_chain = &buf1.get_chains().front();
+    next_chain = first_chain->next();
+    assert(first_chain->chain_capacity() >= default_size + sizeof (int) - 1);
+    assert(next_chain->size() == 1);
+    assert(next_chain->get_misalign() == sizeof (int) - 1);
 }
 
 void run_tests(){

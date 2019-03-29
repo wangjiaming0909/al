@@ -231,6 +231,7 @@ buffer::buffer()
 buffer::buffer(const buffer& other) : chains_(), last_chain_with_data_(0), total_len_(0)
 {
     this->chains_ = other.chains_;
+    //TODO every chain's next is not right
     update_last_chain_with_data(other);
     this->total_len_ = other.total_len_;
 }
