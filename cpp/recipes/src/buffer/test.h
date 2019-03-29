@@ -91,8 +91,8 @@ void test_construct_and_append_buffer(){
 
     //copy constructor
     buffer_iter&& iter = buf.begin();
-    auto* it = &(iter + 4);
-    buffer buf4{buf, 1024, it};
+    // auto* it = &(iter + 4);
+    buffer buf4{buf, 1024, iter + 4};
     assert(buf4.buffer_length() == 1024);
     auto&& iter_in_buf4 = buf4.begin();
     const char* data = static_cast<const char*>(iter_in_buf4.chain().get_buffer());
@@ -124,7 +124,7 @@ void test_construct_and_append_buffer(){
     assert(chains.front().next() == &chains.back());
     assert(buf.buffer_length() == (length + 900 + 100 + 1024));
 
-    buffer buf5{buf, buf.buffer_length() - 100, &(buf.begin() + 24)};
+    buffer buf5{buf, buf.buffer_length() - 100, buf.begin() + 24};
     assert(buf5.buffer_length() == (buf.buffer_length() - 100));
     assert(buf5.chain_number() == 2);
     const auto& first_chain_of_buf5 = buf5.get_chains().front();
@@ -185,10 +185,28 @@ void test_buffer_begin_end()
 
 }
 
+void test_buffer_append_chain()
+{
+    buffer buf1{};
+    buf1.append(SizableClass<1023>());
+    assert(buf1.buffer_length() == 1023);
+    assert(buf1.chain_number() == 1);
+    buf1.append(SizableClass<4>());
+    assert(buf1.buffer_length() == 1023 + 4);
+    assert(buf1.chain_number() == 2);
+
+    const buffer_chain& chain1 = buf1.get_chains().back();
+    assert(chain1.size() == 4);
+    buf1.append(chain1);
+    assert(buf1.buffer_length() == 1023 + 4 + 4);
+    assert(buf1.chain_number() == 2);
+}
+
 void run_tests(){
     test_construct_and_append_buffer();
     test_operator_equal();
     test_append_buffer();
-    // test_buffer_chain_constructor();
+    test_buffer_chain_constructor();
+    test_buffer_append_chain();
 }
 }

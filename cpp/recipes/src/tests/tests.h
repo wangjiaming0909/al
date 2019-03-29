@@ -1,6 +1,7 @@
 #include <iostream>
 #include <functional>
 #include <string>
+#include <vector>
 using namespace std;
 using namespace placeholders;
 
@@ -51,4 +52,8 @@ void test_bind()
     auto bind_func4 = std::bind(function3, std::ref(s), 1);
     bind_func4();
     cout << "S: " << s << endl;
+    std::vector<int> v{};
+    v.push_back(1);
+    v.emplace_back(2);
 }
+

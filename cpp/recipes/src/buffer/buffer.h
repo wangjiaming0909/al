@@ -79,7 +79,7 @@ public:
     buffer_chain(const buffer_chain& other, size_t data_len, Iter start);
     buffer_chain(buffer_chain&& other);
     //* note that if(this->capacity_ > other.capacity_), 
-    //* this function will not change the capacity of this
+    //* this function only would expand the capacity_ won't shrink 
     buffer_chain& operator= (const buffer_chain& other);
     int set_offset(size_t offset);
     size_t get_offset() const {return off_;}
@@ -108,6 +108,7 @@ public:
     //begin will return the first byte in chain(beyond the misalign_)
     Iter begin() const ;
     Iter end() const ;
+    bool validate_iter(Iter it) const ;
 
   private:
     // 内存分配策略: precondition(given_capacity > 0)
@@ -138,11 +139,11 @@ public:
     buffer();
     ~buffer() = default;
     buffer(const buffer& other);
-    buffer(const buffer&& other);
+    buffer(buffer&& other);
     //copy {data_len} data to {this} from {other}
     buffer(const buffer& other, size_t data_len);
     //copy {data_len} data to {this} from {start} to {start + data_len} in {other}
-    buffer(const buffer& other, size_t data_len, const Iter* start = 0);
+    buffer(const buffer& other, size_t data_len, Iter start);
     buffer& operator=(const buffer& other);
 
 public:
@@ -166,7 +167,7 @@ public:
     //append a whole chain into the buffer
     //it could resize the last_chain_with_data due to the memory allocation strategy
     int append(const buffer_chain &chain);
-    int append(const buffer_chain &&chain);
+    int append(buffer_chain &&chain);
     int append_printf(const char *fmt, ...);
     int append_vprintf(const char* fmt, va_list ap);
 
@@ -209,7 +210,7 @@ public:
     size_t chain_number() const {return this->chains_.size();}
 
 private:
-    buffer_chain* push_back(const buffer_chain&& chain);
+    buffer_chain* push_back(buffer_chain&& chain);
     buffer_chain* push_back(const buffer_chain& chain);
     //validate {iter}, if {iter} is in current {chain_}, return true, otherwise return false
     bool validate_iter(const Iter& iter) const ;
