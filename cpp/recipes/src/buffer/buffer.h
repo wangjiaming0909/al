@@ -159,6 +159,7 @@ public:
     Iter iter_of_chain(const buffer_chain& chain);
 
     //* add the data to the end of the buffer
+    //will change the total_len_
     template <typename T>
     int append(const T& data);
     // int append(const buffer& other, size_t data_len);
@@ -166,6 +167,7 @@ public:
     int append(const buffer& other, size_t data_len, Iter start);
     //append a whole chain into the buffer
     //it could resize the last_chain_with_data due to the memory allocation strategy
+    //will change the total_len_
     int append(const buffer_chain &chain);
     int append(buffer_chain &&chain);
     int append_printf(const char *fmt, ...);

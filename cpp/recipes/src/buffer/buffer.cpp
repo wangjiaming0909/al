@@ -203,14 +203,14 @@ buffer::buffer()
 
 }
 
-buffer::buffer(const buffer& other)
+buffer::buffer(const buffer& other) : chains_(), last_chain_with_data_(0), total_len_(0)
 {
     this->chains_ = other.chains_;
     update_last_chain_with_data(other);
     this->total_len_ = other.total_len_;
 }
 
-buffer::buffer(const buffer& other, size_t data_len) 
+buffer::buffer(const buffer& other, size_t data_len) : chains_(), last_chain_with_data_(0), total_len_(0)
 {
     if(other.total_len_ == 0 || data_len == 0) 
     {
@@ -247,7 +247,7 @@ buffer::buffer(const buffer& other, size_t data_len)
     total_len_ = data_len;
 }
 
-buffer::buffer(const buffer& other, size_t data_len, Iter start)
+buffer::buffer(const buffer& other, size_t data_len, Iter start) : chains_(), last_chain_with_data_(0), total_len_(0)
 {
     if(!other.validate_iter(start) || data_len == 0 || other.total_len_ == 0) 
     {
@@ -404,7 +404,7 @@ int buffer::append(const buffer& other, size_t data_len, Iter start)
         append(_chain);
 
         this->last_chain_with_data_ = &chains_.back();
-        total_len_ += bytes_can_copy_in_current_chain;
+//        total_len_ += bytes_can_copy_in_current_chain;
 
         remain_to_copy -= bytes_can_copy_in_current_chain;
         current_chain = current_chain->next();
@@ -427,7 +427,7 @@ int buffer::append(const buffer& other, size_t data_len, Iter start)
         append(_chain);
     }
 
-    total_len_ += total_bytes_going_to_copy;
+//    total_len_ += total_bytes_going_to_copy;
     return total_bytes_going_to_copy;
 }
 
@@ -450,6 +450,7 @@ int buffer::append(const buffer_chain &chain)//TODO copy too much
 
     current_chain->off_ += size;
     last_chain_with_data_ = current_chain;
+    total_len_ += size;
     return size;
 }
 
@@ -624,7 +625,7 @@ buffer_chain* buffer::free_trailing_empty_chains()
 {
     buffer_chain* chain = last_chain_with_data_;
     //no data at all
-    if(chain == 0)
+    if(chain == 0 && chains_.size() == 0)
     {
         chains_.clear(); return 0;
     }
