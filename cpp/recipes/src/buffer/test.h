@@ -368,6 +368,48 @@ void test_puppup_with_more_chains()
     assert(ret == 0);
 }
 
+void test_remove()
+{
+    buffer buf{};
+    buf.append(SizableClass<1023>());
+    buf.append(4);
+    buf.append(SizableClass<1010>());
+
+    //1, the first chain has enough data
+    buffer buf1 = buf;
+    assert(buf1.chain_number() == 2);
+    uint32_t data_len = 1024;
+    void* p = ::calloc(data_len, 1);
+    memset(p, 1, data_len);
+    buf1.remove(p, 10);
+    const buffer_chain* first_chain = &buf1.get_chains().front();
+    assert(first_chain->get_misalign() == 10);
+    for (size_t i = 0; i < 10; i++) {
+        assert(static_cast<char*>(p)[i] == '\0');
+    }
+    for (size_t i = 10; i < data_len; i++) {
+        assert(static_cast<char*>(p)[i] == 1);
+    }
+
+    //2, remove the first chain (size == first_chain->size())
+    buffer buf2 = buf;
+    memset(p, 1, data_len);
+    buf2.remove(p, 1023);
+    first_chain = &buf2.get_chains().front();//the first chain has changed, 第一个chain被删除了
+    assert(first_chain->size() == 1014);
+    assert(first_chain->get_misalign() == 0);
+    assert(buf2.chain_number() == 1);
+    for (size_t i = 0; i < 1023;i++) {
+        assert(static_cast<char*>(p)[i] == '\0');
+    }
+    for (size_t i = 1023; i < data_len; i++) {
+        assert(static_cast<char*>(p)[i] == 1);
+    }
+
+    //3, the first chain do not have enough data, the second chain has enough
+    //4, the first chain do not have enough data, the second chain do not have enough data either
+}
+
 void run_tests(){
     test_construct_and_append_buffer();
     test_operator_equal();
@@ -376,5 +418,6 @@ void run_tests(){
     test_buffer_append_chain();
     test_pullup();
     test_puppup_with_more_chains();
+    test_remove();
 }
 }

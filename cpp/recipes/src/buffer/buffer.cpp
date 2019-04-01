@@ -332,7 +332,7 @@ buffer_chain* buffer::push_back(buffer_chain&& chain)
     {
         auto& last_chain = chains_.back();
         chains_.push_back(std::move(chain));
-        last_chain.set_next_chain(&chains_.back());
+        last_chain.next_ = &chains_.back();
         chains_.back().set_next_chain(0);
     }
     return &chains_.back();
@@ -349,11 +349,29 @@ buffer_chain* buffer::push_back(const buffer_chain& chain)
     {
         auto& last_chain = chains_.back();
         chains_.push_back(chain);
-        last_chain.set_next_chain(&chains_.back());
+        last_chain.next_ = &chains_.back();
         chains_.back().set_next_chain(0);
     }
 
     return &chains_.back();
+}
+
+//同样的, push_front并不关心数据的问题， 仅仅是向chains的头部中添加一个chain
+buffer_chain* buffer::push_front(buffer_chain&& chain)
+{
+    buffer_chain* first_chain = chains_.size() == 0 ? 0 : &chains_.front();
+    chains_.push_front(std::move(chain));
+
+    chains_.front().next_ = first_chain;
+    return &chains_.front();
+}
+
+buffer_chain* buffer::push_front(buffer_chain& chain)
+{
+    buffer_chain* first_chain = chains_.size() == 0 ? 0 : &chains_.front();
+    chains_.push_front(chain);
+    chains_.front().next_ = first_chain;
+    return &chains_.front();
 }
 
 buffer::Iter buffer::begin()
@@ -458,7 +476,7 @@ int buffer::append(const buffer& other, size_t data_len, Iter start)
     return total_bytes_going_to_copy;
 }
 
-int buffer::append(const buffer_chain &chain)//TODO copy too much
+int64_t buffer::append(const buffer_chain &chain)//TODO copy too much
 {
     size_t size = chain.size();
     auto* current_chain = expand_if_needed(size);
@@ -481,7 +499,7 @@ int buffer::append(const buffer_chain &chain)//TODO copy too much
     return size;
 }
 
-int buffer::append(buffer_chain &&chain)
+int64_t buffer::append(buffer_chain &&chain)
 {
     if(last_chain_with_data_ != 0)
     {
@@ -498,11 +516,12 @@ int buffer::append(buffer_chain &&chain)
     return chains_.back().size();//!!
 }
 
-int buffer::append_printf(const char* fmt, ...)
+int64_t buffer::append_printf(const char* fmt, ...)
 {
 
 }
-int buffer::append_vprintf(const char* fmt, va_list ap)
+
+int64_t buffer::append_vprintf(const char* fmt, va_list ap)
 {
 
 }
@@ -567,7 +586,7 @@ unsigned char* buffer::pullup(int size)
     return static_cast<unsigned char*>(first_chain->get_start_buffer());
 }
 
-int buffer::remove(/*out*/void* data, size_t data_len)
+int64_t buffer::remove(/*out*/void* data, size_t data_len)
 {
     if(data == 0 || data_len == 0) return -1;
     //根本就没有数据 or 数据不够
@@ -597,39 +616,9 @@ int buffer::remove(/*out*/void* data, size_t data_len)
         ::memcpy(data + dest_start_pos, current_chain->get_start_buffer(), remain_to_remove);
         current_chain->misalign_ += remain_to_remove;
         total_len_ -= remain_to_remove;
+        break;
     }
-
-    while(remain_to_remove > 0 || current_chain != 0)
-    {
-        if(current_chain->size() <= remain_to_remove)
-        {
-            //remove this chain
-            remain_to_remove -= current_chain->size();
-            assert(last_chain_with_data_ != current_chain);
-            total_len_ -= current_chain->size();
-            chains_.pop_front();
-            current_chain = next_chain;
-            next_chain = current_chain->next();
-            continue;
-        }
-        //直到current_chain 已经达到了data_len 的长度
-        current_chain->misalign_ += remain_to_remove;
-        //如果正好使得 current_chain 空了
-        if(current_chain->misalign_ == current_chain->off_)
-        {
-
-        }
-    }
-//    //1, 如果first_chain 就已经可以给出数据了
-//    if(first_chain->size() >= data_len)
-//    {
-
-//    } else{
-//        //1, pullup
-//        //2, 直接找到需要删除的位置，从头删除到尾
-//    }
-//    ::memcpy(data, first_chain->buffer_ + first_chain->misalign_, data_len);
-//    //2, first_chain 不够
+    return data_len;
 }
 
 int buffer::drain(size_t len)
@@ -707,11 +696,11 @@ buffer_chain* buffer::expand_if_needed(size_t data_len)
     //TODO ERROR last_chain_with_data_ == 0并不代表没有chain，如果有几个空的chain，就可以直接使用，不需要新分配内存
     if(/*last_chain_with_data_ == 0*/ total_len_ == 0)
     {
-        free_trailing_empty_chains();//有可能出现buffer中只有空的chain, 此处是将其free 掉之后重新插入
+//        free_trailing_empty_chains();//有可能出现buffer中只有空的chain, 此处是将其free 掉之后重新插入
         //!! TODO 可以更加高效一点, 检查是否有空的chain，有就检查大小，如果可以塞得下，就直接使用，否则插入新的
         //! //也可以直接在前面插入新的，不free掉之后的内存，当之后往其中插入的时候，可以重复使用这部分内存
 //        assert(chains_.empty() && "chains_ should be empty");
-        push_back(buffer_chain{this, data_len});
+        push_front(buffer_chain{this, data_len});
         return &chains_.back();
     }
 

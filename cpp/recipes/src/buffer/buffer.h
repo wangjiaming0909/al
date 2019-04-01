@@ -34,7 +34,7 @@ protected:
     buffer_iter(
         const buffer* buffer_ptr, 
         const buffer_chain* chain, 
-        size_t offset_of_buffer, 
+        size_t offset_of_buffer,
         size_t chain_number, 
         size_t offset_of_chain);
     
@@ -183,10 +183,10 @@ public:
     //append a whole chain into the buffer
     //it could resize the last_chain_with_data due to the memory allocation strategy
     //will change the total_len_
-    int append(const buffer_chain &chain);
-    int append(buffer_chain &&chain);
-    int append_printf(const char *fmt, ...);
-    int append_vprintf(const char* fmt, va_list ap);
+    int64_t append(const buffer_chain &chain);
+    int64_t append(buffer_chain &&chain);
+    int64_t append_printf(const char *fmt, ...);
+    int64_t append_vprintf(const char* fmt, va_list ap);
 
     template <typename T>
     int prepend(const T& data);
@@ -205,7 +205,7 @@ public:
     //remove the first datalen bytes to the {data}
     //if total length is small than data_len, all data will be copied
     //error returns -1, success will return bytes that copied
-    int remove(/*out*/void* data, size_t data_len);
+    int64_t remove(/*out*/void* data, size_t data_len);
     //behave the same as remove but do not return the removed data, just remove the first {len} bytes
     int drain(size_t len);
     int copy_out_from(void* data, size_t data_len, const Iter* start = 0);
@@ -229,6 +229,8 @@ public:
 private:
     buffer_chain* push_back(buffer_chain&& chain);
     buffer_chain* push_back(const buffer_chain& chain);
+    buffer_chain* push_front(buffer_chain&& chain);
+    buffer_chain* push_front(buffer_chain& chain);
     //validate {iter}, if {iter} is in current {chain_}, return true, otherwise return false
     bool validate_iter(const Iter& iter) const ;
     buffer_chain& first() { return chains_.front(); }
