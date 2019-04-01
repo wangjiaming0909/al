@@ -33,7 +33,7 @@ buffer_iter& buffer_iter::operator+(size_t forward_steps)
         return *this;
     }
 
-    size_t forward_chain_numbers = -1;
+//    int forward_chain_numbers = -1;
     size_t steps_can_forward_in_current_chain = chain_->get_offset() - this->offset_of_chain_;
     assert(steps_can_forward_in_current_chain >= 0 && "offset of a chain should > offset_of_chain in buffer_iter");
     size_t remain_steps = forward_steps;
@@ -73,7 +73,7 @@ buffer_chain::buffer_chain(buffer* parent, size_t capacity)
 
     // buffer_ = static_cast<void*>(new char[capacity_]);
     buffer_ = ::calloc(capacity_, 1);
-    assert(buffer_ != nullptr && ("new operator error size:" + capacity_));
+    assert(buffer_ != nullptr && ("new operator error size"));
 }
 
 buffer_chain::~buffer_chain()
@@ -104,9 +104,9 @@ buffer_chain::buffer_chain(const buffer_chain& other)
 {
     capacity_ = calculate_actual_capacity(other.capacity_);
     buffer_ = ::calloc(capacity_, 1);
-    assert(buffer_ != nullptr && ("new operator error size: " + capacity_));
+    assert(buffer_ != nullptr && ("new operator error size"));
 
-    ::memcpy(buffer_, other.buffer_ + other.misalign_, other.size());
+    ::memcpy(buffer_, other.get_start_buffer(), other.size());
     misalign_ = 0;
     next_ = other.next_;
     off_ = other.size();
@@ -467,12 +467,12 @@ int buffer::append(const buffer_chain &chain)//TODO copy too much
     //expand之后的current_chain就是之前的last_chain_with_data, 因此没有扩展
     if(last_chain_with_data_ == current_chain)//从之前的位置进行copy
     {
-        ::memcpy(current_chain->buffer_ + last_chain_with_data_->off_, chain.buffer_ + chain.misalign_, size);
+        ::memcpy(current_chain->buffer_ + last_chain_with_data_->off_, chain.get_start_buffer(), size);
     }
     else
     {//已经expand了,因此从头开始copy, 其中可能之前并没有任何数据,因此last_chain_with_data_ == 0
         assert(last_chain_with_data_ == 0 || last_chain_with_data_->next_ == current_chain);
-        ::memcpy(current_chain->buffer_, chain.buffer_ + chain.misalign_, size);
+        ::memcpy(current_chain->buffer_, chain.get_start_buffer(), size);
     }
 
     current_chain->off_ += size;
@@ -524,7 +524,7 @@ unsigned char* buffer::pullup(int size)
     buffer_chain* first_chain = &chains_.front();
     //如果第一个chain的大小已经满足size了,那么直接返回
     if(first_chain->size() >= size)
-        return static_cast<unsigned char*>(first_chain->buffer_ + first_chain->misalign_);
+        return static_cast<unsigned char*>(first_chain->get_start_buffer());
 
     //第一个chain不够
     size_t remain_to_pullup = size - first_chain->size();
@@ -564,12 +564,72 @@ unsigned char* buffer::pullup(int size)
     }
 
     last_chain_with_data_ = current_chain ? current_chain : first_chain;
-    return static_cast<unsigned char*>(first_chain->buffer_ + first_chain->misalign_);
+    return static_cast<unsigned char*>(first_chain->get_start_buffer());
 }
 
 int buffer::remove(/*out*/void* data, size_t data_len)
 {
+    if(data == 0 || data_len == 0) return -1;
+    //根本就没有数据 or 数据不够
+    if(last_chain_with_data_ == 0 || total_len_ < data_len) return -1;
 
+    //数据够
+    buffer_chain * current_chain = &chains_.front();
+    buffer_chain* next_chain = current_chain->next();
+    size_t remain_to_remove = data_len;
+    size_t dest_start_pos = 0;
+
+    for (; remain_to_remove > 0; current_chain = next_chain, next_chain = current_chain->next()) {
+        if(current_chain->size() <= remain_to_remove)
+        {
+            //remove this chain
+            assert(current_chain != 0);
+            ::memcpy(data + dest_start_pos, current_chain->get_start_buffer(), current_chain->size());
+            remain_to_remove -= current_chain->size();
+            dest_start_pos += current_chain->size();
+//            assert(last_chain_with_data_ != current_chain);//不一定，可能当前chain就是最后一个有data 的 chain，remain_to_remove 就等于 size
+            total_len_ -= current_chain->size();
+            chains_.pop_front();
+            continue;
+        }
+
+        //remain data to remove && 当前 remove  到 当前 chain 结束, 并且当前chain 不是全部remove
+        ::memcpy(data + dest_start_pos, current_chain->get_start_buffer(), remain_to_remove);
+        current_chain->misalign_ += remain_to_remove;
+        total_len_ -= remain_to_remove;
+    }
+
+    while(remain_to_remove > 0 || current_chain != 0)
+    {
+        if(current_chain->size() <= remain_to_remove)
+        {
+            //remove this chain
+            remain_to_remove -= current_chain->size();
+            assert(last_chain_with_data_ != current_chain);
+            total_len_ -= current_chain->size();
+            chains_.pop_front();
+            current_chain = next_chain;
+            next_chain = current_chain->next();
+            continue;
+        }
+        //直到current_chain 已经达到了data_len 的长度
+        current_chain->misalign_ += remain_to_remove;
+        //如果正好使得 current_chain 空了
+        if(current_chain->misalign_ == current_chain->off_)
+        {
+
+        }
+    }
+//    //1, 如果first_chain 就已经可以给出数据了
+//    if(first_chain->size() >= data_len)
+//    {
+
+//    } else{
+//        //1, pullup
+//        //2, 直接找到需要删除的位置，从头删除到尾
+//    }
+//    ::memcpy(data, first_chain->buffer_ + first_chain->misalign_, data_len);
+//    //2, first_chain 不够
 }
 
 int buffer::drain(size_t len)
@@ -644,9 +704,13 @@ bool buffer::validate_iter(const Iter& iter) const
 buffer_chain* buffer::expand_if_needed(size_t data_len)
 {
     //no data in buffer at all
-    if(last_chain_with_data_ == 0)
+    //TODO ERROR last_chain_with_data_ == 0并不代表没有chain，如果有几个空的chain，就可以直接使用，不需要新分配内存
+    if(/*last_chain_with_data_ == 0*/ total_len_ == 0)
     {
-        assert(chains_.empty() && "chains_ should be empty");
+        free_trailing_empty_chains();//有可能出现buffer中只有空的chain, 此处是将其free 掉之后重新插入
+        //!! TODO 可以更加高效一点, 检查是否有空的chain，有就检查大小，如果可以塞得下，就直接使用，否则插入新的
+        //! //也可以直接在前面插入新的，不free掉之后的内存，当之后往其中插入的时候，可以重复使用这部分内存
+//        assert(chains_.empty() && "chains_ should be empty");
         push_back(buffer_chain{this, data_len});
         return &chains_.back();
     }
@@ -693,7 +757,7 @@ buffer_chain* buffer::free_trailing_empty_chains()
 {
     buffer_chain* chain = last_chain_with_data_;
     //no data at all
-    if(chain == 0 && chains_.size() == 0)
+    if(total_len_ == 0)
     {
         chains_.clear(); return 0;
     }

@@ -54,13 +54,13 @@ public:
     const buffer_chain& chain() {return *chain_;}
 
 public:
-    static const buffer_iter NULL_ITER;
+    static const                       buffer_iter NULL_ITER;
 private:
-    const buffer*             buffer_;
-    size_t              offset_of_buffer_;
-    size_t              chain_number_;
-    size_t              offset_of_chain_;
-    const buffer_chain*       chain_;
+    const buffer*                   buffer_;
+    const buffer_chain*        chain_;
+    size_t                              offset_of_buffer_;
+    size_t                              chain_number_;
+    size_t                              offset_of_chain_;
 };
 
 struct buffer_iovec{
@@ -104,7 +104,9 @@ public:
 public:
     size_t chain_capacity() const { return capacity_; }
     void* get_buffer() { return buffer_; }
-    const void* get_buffer() const {return buffer_;}
+    const void* get_buffer() const  { return buffer_; }
+    void* get_start_buffer() {return static_cast<char*>(buffer_) + misalign_;}
+    const void* get_start_buffer() const {return static_cast<char*>(buffer_) + misalign_;}
     void set_next_chain(buffer_chain* next) {next_ = next;}
     buffer_chain* next() { return next_; }
     const buffer_chain* next() const {return next_;}
