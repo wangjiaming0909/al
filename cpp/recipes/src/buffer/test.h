@@ -99,8 +99,8 @@ void test_construct_and_append_buffer(){
     const int* int_2 = reinterpret_cast<const int*>(data);
     assert(*int_2 == 2);
     const char* char_2 = reinterpret_cast<const char*>(data + 4);
-    char* actual = "abcd";
-    for(int i = 0; i < strlen(char_2); i++)
+    const char* actual = "abcd";
+    for(size_t i = 0; i < strlen(char_2); i++)
     {
         assert(char_2[i] == actual[i]);
     }
@@ -264,10 +264,108 @@ void test_pullup()
     assert(first_chain->size() == size);
     assert(next_chain == 0);
 /*-----------------------------only two chains----------------------------------------*/
+}
 
-/*-----------------------------more chains----------------------------------------*/
+void test_puppup_with_more_chains()
+{
+    buffer buf1{};
+    const size_t size1 = 1020, size2 = 1010;
+    const size_t size3_1 = 100, size3_2 = 900;
+    const size_t size4 = 100;
+    buf1.append(SizableClass<size1>());
+    assert(buf1.chain_number() == 1);
+    buf1.append(1.1);
+    assert(buf1.chain_number() == 2);
+    buf1.append(SizableClass<size2>());//size2 + sizeof(double)
+    assert(buf1.chain_number() == 2);
+    buf1.append(SizableClass<size3_1>());
+    assert(buf1.chain_number() == 3);
+    buf1.append(SizableClass<size3_2>());
+    assert(buf1.chain_number() == 3);
+    buf1.append(SizableClass<size4>());
+    assert(buf1.chain_number() == 4);
+    //1020/1024, 1018/1024, 1000/1024, 100/1024
 
-/*-----------------------------more chains----------------------------------------*/
+    //the existed data in first chain is enough
+    buffer buf2 = buf1;
+    const unsigned char* p = buf2.pullup(1019);
+    assert(buf1.chain_number() == 4);
+    auto* first_chain = &buf2.get_chains().front();
+    assert(first_chain->size() == size1);
+    assert(first_chain->chain_capacity() == 1024);
+    assert(p == first_chain->get_buffer());
+    int ret = memcmp(p, first_chain->get_buffer(), first_chain->size());
+    assert(ret == 0);
+
+    //the existed data in first chain is not enough, but the first chain is big enough
+    buffer buf3 = buf1;
+    p = buf3.pullup(1024);
+    first_chain = &buf3.get_chains().front();
+    auto* next_chain = first_chain->next();
+    assert(buf3.chain_number() == 4);
+    assert(first_chain->chain_capacity() >= 1024);
+    assert(first_chain->size() == 1024);
+    assert(next_chain->get_misalign() == 4);
+    assert(p == first_chain->get_buffer());
+    ret = memcmp(p, first_chain->get_buffer(), first_chain->size());
+    assert(ret == 0);
+
+    //the first chain is not enough, keep the next chain, remain some bytes in the second chain
+    buffer buf4 = buf1;
+    p = buf4.pullup(2020);
+    first_chain = &buf4.get_chains().front();
+    next_chain = first_chain->next();
+    assert(buf4.chain_number() == 4);
+    assert(first_chain->chain_capacity() >= 2020);
+    assert(first_chain->size() == 2020);
+    assert(next_chain->get_misalign() == (2020 - 1020));
+    assert(p == first_chain->get_buffer());
+    ret = memcmp(p, first_chain->get_buffer(), first_chain->size());
+    assert(ret == 0);
+
+    //pullup all data from the first_chain and next_chian
+    buffer buf5 = buf1;
+    size_t size_going_to_pullup = size1 + size2 + sizeof(double);
+    p = buf5.pullup(size_going_to_pullup);
+    first_chain = &buf5.get_chains().front();
+    next_chain = first_chain->next();
+    assert(buf5.chain_number() == 3);
+    assert(first_chain->chain_capacity() >= size_going_to_pullup);
+    assert(first_chain->size() == size_going_to_pullup);
+    assert(next_chain->size() == 1000);
+    assert(next_chain->get_misalign() == 0);
+    assert(p == first_chain->get_buffer());
+    ret = memcmp(p, first_chain->get_buffer(), first_chain->size());
+    assert(ret == 0);
+
+    //pull all data from first 3 chains
+    buffer buf6 = buf1;
+    size_going_to_pullup = size1 + size2 + sizeof(double) + size3_1 + size3_2;
+    p = buf6.pullup(size_going_to_pullup);
+    first_chain = &buf6.get_chains().front();
+    next_chain = first_chain->next();
+    assert(buf6.chain_number() == 2);
+    assert(first_chain->chain_capacity() >= size_going_to_pullup);
+    assert(first_chain->size() == size_going_to_pullup);
+    assert(next_chain->size() == 100);
+    assert(next_chain->get_misalign() == 0);
+    assert(p == first_chain->get_buffer());
+    ret = ::memcmp(p, first_chain->get_buffer(), first_chain->size());
+    assert(ret == 0);
+
+    //pullup all data from the buffer
+    buffer buf7 = buf1;
+    size_going_to_pullup = size1 + size2 + sizeof(double) + size3_1 + size3_2 + size4;
+    p = buf7.pullup(size_going_to_pullup);
+    first_chain = &buf7.get_chains().front();
+    next_chain = first_chain->next();
+    assert(buf7.chain_number() == 1);
+    assert(first_chain->chain_capacity() >= size_going_to_pullup);
+    assert(first_chain->size() == size_going_to_pullup);
+    assert(next_chain == 0);
+    assert(p == first_chain->get_buffer());
+    ret = ::memcmp(p, first_chain->get_buffer(), first_chain->size());
+    assert(ret == 0);
 }
 
 void run_tests(){
@@ -277,5 +375,6 @@ void run_tests(){
     test_buffer_chain_constructor();
     test_buffer_append_chain();
     test_pullup();
+    test_puppup_with_more_chains();
 }
 }
