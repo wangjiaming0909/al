@@ -233,6 +233,7 @@ buffer::buffer(const buffer& other) : chains_(), last_chain_with_data_(0), total
     this->chains_ = other.chains_;
     //TODO every chain's next is not right
     update_last_chain_with_data(other);
+    update_next_field_after_copy();
     this->total_len_ = other.total_len_;
 }
 
@@ -511,7 +512,7 @@ int buffer::prepend(const buffer& other, size_t data_len, Iter start)
     
 }
 
-unsigned char* buffer::pullup(size_t size)
+unsigned char* buffer::pullup(int size)
 {
     //如果size 比 total_len_ 大, 那么将不能保证第一个node可以达到size的大小,因此返回nullptr
     if(size == 0 || size > total_len_)
@@ -548,9 +549,10 @@ unsigned char* buffer::pullup(size_t size)
     buffer_chain *current_chain = first_chain->next();
     while(current_chain != 0 && remain_to_pullup >= current_chain->size())
     {
+        remain_to_pullup -= current_chain->size();
         first_chain->append(*current_chain);
         first_chain->next_ = current_chain->next_;
-        chains_.erase(chains_.begin()++);
+        chains_.erase(++chains_.begin());
         current_chain = first_chain->next_;
     }
 
@@ -725,4 +727,18 @@ buffer_chain* buffer::update_last_chain_with_data(const buffer& other)
         (&*other_start != other.last_chain_with_data_); 
         start++, other_start++);
     last_chain_with_data_ = &*start;
+}
+
+void buffer::update_next_field_after_copy()
+{
+    //当从一个chains_ 拷贝时, 每个chain 的next也都是拷贝的, 因此next field是不对的,
+    //通过遍历一遍更新每个节点的next
+    if(chains_.size() <= 1) return;
+    buffer_chain* current_chain = &chains_.front();
+    for(auto it = ++chains_.begin(); it != chains_.end(); it++)
+    {
+        current_chain->next_ = &*it;
+        current_chain = &*it;
+    }
+    chains_.back().next_ = 0;
 }

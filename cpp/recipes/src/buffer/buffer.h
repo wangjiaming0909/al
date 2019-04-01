@@ -198,7 +198,7 @@ public:
     //if size is greater than the number of bytes in the buffer, the function returns null
     //otherwise pullup returns the first byte in the buffer
     //* note that if the size is the same as first_chunk_length will do nothing
-    unsigned char* pullup(size_t size);
+    unsigned char* pullup(int size);
 
     //remove the first datalen bytes to the {data}
     //if total length is small than data_len, all data will be copied
@@ -243,6 +243,7 @@ private:
     buffer_chain* expand_if_needed(size_t data_len);
     buffer_chain* free_trailing_empty_chains();
     buffer_chain* update_last_chain_with_data(const buffer& other);
+    void update_next_field_after_copy();
 private:
     // bi-direactional linked list
     std::list<buffer_chain>         chains_;

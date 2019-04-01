@@ -199,6 +199,7 @@ void test_buffer_append_chain()
 
 void test_pullup()
 {
+/*-----------------------------only two chains----------------------------------------*/
     const size_t default_size = buffer_chain::DEFAULT_CHAIN_SIZE;
     buffer buf1{};
     buf1.append(SizableClass<default_size - 1>());
@@ -242,12 +243,31 @@ void test_pullup()
 
     //the first chain is not enough, keep the next chain, remain one byte in the next chain
     buffer buf3 = buf1;
-    p = buf3.pullup(default_size + sizeof (int) - 1);
-    first_chain = &buf1.get_chains().front();
+    size_t size = default_size - 1 + sizeof (int) - 1;
+    p = buf3.pullup(size);
+    first_chain = &buf3.get_chains().front();
     next_chain = first_chain->next();
-    assert(first_chain->chain_capacity() >= default_size + sizeof (int) - 1);
+    assert(first_chain->chain_capacity() >= size);
+    assert(first_chain->size() == size);
     assert(next_chain->size() == 1);
     assert(next_chain->get_misalign() == sizeof (int) - 1);
+
+    //the size is going to pullup equals to the sum of first_chain and the second chain
+    //after pullup, the next chain will be deleted
+    buffer buf4 = buf1;
+    size = default_size - 1 + sizeof(int);
+    p = buf4.pullup(size);
+    first_chain = &buf4.get_chains().front();
+    next_chain = first_chain->next();
+    assert(buf4.get_chains().size() == 1);
+    assert(first_chain->chain_capacity() >= size);
+    assert(first_chain->size() == size);
+    assert(next_chain == 0);
+/*-----------------------------only two chains----------------------------------------*/
+
+/*-----------------------------more chains----------------------------------------*/
+
+/*-----------------------------more chains----------------------------------------*/
 }
 
 void run_tests(){
