@@ -58,17 +58,17 @@ public:
     const buffer_chain& chain() {return *chain_;}
 
 public:
-    static const                       buffer_iter NULL_ITER;
+    static const            	buffer_iter NULL_ITER;
 private:
-    const buffer*                   buffer_;
-    const buffer_chain*        chain_;
-    uint32_t                              offset_of_buffer_;
-    uint32_t                              chain_number_;
-    uint32_t                              offset_of_chain_;
+    const buffer*               buffer_;
+    const buffer_chain*        	chain_;
+    uint32_t                    offset_of_buffer_;
+    uint32_t                    chain_number_;
+    uint32_t                    offset_of_chain_;
 };
 
 struct buffer_iovec{
-    void*       iov_base;
+    void*         iov_base;
     uint32_t      iob_len;
 };
 
@@ -140,11 +140,11 @@ public:
     static const uint32_t MAXIMUM_SIZE_WHEN_EXPAND = 4096;
 private:
     void*               buffer_;
-    uint32_t              capacity_;
-    uint32_t              off_;//offset into chain, the total number of bytes stored in the chain
+    uint32_t            capacity_;
+    uint32_t            off_;//offset into chain, the total number of bytes stored in the chain
     buffer_chain*       next_;
     buffer*             parent_;
-    uint32_t              misalign_;
+    uint32_t            misalign_;
 };
 
 //** 1, lock or not lock
@@ -254,8 +254,8 @@ private:
     void update_next_field_after_copy();
 private:
     // bi-direactional linked list
-    std::list<buffer_chain>         chains_;
-    buffer_chain*                   last_chain_with_data_;//最后一个有数据的chain
+    std::list<buffer_chain>           chains_;
+    buffer_chain*                     last_chain_with_data_;//最后一个有数据的chain
     uint32_t                          total_len_;
 
 #ifdef TESTING
