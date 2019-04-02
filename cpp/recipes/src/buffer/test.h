@@ -70,10 +70,10 @@ void test_construct_and_append_buffer(){
     assert(buf.buffer_length() == sizeof(int) * 2);
     buf.append("abcd");
     assert(buf.buffer_length() == sizeof(int) * 2 + sizeof("abcd"));
-    size_t total_length = buf.buffer_length();
+    uint32_t total_length = buf.buffer_length();
     std::string s{"abcd"};
     buf.append(s);
-    size_t length = total_length + sizeof(s);
+    uint32_t length = total_length + sizeof(s);
     assert(buf.buffer_length() == length);
     auto dummy = dummy_class();
     buf.append(dummy);
@@ -100,7 +100,7 @@ void test_construct_and_append_buffer(){
     assert(*int_2 == 2);
     const char* char_2 = reinterpret_cast<const char*>(data + 4);
     const char* actual = "abcd";
-    for(size_t i = 0; i < strlen(char_2); i++)
+    for(uint32_t i = 0; i < strlen(char_2); i++)
     {
         assert(char_2[i] == actual[i]);
     }
@@ -160,7 +160,7 @@ void test_append_buffer()
     assert(buf1.buffer_length() == (64 + 4));
 
     //capacity: 1024, off_: 128 and add 4 bytes
-    size_t length = buf2.buffer_length();
+    uint32_t length = buf2.buffer_length();
     buf2.append(buf1, 4, buf1.begin() + 64); //the same as the first append
     assert(buf2.buffer_length() == length + 4);
     assert(buf2.get_chains().size() == 1);
@@ -200,7 +200,7 @@ void test_buffer_append_chain()
 void test_pullup()
 {
 /*-----------------------------only two chains----------------------------------------*/
-    const size_t default_size = buffer_chain::DEFAULT_CHAIN_SIZE;
+    const uint32_t default_size = buffer_chain::DEFAULT_CHAIN_SIZE;
     buffer buf1{};
     buf1.append(SizableClass<default_size - 1>());
     const auto* first_chain = &buf1.get_chains().front();
@@ -243,7 +243,7 @@ void test_pullup()
 
     //the first chain is not enough, keep the next chain, remain one byte in the next chain
     buffer buf3 = buf1;
-    size_t size = default_size - 1 + sizeof (int) - 1;
+    uint32_t size = default_size - 1 + sizeof (int) - 1;
     p = buf3.pullup(size);
     first_chain = &buf3.get_chains().front();
     next_chain = first_chain->next();
@@ -269,9 +269,9 @@ void test_pullup()
 void test_pullup_with_more_chains()
 {
     buffer buf1{};
-    const size_t size1 = 1020, size2 = 1010;
-    const size_t size3_1 = 100, size3_2 = 900;
-    const size_t size4 = 100;
+    const uint32_t size1 = 1020, size2 = 1010;
+    const uint32_t size3_1 = 100, size3_2 = 900;
+    const uint32_t size4 = 100;
     buf1.append(SizableClass<size1>());
     assert(buf1.chain_number() == 1);
     buf1.append(1.1);
@@ -325,7 +325,7 @@ void test_pullup_with_more_chains()
 
     //pullup all data from the first_chain and next_chian
     buffer buf5 = buf1;
-    size_t size_going_to_pullup = size1 + size2 + sizeof(double);
+    uint32_t size_going_to_pullup = size1 + size2 + sizeof(double);
     p = buf5.pullup(size_going_to_pullup);
     first_chain = &buf5.get_chains().front();
     next_chain = first_chain->next();
@@ -384,10 +384,10 @@ void test_remove()
     buf1.remove(p, 10);
     const buffer_chain* first_chain = &buf1.get_chains().front();
     assert(first_chain->get_misalign() == 10);
-    for (size_t i = 0; i < 10; i++) {
+    for (uint32_t i = 0; i < 10; i++) {
         assert(static_cast<char*>(p)[i] == '\0');
     }
-    for (size_t i = 10; i < data_len; i++) {
+    for (uint32_t i = 10; i < data_len; i++) {
         assert(static_cast<char*>(p)[i] == 1);
     }
 
@@ -399,16 +399,16 @@ void test_remove()
     assert(first_chain->size() == 1014);
     assert(first_chain->get_misalign() == 0);
     assert(buf2.chain_number() == 1);
-    for (size_t i = 0; i < 1023;i++) {
+    for (uint32_t i = 0; i < 1023;i++) {
         assert(static_cast<char*>(p)[i] == '\0');
     }
-    for (size_t i = 1023; i < data_len; i++) {
+    for (uint32_t i = 1023; i < data_len; i++) {
         assert(static_cast<char*>(p)[i] == 1);
     }
 
     //3, the first chain do not have enough data, the second chain has enough
     buffer buf3 = buf;
-    for(size_t i = 0; i < 1024; i++)
+    for(uint32_t i = 0; i < 1024; i++)
     {
         assert(static_cast<const char*>(buf3.get_chains().front().get_buffer())[i] == '\0');
         assert(static_cast<const char*>(buf3.get_chains().back().get_buffer())[i] == '\0');
@@ -419,7 +419,7 @@ void test_remove()
     assert(first_chain->size() == 1013);
     assert(first_chain->get_misalign() == 1);
     assert(buf3.chain_number() == 1);
-    for(size_t i = 0; i < 1024; i++)
+    for(uint32_t i = 0; i < 1024; i++)
     {
         assert(static_cast<char*>(p)[i] == '\0');
     }

@@ -5,9 +5,9 @@
 
 buffer_iter::buffer_iter( const buffer* buffer_ptr
     , const buffer_chain* chain
-    , size_t offset_of_buffer
-    , size_t chain_number
-    , size_t offset_of_chain)
+    , uint32_t offset_of_buffer
+    , uint32_t chain_number
+    , uint32_t offset_of_chain)
     : buffer_(buffer_ptr)
     , chain_(chain)
     , offset_of_buffer_(offset_of_buffer)
@@ -19,11 +19,11 @@ buffer_iter::buffer_iter( const buffer* buffer_ptr
 
 const buffer_iter buffer_iter::NULL_ITER = buffer_iter{0, 0, 0, 0, 0};
 
-buffer_iter& buffer_iter::operator+(size_t forward_steps)
+buffer_iter& buffer_iter::operator+(uint32_t forward_steps)
 {
     if(forward_steps == 0) return *this;
 
-    size_t maximum_steps_can_forward = buffer_->total_len() - this->offset_of_buffer_;
+    uint32_t maximum_steps_can_forward = buffer_->total_len() - this->offset_of_buffer_;
     if(forward_steps > maximum_steps_can_forward)
     {
         chain_ = buffer_->last_chain_with_data();
@@ -34,9 +34,9 @@ buffer_iter& buffer_iter::operator+(size_t forward_steps)
     }
 
 //    int forward_chain_numbers = -1;
-    size_t steps_can_forward_in_current_chain = chain_->get_offset() - this->offset_of_chain_;
+    uint32_t steps_can_forward_in_current_chain = chain_->get_offset() - this->offset_of_chain_;
     assert(steps_can_forward_in_current_chain >= 0 && "offset of a chain should > offset_of_chain in buffer_iter");
-    size_t remain_steps = forward_steps;
+    uint32_t remain_steps = forward_steps;
 
     //current is not the last chain_with_data
     while(!buffer_->is_last_chain_with_data(chain_) && remain_steps > steps_can_forward_in_current_chain)
@@ -54,7 +54,7 @@ buffer_iter& buffer_iter::operator+(size_t forward_steps)
     return *this;
 }
 
-buffer_chain::buffer_chain(buffer* parent, size_t capacity) 
+buffer_chain::buffer_chain(buffer* parent, uint32_t capacity) 
     : buffer_(0)
     , off_(0)
     , next_(0)
@@ -113,7 +113,7 @@ buffer_chain::buffer_chain(const buffer_chain& other)
     parent_ = other.parent_;
 }
 
-buffer_chain::buffer_chain(const buffer_chain& other, size_t data_len, Iter start)
+buffer_chain::buffer_chain(const buffer_chain& other, uint32_t data_len, Iter start)
 {
     //check if start is in the chain {other}, and within the range of other
     if( !other.validate_iter(start) || //TODO < or <=  
@@ -155,16 +155,16 @@ buffer_chain& buffer_chain::operator= (const buffer_chain& other)
     misalign_ = 0;
 }
 
-size_t buffer_chain::append(const buffer_chain& chain)
+uint32_t buffer_chain::append(const buffer_chain& chain)
 {
-    size_t size = chain.size();//防止自己append给自己，先记下size
+    uint32_t size = chain.size();//防止自己append给自己，先记下size
     if(size > chain_free_space()) return 0;
     ::memcpy(buffer_ + off_, chain.buffer_ + chain.misalign_, size);
     off_ += size;
     return size;
 }
 
-size_t buffer_chain::append(const buffer_chain& chain, size_t len, Iter start)
+uint32_t buffer_chain::append(const buffer_chain& chain, uint32_t len, Iter start)
 {
     if(len > chain.size() || !chain.validate_iter(start) || len > chain.off_ - start.offset_of_chain_)
     {
@@ -184,7 +184,7 @@ bool buffer_chain::validate_iter(Iter it) const
     return true;
 }
 
-int buffer_chain::set_offset(size_t offset)
+int buffer_chain::set_offset(uint32_t offset)
 {
     if(offset > capacity_) return -1;
     off_ = offset; return 0;
@@ -200,9 +200,9 @@ buffer_chain::Iter buffer_chain::end() const
     return Iter{this->parent_, this, this->parent_->iter_of_chain(*this).offset_of_buffer_ + this->off_, 0, off_};
 }
 
-size_t buffer_chain::calculate_actual_capacity(size_t given_capacity)
+uint32_t buffer_chain::calculate_actual_capacity(uint32_t given_capacity)
 {
-    size_t to_alloc = 0;
+    uint32_t to_alloc = 0;
     if(given_capacity < MAXIMUM_CHAIN_SIZE / 2)
     {
         to_alloc = DEFAULT_CHAIN_SIZE;
@@ -237,7 +237,7 @@ buffer::buffer(const buffer& other) : chains_(), last_chain_with_data_(0), total
     this->total_len_ = other.total_len_;
 }
 
-buffer::buffer(const buffer& other, size_t data_len) : chains_(), last_chain_with_data_(0), total_len_(0)
+buffer::buffer(const buffer& other, uint32_t data_len) : chains_(), last_chain_with_data_(0), total_len_(0)
 {
     if(other.total_len_ == 0 || data_len == 0) 
     {
@@ -251,7 +251,7 @@ buffer::buffer(const buffer& other, size_t data_len) : chains_(), last_chain_wit
     }
 
     //partially copy
-    size_t remain_to_copy = data_len;
+    uint32_t remain_to_copy = data_len;
     const buffer_chain* current_chain = &other.first();
 
     while(!other.is_last_chain_with_data(current_chain) && current_chain->size() < remain_to_copy)
@@ -274,7 +274,7 @@ buffer::buffer(const buffer& other, size_t data_len) : chains_(), last_chain_wit
     total_len_ = data_len;
 }
 
-buffer::buffer(const buffer& other, size_t data_len, Iter start) : chains_(), last_chain_with_data_(0), total_len_(0)
+buffer::buffer(const buffer& other, uint32_t data_len, Iter start) : chains_(), last_chain_with_data_(0), total_len_(0)
 {
     if(!other.validate_iter(start) || data_len == 0 || other.total_len_ == 0) 
     {
@@ -287,10 +287,10 @@ buffer::buffer(const buffer& other, size_t data_len, Iter start) : chains_(), la
         ::new(this)buffer{}; return;
     }
 
-    size_t bytes_can_copy_in_current_chain = current_chain->off_ - start.offset_of_chain_;
+    uint32_t bytes_can_copy_in_current_chain = current_chain->off_ - start.offset_of_chain_;
     Iter start_iter_in_current_chain = start;
-    size_t maximum_bytes_can_copy_out = other.total_len_ - start.offset_of_buffer_;
-    size_t remain_to_copy = data_len > maximum_bytes_can_copy_out ? maximum_bytes_can_copy_out : data_len;
+    uint32_t maximum_bytes_can_copy_out = other.total_len_ - start.offset_of_buffer_;
+    uint32_t remain_to_copy = data_len > maximum_bytes_can_copy_out ? maximum_bytes_can_copy_out : data_len;
     bool start_from_begin = false;// if the start_iter has been used, so next time we need to read from front of next chain
 
     while(  !other.is_last_chain_with_data(current_chain) && 
@@ -386,7 +386,7 @@ buffer::Iter buffer::end()
 
 buffer::Iter buffer::iter_of_chain(const buffer_chain& chain)
 {
-    size_t offset_of_buffer = 0;
+    uint32_t offset_of_buffer = 0;
     buffer_chain* current_chain = &this->chains_.front();
 
     while(current_chain != 0 && current_chain != &chain)
@@ -414,13 +414,13 @@ buffer& buffer::operator=(const buffer& other)
     update_last_chain_with_data(other);
 }
 
-size_t buffer::first_chain_length()
+uint32_t buffer::first_chain_length()
 {
     if(chains_.size() == 0 || chains_.front().get_offset() == 0) return 0;
     return chains_.front().size();
 }
 
-int buffer::append(const buffer& other, size_t data_len, Iter start)
+int buffer::append(const buffer& other, uint32_t data_len, Iter start)
 {
     if(!other.validate_iter(start) || other.total_len_ == 0 || data_len == 0)
     {
@@ -435,11 +435,11 @@ int buffer::append(const buffer& other, size_t data_len, Iter start)
         return -1;
     }
 
-    size_t bytes_can_copy_in_current_chain = current_chain->off_ - start.offset_of_chain_;
+    uint32_t bytes_can_copy_in_current_chain = current_chain->off_ - start.offset_of_chain_;
     Iter start_iter_in_current_chain = start;
-    size_t maximum_bytes_can_copy_out = other.total_len_ - start.offset_of_buffer_;
-    size_t remain_to_copy = data_len > maximum_bytes_can_copy_out ? maximum_bytes_can_copy_out : data_len;
-    size_t total_bytes_going_to_copy = remain_to_copy;
+    uint32_t maximum_bytes_can_copy_out = other.total_len_ - start.offset_of_buffer_;
+    uint32_t remain_to_copy = data_len > maximum_bytes_can_copy_out ? maximum_bytes_can_copy_out : data_len;
+    uint32_t total_bytes_going_to_copy = remain_to_copy;
     bool start_from_begin = false; // if the start_iter has been used, so next time we need to read from front of next chain
 
     while(  !other.is_last_chain_with_data(current_chain) && 
@@ -478,7 +478,7 @@ int buffer::append(const buffer& other, size_t data_len, Iter start)
 
 int64_t buffer::append(const buffer_chain &chain)//TODO copy too much
 {
-    size_t size = chain.size();
+    uint32_t size = chain.size();
     auto* current_chain = expand_if_needed(size);
     assert(current_chain->chain_free_space() >= size);
     //TODO check if that current_chain is the same as last_chain_with_data
@@ -526,7 +526,7 @@ int64_t buffer::append_vprintf(const char* fmt, va_list ap)
 
 }
 
-int buffer::prepend(const buffer& other, size_t data_len, Iter start)
+int buffer::prepend(const buffer& other, uint32_t data_len, Iter start)
 {
     
 }
@@ -546,7 +546,7 @@ unsigned char* buffer::pullup(int size)
         return static_cast<unsigned char*>(first_chain->get_start_buffer());
 
     //第一个chain不够
-    size_t remain_to_pullup = size - first_chain->size();
+    uint32_t remain_to_pullup = size - first_chain->size();
 
     //如果first_chain的free size可以塞下多出来的部分, 那么就可以不移动任何元素，直接拷贝多出来的部分
     if(first_chain->chain_free_space() >= remain_to_pullup)
@@ -586,7 +586,7 @@ unsigned char* buffer::pullup(int size)
     return static_cast<unsigned char*>(first_chain->get_start_buffer());
 }
 
-int64_t buffer::remove(/*out*/void* data, size_t data_len)
+int64_t buffer::remove(/*out*/void* data, uint32_t data_len)
 {
     if(data == 0 || data_len == 0) return -1;
     //根本就没有数据 or 数据不够
@@ -595,8 +595,8 @@ int64_t buffer::remove(/*out*/void* data, size_t data_len)
     //数据够
     buffer_chain * current_chain = &chains_.front();
     buffer_chain* next_chain = current_chain->next();
-    size_t remain_to_remove = data_len;
-    size_t dest_start_pos = 0;
+    uint32_t remain_to_remove = data_len;
+    uint32_t dest_start_pos = 0;
 
     for (; remain_to_remove > 0; current_chain = next_chain, next_chain = current_chain->next()) {
         if(current_chain->size() <= remain_to_remove)
@@ -627,7 +627,7 @@ int64_t buffer::remove(/*out*/void* data, size_t data_len)
     return data_len;
 }
 
-int buffer::drain(size_t len)
+int buffer::drain(uint32_t len)
 {
     void* datap = ::calloc(len, 1);
     int64_t ret = remove(datap, len);
@@ -635,32 +635,32 @@ int buffer::drain(size_t len)
     return ret;
 }
 
-int buffer::copy_out_from(void* data, size_t data_len, Iter start)
+int buffer::copy_out_from(void* data, uint32_t data_len, Iter start)
 {
 
 }
 
-char* buffer::read_line(size_t *n_read_out, buffer_eol_style eol_style)
+char* buffer::read_line(uint32_t *n_read_out, buffer_eol_style eol_style)
 {
 
 }
 
-buffer_iter buffer::search(const char* what, size_t len, Iter start)
+buffer_iter buffer::search(const char* what, uint32_t len, Iter start)
 {
 
 }
 
-buffer_iter buffer::search_range(const char* what, size_t len, Iter start, Iter end)
+buffer_iter buffer::search_range(const char* what, uint32_t len, Iter start, Iter end)
 {
 
 }
 
-buffer_iter buffer::search_eol(size_t* eol_len_out, buffer_eol_style eol_style,Iter start)
+buffer_iter buffer::search_eol(uint32_t* eol_len_out, buffer_eol_style eol_style,Iter start)
 {
 
 }
 
-int buffer::peek(std::vector<const buffer_iovec*> vec_out, size_t len, Iter start)
+int buffer::peek(std::vector<const buffer_iovec*> vec_out, uint32_t len, Iter start)
 {
 
 }
@@ -699,7 +699,7 @@ bool buffer::validate_iter(const Iter& iter) const
     return false;
 }
 
-buffer_chain* buffer::expand_if_needed(size_t data_len)
+buffer_chain* buffer::expand_if_needed(uint32_t data_len)
 {
     //no data in buffer at all
     //TODO ERROR last_chain_with_data_ == 0并不代表没有chain，如果有几个空的chain，就可以直接使用，不需要新分配内存
@@ -739,7 +739,7 @@ buffer_chain* buffer::expand_if_needed(size_t data_len)
         }
     } else {
         //now we can resize lc 
-        size_t length_needed = lc->get_offset() + data_len;
+        uint32_t length_needed = lc->get_offset() + data_len;
         buffer_chain chain_newed{this, length_needed};
         //! lc 一定是最后一个chain么?? 为什么pop_back()
         chain_newed = *lc;//copy from lc into chain_newed
