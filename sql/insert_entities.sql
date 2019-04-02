@@ -1,3 +1,20 @@
+--department
+INSERT INTO department(dept_name, building, budget)
+	values('Biology', 'Watson', 90000);
+INSERT INTO department(dept_name, building, budget)
+	values('Comp.Sci.', 'Taylor', 100000);
+INSERT INTO department(dept_name, building, budget)
+	values('Elec.Eng.', 'Taylor', 85000);
+INSERT INTO department(dept_name, building, budget)
+	values('Finance', 'Painter', 120000);
+INSERT INTO department(dept_name, building, budget)
+	values('History', 'Painter', 50000);
+INSERT INTO department(dept_name, building, budget)
+	values('Music', 'Packard', 80000);
+INSERT INTO department(dept_name, building, budget)
+	values('Physics', 'Watson', 70000);
+
+--department
 
 --course
 INSERT INTO course(course_id, title, dept_name, credits) 
@@ -30,23 +47,6 @@ INSERT INTO course(course_id, title, dept_name, credits)
 	values('PHY-101', 'Physical Principles', 'Physics', 4);
 --course
 
---department
-INSERT INTO department(dept_name, building, budget)
-	values('Biology', 'Watson', 90000);
-INSERT INTO department(dept_name, building, budget)
-	values('Comp.Sci.', 'Taylor', 100000);
-INSERT INTO department(dept_name, building, budget)
-	values('Elec.Eng.', 'Taylor', 85000);
-INSERT INTO department(dept_name, building, budget)
-	values('Finance', 'Painter', 120000);
-INSERT INTO department(dept_name, building, budget)
-	values('History', 'Painter', 50000);
-INSERT INTO department(dept_name, building, budget)
-	values('Music', 'Packard', 80000);
-INSERT INTO department(dept_name, building, budget)
-	values('Physics', 'Watson', 70000);
-
---department
 
 --instructor
 INSERT INTO instructor(ID, name, dept_name, salary)
