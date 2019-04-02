@@ -266,7 +266,7 @@ void test_pullup()
 /*-----------------------------only two chains----------------------------------------*/
 }
 
-void test_puppup_with_more_chains()
+void test_pullup_with_more_chains()
 {
     buffer buf1{};
     const size_t size1 = 1020, size2 = 1010;
@@ -372,13 +372,13 @@ void test_remove()
 {
     buffer buf{};
     buf.append(SizableClass<1023>());
-    buf.append(4);
+    buf.append(SizableClass<4>());
     buf.append(SizableClass<1010>());
 
     //1, the first chain has enough data
     buffer buf1 = buf;
     assert(buf1.chain_number() == 2);
-    uint32_t data_len = 1024;
+    uint32_t data_len = 4096;
     void* p = ::calloc(data_len, 1);
     memset(p, 1, data_len);
     buf1.remove(p, 10);
@@ -407,7 +407,34 @@ void test_remove()
     }
 
     //3, the first chain do not have enough data, the second chain has enough
-    //4, the first chain do not have enough data, the second chain do not have enough data either
+    buffer buf3 = buf;
+    for(size_t i = 0; i < 1024; i++)
+    {
+        assert(static_cast<const char*>(buf3.get_chains().front().get_buffer())[i] == '\0');
+        assert(static_cast<const char*>(buf3.get_chains().back().get_buffer())[i] == '\0');
+    }
+    ::memset(p, 1, data_len);
+    buf3.remove(p, 1024);
+    first_chain = &buf3.get_chains().front();
+    assert(first_chain->size() == 1013);
+    assert(first_chain->get_misalign() == 1);
+    assert(buf3.chain_number() == 1);
+    for(size_t i = 0; i < 1024; i++)
+    {
+        assert(static_cast<char*>(p)[i] == '\0');
+    }
+
+    //4, the total_length == data_len
+    buffer buf4 = buf;
+    ::memset(p, 1, data_len);
+    buf4.remove(p, 1023 + 4 + 1010);
+    first_chain = &buf.get_chains().front();
+    assert(buf4.chain_number() == 0);
+    assert(buf4.get_chains().size() == 0);
+    assert(buf4.buffer_length() == 0);
+
+    if(p != 0)
+        free(p);
 }
 
 void run_tests(){
@@ -417,7 +444,7 @@ void run_tests(){
     test_buffer_chain_constructor();
     test_buffer_append_chain();
     test_pullup();
-    test_puppup_with_more_chains();
+    test_pullup_with_more_chains();
     test_remove();
 }
 }

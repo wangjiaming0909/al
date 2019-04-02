@@ -609,6 +609,12 @@ int64_t buffer::remove(/*out*/void* data, size_t data_len)
 //            assert(last_chain_with_data_ != current_chain);//不一定，可能当前chain就是最后一个有data 的 chain，remain_to_remove 就等于 size
             total_len_ -= current_chain->size();
             chains_.pop_front();
+
+            if(next_chain == 0)  //当当前chain已经是最后一个的时候,next就是空的,此时不需要再循环了,已经结束了
+            {
+                assert(remain_to_remove == 0);
+                break;
+            }
             continue;
         }
 
@@ -623,10 +629,13 @@ int64_t buffer::remove(/*out*/void* data, size_t data_len)
 
 int buffer::drain(size_t len)
 {
-
+    void* datap = ::calloc(len, 1);
+    int64_t ret = remove(datap, len);
+    free(datap);
+    return ret;
 }
 
-int buffer::copy_out_from(void* data, size_t data_len, const Iter* start)
+int buffer::copy_out_from(void* data, size_t data_len, Iter start)
 {
 
 }
@@ -636,22 +645,22 @@ char* buffer::read_line(size_t *n_read_out, buffer_eol_style eol_style)
 
 }
 
-buffer_iter buffer::search(const char* what, size_t len, const Iter* start)
+buffer_iter buffer::search(const char* what, size_t len, Iter start)
 {
 
 }
 
-buffer_iter buffer::search_range(const char* what, size_t len, const Iter* start, const Iter* end)
+buffer_iter buffer::search_range(const char* what, size_t len, Iter start, Iter end)
 {
 
 }
 
-buffer_iter buffer::search_eol(size_t* eol_len_out, buffer_eol_style eol_style, const Iter* start)
+buffer_iter buffer::search_eol(size_t* eol_len_out, buffer_eol_style eol_style,Iter start)
 {
 
 }
 
-int buffer::peek(std::vector<const buffer_iovec*> vec_out, size_t len, const Iter* start)
+int buffer::peek(std::vector<const buffer_iovec*> vec_out, size_t len, Iter start)
 {
 
 }
