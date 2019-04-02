@@ -231,7 +231,6 @@ buffer::buffer()
 buffer::buffer(const buffer& other) : chains_(), last_chain_with_data_(0), total_len_(0)
 {
     this->chains_ = other.chains_;
-    //TODO every chain's next is not right
     update_last_chain_with_data(other);
     update_next_field_after_copy();
     this->total_len_ = other.total_len_;
@@ -647,7 +646,21 @@ int64_t buffer::copy_out_from(void* data, uint32_t data_len, Iter start)
 
 char* buffer::read_line(uint32_t *n_read_out, buffer_eol_style eol_style)
 {
-
+    switch(eol_style)
+    {
+    case buffer_eol_style::BUFFER_EOL_CRLF:
+        //找\n, 也要找\r
+        break;
+    case buffer_eol_style::BUFFER_EOL_CRLF_STRICT:
+        //找\r\n
+        break;
+    case buffer_eol_style::BUFFER_EOL_LF:
+        //找\n
+        break;
+    case buffer_eol_style::BUFFER_EOL_NUL:
+        //找\0
+        break;
+    }
 }
 
 buffer_iter buffer::search(const char* what, uint32_t len, Iter start)
@@ -660,7 +673,7 @@ buffer_iter buffer::search_range(const char* what, uint32_t len, Iter start, Ite
 
 }
 
-buffer_iter buffer::search_eol(uint32_t* eol_len_out, buffer_eol_style eol_style,Iter start)
+buffer_iter buffer::search_eol(uint32_t* eol_len_out, buffer_eol_style eol_style, Iter start)
 {
 
 }

@@ -220,7 +220,7 @@ public:
     buffer_iter search_range(const char* what, uint32_t len, Iter start, Iter end);
     //detect line_endings as read_line, but do not copy out the line, returns a iter to the start of the end-of-line character(s)
     //if {eol_len_out} is non-NULL, it is set to the length of the EOL string
-    buffer_iter search_eol(uint32_t* eol_len_out, buffer_eol_style eol_style, Iter start);
+    buffer_iter search_eol(uint32_t* eol_len_out, Iter start);
 
     //inspecting data without cpoying, returns bytes that returned
     int peek(std::vector<const buffer_iovec*> vec_out, uint32_t len, Iter start);
