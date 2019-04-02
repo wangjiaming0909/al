@@ -211,8 +211,8 @@ public:
     //error returns -1, success will return bytes that copied
     int64_t remove(/*out*/void* data, uint32_t data_len);
     //behave the same as remove but do not return the removed data, just remove the first {len} bytes
-    int drain(uint32_t len);
-    int copy_out_from(void* data, uint32_t data_len, Iter start);
+    int64_t drain(uint32_t len);
+    int64_t copy_out_from(void* data, uint32_t data_len, Iter start);
     char* read_line(uint32_t *n_read_out, buffer_eol_style eol_style);
 
     //search

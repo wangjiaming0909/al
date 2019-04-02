@@ -31,6 +31,16 @@ struct SizableClass{
     char buffer_[N];
 };
 
+template <unsigned int N>
+struct SizableClass_WithData{
+    SizableClass_WithData()
+    {
+        std::srand(std::time(0));
+        memset(buffer_, std::rand(), N);
+    }
+    char buffer_[N];
+};
+
 void test_buffer_chain_constructor()
 {
     buffer buf1{};
@@ -437,7 +447,51 @@ void test_remove()
         free(p);
 }
 
-void run_tests(){
+void test_copy_out_from()
+{
+    auto s1 = SizableClass_WithData<1023>();
+    auto s2 = SizableClass_WithData<4>();
+    auto s3 = SizableClass_WithData<1010>();
+    buffer buf{};
+    buf.append(s1);
+    buf.append(s2);
+    buf.append(s3);
+
+    //第一个chain足够拷贝出来
+    buffer buf1 = buf;
+    uint32_t size_of_p = 4096;
+    char* p = static_cast<char*>(::calloc(size_of_p, 1));
+    memset(p, 1, size_of_p);
+    //no offset
+    buf1.copy_out_from(p, 100, buf1.begin());
+    assert(memcmp(p, s1.buffer_, 100) == 0);
+    //with offset of 10
+    memset(p, 1, size_of_p);
+    buf1.copy_out_from(p, 100, buf1.begin() + 10);
+    assert(memcmp(p, s1.buffer_ + 10, 100) == 0);
+
+    //用到die第二个chain中的数据
+    buffer buf2 = buf;
+    memset(p, 1, size_of_p);
+    //no offset
+    int64_t ret = buf2.copy_out_from(p, 1040, buf2.begin());
+    assert(ret > 0);
+    assert(memcmp(p, s1.buffer_, 1023) == 0);
+    assert(memcmp(p + 1023, s2.buffer_, 4) == 0);
+    assert(memcmp(p + 1023 + 4, s3.buffer_, 1040 - 1023 - 4) == 0);
+    //with offset
+
+    memset(p, 1, size_of_p);
+    assert(buf2.buffer_length() == 1023 + 4 + 1010);
+    ret = buf2.copy_out_from(p, 1040, buf2.begin() + 100);
+    assert(ret == 1040);
+    assert(memcmp(p, s1.buffer_ + 100, 1023 - 100) == 0);
+    assert(memcmp(p + 1023 - 100, s2.buffer_, 4) == 0);
+    assert(memcmp(p + 1023 - 100 + 4, s3.buffer_, 1040 - (1023 - 100) - 4) == 0);
+}
+
+void run_tests()
+{
     test_construct_and_append_buffer();
     test_operator_equal();
     test_append_buffer();
@@ -446,5 +500,7 @@ void run_tests(){
     test_pullup();
     test_pullup_with_more_chains();
     test_remove();
+    test_copy_out_from();
 }
-}
+
+} //namespace buffer_test

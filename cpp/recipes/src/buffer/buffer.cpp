@@ -627,7 +627,7 @@ int64_t buffer::remove(/*out*/void* data, uint32_t data_len)
     return data_len;
 }
 
-int buffer::drain(uint32_t len)
+int64_t buffer::drain(uint32_t len)
 {
     void* datap = ::calloc(len, 1);
     int64_t ret = remove(datap, len);
@@ -635,9 +635,14 @@ int buffer::drain(uint32_t len)
     return ret;
 }
 
-int buffer::copy_out_from(void* data, uint32_t data_len, Iter start)
+int64_t buffer::copy_out_from(void* data, uint32_t data_len, Iter start)
 {
+    if(!validate_iter(start) || data == 0)
+        return -1;
+    if(data_len == 0) return 0;
 
+    buffer tmp_buf{*this, data_len, start};//COPY ONCE
+    return tmp_buf.remove(data, data_len);//COPY ONCE
 }
 
 char* buffer::read_line(uint32_t *n_read_out, buffer_eol_style eol_style)
