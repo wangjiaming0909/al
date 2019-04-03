@@ -385,6 +385,7 @@ buffer::Iter buffer::end()
 
 buffer::Iter buffer::iter_of_chain(const buffer_chain& chain)
 {
+    if(total_len_ == 0) return Iter::NULL_ITER;
     uint32_t offset_of_buffer = 0;
     buffer_chain* current_chain = &this->chains_.front();
 
@@ -398,7 +399,7 @@ buffer::Iter buffer::iter_of_chain(const buffer_chain& chain)
     //the chain is not found
     if(current_chain == 0)
     {
-        return Iter{0, 0, 0, 0, 0};
+        return Iter::NULL_ITER;
     }
     return Iter{this, current_chain, offset_of_buffer, 0, current_chain->misalign_};
 }
@@ -565,8 +566,11 @@ unsigned char* buffer::pullup(int size)
 
     first_chain = &chains_.front();
     buffer_chain *current_chain = first_chain->next();
-    while(current_chain != 0 && remain_to_pullup >= current_chain->size())
+
+    //current_chian可能是就是last_chain_with_data_, 但是current_chain不可能是空chain
+    while( current_chain != 0 && remain_to_pullup >= current_chain->size())
     {
+        assert(current_chain->size() > 0);
         remain_to_pullup -= current_chain->size();
         first_chain->append(*current_chain);
         first_chain->next_ = current_chain->next_;
@@ -602,6 +606,7 @@ int64_t buffer::remove(/*out*/void* data, uint32_t data_len)
         {
             //remove this chain
             assert(current_chain != 0);
+            assert(current_chain->size() > 0);
             ::memcpy(data + dest_start_pos, current_chain->get_start_buffer(), current_chain->size());
             remain_to_remove -= current_chain->size();
             dest_start_pos += current_chain->size();
@@ -609,7 +614,8 @@ int64_t buffer::remove(/*out*/void* data, uint32_t data_len)
             total_len_ -= current_chain->size();
             chains_.pop_front();
 
-            if(next_chain == 0)  //当当前chain已经是最后一个的时候,next就是空的,此时不需要再循环了,已经结束了
+            //!!! ERROR 不应该判断next是不是空,而应该判断 当前 chian是不是last_chain_with_data
+            if(/*next_chain == 0*/ current_chain == last_chain_with_data_)  //当当前chain已经是最后一个的时候,next就是空的,此时不需要再循环了,已经结束了
             {
                 assert(remain_to_remove == 0);
                 break;
@@ -646,6 +652,90 @@ int64_t buffer::copy_out_from(void* data, uint32_t data_len, Iter start)
 
 char* buffer::read_line(uint32_t *n_read_out, buffer_eol_style eol_style)
 {
+}
+
+buffer_iter buffer::search(const char* what, uint32_t len, Iter start)
+{
+
+}
+
+buffer_iter buffer::search_range(const char* what, uint32_t len, Iter start, Iter end)
+{
+    if(!validate_iter(start) || !validate_iter(end) || len == 0 || what == 0)
+    {
+        return Iter::NULL_ITER;
+    }
+
+    auto* first_chain = start.chain_;
+    auto* last_chain = end.chain_;
+    uint32_t off = start.offset_of_chain_;
+    uint32_t last_off = start.offset_of_chain_;
+    auto* current_chain = first_chain;
+    auto* next_chain = current_chain->next_;
+    const char first = what[0];
+    void* target = 0;
+    uint32_t target_offset_of_chain = 0;
+
+    for(;
+        current_chain && current_chain->size() > 0;
+        current_chain = next_chain, next_chain = current_chain ? current_chain->next_ : 0)
+    {
+        if(current_chain == last_chain) off = last_off;
+
+        target = ::memchr(current_chain->buffer_ + off, first, current_chain->off_ - off);
+        if(target != 0)//find it
+        {
+            target_offset_of_chain = static_cast<char*>(target) - static_cast<const char*>(current_chain->get_start_buffer());
+            //memcmp, 注意可能之后的字符再下一个chain中
+            if(!buffer_memcmp(what, len, iter_of_chain(*current_chain) + (target_offset_of_chain - current_chain->misalign_)))
+            {
+                target = 0;
+            }
+        }
+    }
+
+    if(target == 0)
+    {
+        return Iter::NULL_ITER;
+    }
+
+    return iter_of_chain(*current_chain) + target_offset_of_chain;
+}
+
+bool buffer::buffer_memcmp(const char* source, uint32_t len, Iter start)
+{
+    if(!validate_iter(start) || source == 0 || len > total_len_ - start.offset_of_buffer_)
+    {
+        return false;
+    }
+
+    const buffer_chain* current_chain = start.chain_;
+    uint32_t off = start.offset_of_chain_;
+    const buffer_chain* next_chain = current_chain->next_;
+    uint32_t remain_to_compare = len;
+
+    while (current_chain && current_chain->size() > 0 && remain_to_compare > 0) {
+        uint32_t size_going_to_compare = remain_to_compare > (current_chain->off_ - off) ? (current_chain->off_ - off) : remain_to_compare;
+        if(::memcmp(current_chain->buffer_ + off, source, size_going_to_compare) != 0)
+            return false;
+        if(next_chain == 0) break;
+
+        remain_to_compare -= size_going_to_compare;
+        current_chain = next_chain;
+        next_chain = current_chain->next_;
+        off = current_chain->misalign_;
+    }
+
+    if(remain_to_compare == 0)  return true;
+}
+
+buffer_iter buffer::search_eol(uint32_t* eol_len_out, buffer_eol_style eol_style, Iter start)
+{
+    if(eol_len_out == 0 || !validate_iter(start) || total_len_ == 0)
+    {
+        return Iter::NULL_ITER;
+    }
+
     switch(eol_style)
     {
     case buffer_eol_style::BUFFER_EOL_CRLF:
@@ -661,20 +751,6 @@ char* buffer::read_line(uint32_t *n_read_out, buffer_eol_style eol_style)
         //找\0
         break;
     }
-}
-
-buffer_iter buffer::search(const char* what, uint32_t len, Iter start)
-{
-
-}
-
-buffer_iter buffer::search_range(const char* what, uint32_t len, Iter start, Iter end)
-{
-
-}
-
-buffer_iter buffer::search_eol(uint32_t* eol_len_out, buffer_eol_style eol_style, Iter start)
-{
 
 }
 

@@ -490,6 +490,16 @@ void test_copy_out_from()
     assert(memcmp(p + 1023 - 100 + 4, s3.buffer_, 1040 - (1023 - 100) - 4) == 0);
 }
 
+void test_buffer_search_range()
+{
+
+}
+
+void test_buffer_memcmp()
+{
+
+}
+
 void run_tests()
 {
     test_construct_and_append_buffer();
@@ -501,6 +511,8 @@ void run_tests()
     test_pullup_with_more_chains();
     test_remove();
     test_copy_out_from();
+    test_buffer_memcmp();
+    test_buffer_search_range();
 }
 
 } //namespace buffer_test
