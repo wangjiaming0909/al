@@ -690,7 +690,7 @@ buffer_iter buffer::search_range(const char* what, uint32_t len, Iter start, Ite
             if(!buffer_memcmp(what, len, iter_of_chain(*current_chain) + (target_offset_of_chain - current_chain->misalign_)))
             {
                 target = 0;
-            }
+            } else break;//succeed
         }
     }
 
@@ -718,9 +718,9 @@ bool buffer::buffer_memcmp(const char* source, uint32_t len, Iter start)
         uint32_t size_going_to_compare = remain_to_compare > (current_chain->off_ - off) ? (current_chain->off_ - off) : remain_to_compare;
         if(::memcmp(current_chain->buffer_ + off, source, size_going_to_compare) != 0)
             return false;
-        if(next_chain == 0) break;
-
         remain_to_compare -= size_going_to_compare;
+
+        if(next_chain == 0) break;
         current_chain = next_chain;
         next_chain = current_chain->next_;
         off = current_chain->misalign_;

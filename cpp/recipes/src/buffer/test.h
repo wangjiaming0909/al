@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <ctime>
+#include <random>
 
 using namespace std;
 
@@ -37,6 +38,23 @@ struct SizableClass_WithData{
     {
         std::srand(std::time(0));
         memset(buffer_, std::rand(), N);
+    }
+    char buffer_[N];
+};
+
+
+static std::random_device rd;
+static std::mt19937 gen(rd());
+static std::uniform_int_distribution<> dis(33, 126);
+
+template <unsigned int N>
+struct SizableClass_WithChar{
+    SizableClass_WithChar()
+    {
+        for(uint32_t i = 0; i < N; i++)
+        {
+            buffer_[i] = dis(gen);
+        }
     }
     char buffer_[N];
 };
@@ -492,11 +510,95 @@ void test_copy_out_from()
 
 void test_buffer_search_range()
 {
+    SizableClass_WithChar<1023> s1{};
+    SizableClass_WithChar<4> s2{};
+    SizableClass_WithChar<1010> s3{};
+    buffer buf{};
+    buf.append(s1);
+    buf.append(s2);
+    buf.append(s3);
 
+    uint32_t data_size = 1024;
+    uint32_t target_len = 2;
+    char* data = static_cast<char*>(::calloc(data_size, 1));
+    ::memset(data, 0, data_size);
+    ::memcpy(data, s1.buffer_ + 100, target_len);
+
+    auto it = buf.search_range(data, target_len, buf.begin(), buf.end());
+    assert(it.chain() == buf.begin().chain());
+    assert(it.offset() == 100);
+
+    //cross two chains
+//    ::memset(data, 0, data_size);
+//    target_len = 100;
+//    ::memcpy(data, s1.buffer_ + 1000, 1023 - 1000);
+//    ::memcpy(data + 23, s2.buffer_, 4);
+//    ::memcpy(data + 23 + 4, s3.buffer_, 100 - 23 - 4);
+//    auto it2 = buf.search_range(data, target_len, buf.begin(), buf.end());
+//    assert(it.chain() == buf.begin().chain());
+//    assert(it2.offset() == 1000);
 }
 
 void test_buffer_memcmp()
 {
+    buffer buf{};
+    SizableClass_WithData<1023> s1{};
+    SizableClass_WithData<8> s2{};
+    SizableClass_WithData<1010> s3{};
+    buf.append(s1);
+    buf.append(s2);
+    buf.append(s3);
+
+    uint32_t data_size = 4096;
+    char* data_to_compare = static_cast<char*>(::calloc(data_size, 1));
+    //1023/1024, 1018/1024
+    //only compare the first chain
+    ::memcpy(data_to_compare, s1.buffer_, 1023);
+    bool ret = buf.buffer_memcmp(data_to_compare, 1023, buf.begin());
+    assert(ret == true);
+
+    //only compare the first chain but not from first byte
+    ::memset(data_to_compare, 0, data_size);
+    ::memcpy(data_to_compare, s1.buffer_ + 100, 923);
+    ret = buf.buffer_memcmp(data_to_compare, 923, buf.begin() + 100);
+    assert(ret == true);
+
+    //compare two chains, from start
+    ::memset(data_to_compare, 0, data_size);
+    ::memcpy(data_to_compare, s1.buffer_, 1023);
+    ::memcpy(data_to_compare + 1023, s2.buffer_, 8);
+    ret = buf.buffer_memcmp(data_to_compare, 1023 + 8, buf.begin());
+    assert(ret == true);
+
+    //compare all bytes
+    ::memset(data_to_compare, 0, data_size);
+    ::memcpy(data_to_compare, s1.buffer_, 1023);
+    ::memcpy(data_to_compare + 1023, s2.buffer_, 8);
+    ::memcpy(data_to_compare + 1023 + 8, s3.buffer_, 1010);
+    ret = buf.buffer_memcmp(data_to_compare, 1023 + 8 + 1010, buf.begin());
+    assert(ret == true);
+
+    //compare all bytes not from first byte
+    ::memset(data_to_compare, 0, data_size);
+    ::memcpy(data_to_compare, s1.buffer_ + 64, 1023 - 64);
+    ::memcpy(data_to_compare + 1023 - 64, s2.buffer_, 8);
+    ::memcpy(data_to_compare + 1023 + 8 - 64, s3.buffer_, 1010);
+    ret = buf.buffer_memcmp(data_to_compare, 1023 + 8 + 1010 - 64, buf.begin() + 64);
+    assert(ret == true);
+
+    //compare the second chain, from the first byte of the second chain
+    ::memset(data_to_compare, 0, data_size);
+    ::memcpy(data_to_compare, s2.buffer_, 8);
+    ::memcpy(data_to_compare + 8, s3.buffer_, 1010);
+    ret = buf.buffer_memcmp(data_to_compare, 8 + 1010, buf.begin() + 1023);
+    assert(ret == true);
+
+    //compare the second chain, not from the first byte of the second chain
+    ::memset(data_to_compare, 0, data_size);
+    ::memcpy(data_to_compare, s2.buffer_ + 2, 6);
+    ::memcpy(data_to_compare + 6, s3.buffer_, 1010);
+    ret = buf.buffer_memcmp(data_to_compare, 6 + 1010, buf.begin() + (1023 + 2));
+    assert(ret == true);
 
 }
 
