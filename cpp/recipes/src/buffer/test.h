@@ -529,22 +529,22 @@ void test_buffer_search_range()
     assert(it.offset() == 100);
 
     //cross two chains
-//    ::memset(data, 0, data_size);
-//    target_len = 100;
-//    ::memcpy(data, s1.buffer_ + 1000, 1023 - 1000);
-//    ::memcpy(data + 23, s2.buffer_, 4);
-//    ::memcpy(data + 23 + 4, s3.buffer_, 100 - 23 - 4);
-//    auto it2 = buf.search_range(data, target_len, buf.begin(), buf.end());
-//    assert(it.chain() == buf.begin().chain());
-//    assert(it2.offset() == 1000);
+    ::memset(data, 0, data_size);
+    target_len = 100;
+    ::memcpy(data, s1.buffer_ + 1000, 1023 - 1000);
+    ::memcpy(data + 23, s2.buffer_, 4);
+    ::memcpy(data + 23 + 4, s3.buffer_, 100 - 23 - 4);
+    auto it2 = buf.search_range(data, target_len, buf.begin(), buf.end());
+    assert(it.chain() == buf.begin().chain());
+    assert(it2.offset() == 1000);
 }
 
 void test_buffer_memcmp()
 {
     buffer buf{};
-    SizableClass_WithData<1023> s1{};
-    SizableClass_WithData<8> s2{};
-    SizableClass_WithData<1010> s3{};
+    SizableClass_WithChar<1023> s1{};
+    SizableClass_WithChar<8> s2{};
+    SizableClass_WithChar<1010> s3{};
     buf.append(s1);
     buf.append(s2);
     buf.append(s3);
@@ -599,7 +599,67 @@ void test_buffer_memcmp()
     ::memcpy(data_to_compare + 6, s3.buffer_, 1010);
     ret = buf.buffer_memcmp(data_to_compare, 6 + 1010, buf.begin() + (1023 + 2));
     assert(ret == true);
+}
 
+void test_buffer_iter(){
+    auto it_NUL = buffer_iter::NULL_ITER;
+    buffer buf{};
+    buf.append(4);
+    auto it_begin = buf.begin();
+    auto it_end = buf.end();
+    assert(!(it_NUL > it_begin));
+    assert(!(it_NUL > it_end));
+    assert(it_begin < it_end);
+    assert((it_begin + sizeof (4)) == it_end);
+}
+
+void test_buffer_search_eol()
+{
+    SizableClass_WithData<1023> s1{};
+    SizableClass_WithData<4> s2{};
+    SizableClass_WithData<1010> s3{};
+
+    const char* CRLF = "\r\n";
+//    const char* LF = "\n";
+    ::memcpy(s1.buffer_ + 100, CRLF, 2);
+
+    buffer buf{};
+    buf.append(s1);
+    buf.append(s2);
+    buf.append(s3);
+
+    uint32_t len = 0;
+    auto it = buf.search_eol(&len, buffer_eol_style::BUFFER_EOL_CRLF_STRICT, buf.begin());
+    assert(it.chain().get_buffer() == buf.get_chains().front().get_buffer());
+    assert(it.chain().size() == buf.get_chains().front().size());
+    assert(it.offset() == 100);
+    assert(len == 2);
+}
+
+void test_buffer_read_line()
+{
+    SizableClass_WithData<1023> s1{};
+    SizableClass_WithData<4> s2{};
+    SizableClass_WithData<1010> s3{};
+
+    const char* CRLF = "\r\n";
+//    const char* LF = "\n";
+    uint32_t pos_of_CR = 100;
+    ::memcpy(s1.buffer_ + pos_of_CR, CRLF, 2);
+
+    buffer buf{};
+    buf.append(s1);
+    buf.append(s2);
+    buf.append(s3);
+
+    uint32_t data_size = 4096;
+    char* data = static_cast<char*>(::calloc(data_size, 1));
+    auto read_size = buf.read_line(data, 4096, buffer_eol_style::BUFFER_EOL_CRLF_STRICT);
+    assert(read_size == pos_of_CR);
+
+    assert(memcmp(s1.buffer_, data, read_size) == 0);
+
+    free(data);
 }
 
 void run_tests()
@@ -615,6 +675,9 @@ void run_tests()
     test_copy_out_from();
     test_buffer_memcmp();
     test_buffer_search_range();
+    test_buffer_iter();
+    test_buffer_search_eol();
+    test_buffer_read_line();
 }
 
 } //namespace buffer_test

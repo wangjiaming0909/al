@@ -54,6 +54,31 @@ buffer_iter& buffer_iter::operator+(uint32_t forward_steps)
     return *this;
 }
 
+bool buffer_iter::operator>(const buffer_iter& other)
+{
+    //其中有任何一个buffer是0就不比较了，直接返回false
+    if(buffer_ == 0 || other.buffer_ == 0) return false;
+    // 根本就不是同一个buffer的
+    if(other.buffer_ != buffer_ ) return false;
+
+    if(!buffer_->validate_iter(other) || !other.buffer_->validate_iter(*this)) return false;
+
+    return offset_of_buffer_ > other.offset_of_buffer_;
+}
+
+bool buffer_iter::operator<(const buffer_iter& other)
+{
+    return !this->operator>(other);
+}
+
+bool buffer_iter::operator==(const buffer_iter& other)
+{
+    if(buffer_ == 0 || other.buffer_ == 0) return false;
+    if(other.buffer_ != buffer_ ) return false;
+    if(!buffer_->validate_iter(other) || !other.buffer_->validate_iter(*this)) return false;
+    return offset_of_buffer_ == other.offset_of_buffer_;
+}
+
 buffer_chain::buffer_chain(buffer* parent, uint32_t capacity) 
     : buffer_(0)
     , off_(0)
@@ -72,7 +97,7 @@ buffer_chain::buffer_chain(buffer* parent, uint32_t capacity)
     }
 
     // buffer_ = static_cast<void*>(new char[capacity_]);
-    buffer_ = ::calloc(capacity_, 1);
+    buffer_ = static_cast<char*>(::calloc(capacity_, 1));
     assert(buffer_ != nullptr && ("new operator error size"));
 }
 
@@ -103,7 +128,7 @@ buffer_chain::buffer_chain(buffer_chain&& other)
 buffer_chain::buffer_chain(const buffer_chain& other)
 {
     capacity_ = calculate_actual_capacity(other.capacity_);
-    buffer_ = ::calloc(capacity_, 1);
+    buffer_ = static_cast<char*>(::calloc(capacity_, 1));
     assert(buffer_ != nullptr && ("new operator error size"));
 
     ::memcpy(buffer_, other.get_start_buffer(), other.size());
@@ -145,7 +170,7 @@ buffer_chain& buffer_chain::operator= (const buffer_chain& other)
         if(buffer_ != 0) 
             free(buffer_);
         capacity_ = other.capacity_;
-        buffer_ = ::calloc(capacity_, 1);
+        buffer_ = static_cast<char*>(::calloc(capacity_, 1));
     }
 
     ::memcpy(buffer_, other.buffer_ + misalign_, other.size());
@@ -642,7 +667,7 @@ int64_t buffer::drain(uint32_t len)
 
 int64_t buffer::copy_out_from(void* data, uint32_t data_len, Iter start)
 {
-    if(!validate_iter(start) || data == 0)
+    if(!validate_iter(start) || data == nullptr)
         return -1;
     if(data_len == 0) return 0;
 
@@ -650,18 +675,27 @@ int64_t buffer::copy_out_from(void* data, uint32_t data_len, Iter start)
     return tmp_buf.remove(data, data_len);//COPY ONCE
 }
 
-char* buffer::read_line(uint32_t *n_read_out, buffer_eol_style eol_style)
+int64_t buffer::read_line(char * read_out, uint32_t n, buffer_eol_style eol_style)
 {
+    if(read_out == nullptr) return -1;
+
+    uint32_t eol_len = 0;
+    auto it = search_eol(&eol_len, eol_style, begin());
+    if(!it.is_valid()) return -1;
+
+    int64_t bytes_read = remove(read_out, it.offset_of_buffer_);
+    drain(eol_len);
+    return bytes_read;
 }
 
 buffer_iter buffer::search(const char* what, uint32_t len, Iter start)
 {
-
+    return search_range(what, len, start, end());
 }
 
 buffer_iter buffer::search_range(const char* what, uint32_t len, Iter start, Iter end)
 {
-    if(!validate_iter(start) || !validate_iter(end) || len == 0 || what == 0)
+    if(!validate_iter(start) || !validate_iter(end) || len == 0 || what == nullptr)
     {
         return Iter::NULL_ITER;
     }
@@ -673,28 +707,34 @@ buffer_iter buffer::search_range(const char* what, uint32_t len, Iter start, Ite
     auto* current_chain = first_chain;
     auto* next_chain = current_chain->next_;
     const char first = what[0];
-    void* target = 0;
+    void* target = nullptr;
     uint32_t target_offset_of_chain = 0;
+    bool FOUND = false;
 
     for(;
         current_chain && current_chain->size() > 0;
-        current_chain = next_chain, next_chain = current_chain ? current_chain->next_ : 0)
+        current_chain = next_chain, next_chain = current_chain ? current_chain->next_ : 0, off = current_chain ? current_chain->misalign_ : 0)
     {
         if(current_chain == last_chain) off = last_off;
 
-        target = ::memchr(current_chain->buffer_ + off, first, current_chain->off_ - off);
-        if(target != 0)//find it
+        while(true)
         {
+            target = ::memchr(current_chain->buffer_ + off, first, current_chain->off_ - off);
+            if(target == nullptr) break;
+            //in one chain, there could be some first char
+            off = static_cast<char*>(target) - current_chain->buffer_ + 1;
             target_offset_of_chain = static_cast<char*>(target) - static_cast<const char*>(current_chain->get_start_buffer());
             //memcmp, 注意可能之后的字符再下一个chain中
-            if(!buffer_memcmp(what, len, iter_of_chain(*current_chain) + (target_offset_of_chain - current_chain->misalign_)))
+            if(buffer_memcmp(what, len, iter_of_chain(*current_chain) + (target_offset_of_chain - current_chain->misalign_)))
             {
-                target = 0;
-            } else break;//succeed
+                FOUND = true;
+                break;
+            }
         }
+        if(FOUND) break;
     }
 
-    if(target == 0)
+    if(!FOUND)
     {
         return Iter::NULL_ITER;
     }
@@ -704,7 +744,7 @@ buffer_iter buffer::search_range(const char* what, uint32_t len, Iter start, Ite
 
 bool buffer::buffer_memcmp(const char* source, uint32_t len, Iter start)
 {
-    if(!validate_iter(start) || source == 0 || len > total_len_ - start.offset_of_buffer_)
+    if(!validate_iter(start) || source == nullptr || len > total_len_ - start.offset_of_buffer_)
     {
         return false;
     }
@@ -713,12 +753,14 @@ bool buffer::buffer_memcmp(const char* source, uint32_t len, Iter start)
     uint32_t off = start.offset_of_chain_;
     const buffer_chain* next_chain = current_chain->next_;
     uint32_t remain_to_compare = len;
+    uint32_t off_of_source = 0;
 
     while (current_chain && current_chain->size() > 0 && remain_to_compare > 0) {
         uint32_t size_going_to_compare = remain_to_compare > (current_chain->off_ - off) ? (current_chain->off_ - off) : remain_to_compare;
-        if(::memcmp(current_chain->buffer_ + off, source, size_going_to_compare) != 0)
+        if(::memcmp(current_chain->buffer_ + off, source + off_of_source, size_going_to_compare) != 0)
             return false;
         remain_to_compare -= size_going_to_compare;
+        off_of_source += size_going_to_compare;
 
         if(next_chain == 0) break;
         current_chain = next_chain;
@@ -736,22 +778,49 @@ buffer_iter buffer::search_eol(uint32_t* eol_len_out, buffer_eol_style eol_style
         return Iter::NULL_ITER;
     }
 
+    auto it_CRLF = search_range("\r\n", 2, begin(), end());
+    auto it_LF = search_range("\n", 1, begin(), end());
+    auto it_NUL = search_range("\0", 1, begin(), end());
+
+    Iter it_ret = Iter::NULL_ITER;
+
     switch(eol_style)
     {
     case buffer_eol_style::BUFFER_EOL_CRLF:
+    {
         //找\n, 也要找\r
+        if(!it_CRLF.is_valid())
+        {
+            if(it_LF.is_valid())
+            {
+                it_ret = it_LF < it_CRLF ? it_LF : it_CRLF;//when it_LF == it_CRLF, return it_CRLF
+                *eol_len_out = 2;
+            }
+        }
+        it_ret = it_CRLF;
+        *eol_len_out = 1;
         break;
+    }
     case buffer_eol_style::BUFFER_EOL_CRLF_STRICT:
+    {
         //找\r\n
+        it_ret = it_CRLF;
+        *eol_len_out = 2;
         break;
+    }
     case buffer_eol_style::BUFFER_EOL_LF:
         //找\n
+        it_ret = it_CRLF;
+        *eol_len_out = 1;
         break;
     case buffer_eol_style::BUFFER_EOL_NUL:
         //找\0
+        it_ret = it_NUL;
+        *eol_len_out = 1;
         break;
     }
 
+    return it_ret;
 }
 
 int buffer::peek(std::vector<const buffer_iovec*> vec_out, uint32_t len, Iter start)

@@ -56,6 +56,12 @@ public:
     //如果向前forward 这么多之后，已经超出了整个buffer 现存的所有数据的iter, 返回最后的iter, 即back()
     buffer_iter& operator+(uint32_t forward_steps);
     const buffer_chain& chain() {return *chain_;}
+    //不是同一个buffer返回 false
+    //是同一个buffer，> 返回 true
+    bool operator>(const buffer_iter& other);
+    bool operator<(const buffer_iter& other);
+    bool operator==(const buffer_iter& other);
+    bool is_valid() const{return buffer_ != nullptr && chain_ != nullptr;}
 
 public:
     static const            	buffer_iter NULL_ITER;
@@ -76,7 +82,7 @@ class buffer_chain{
 public:
     friend class buffer;
     using Iter = buffer_iter;
-    buffer_chain(buffer* parent = 0, uint32_t capacity = DEFAULT_CHAIN_SIZE);
+    buffer_chain(buffer* parent = nullptr, uint32_t capacity = DEFAULT_CHAIN_SIZE);
     ~buffer_chain();
     //copy data from other, align the data when copying, and the capacity will be the same as other
     buffer_chain(const buffer_chain& other);
@@ -139,7 +145,7 @@ public:
     static const uint32_t MAXIMUM_CHAIN_SIZE = UINT32_MAX;
     static const uint32_t MAXIMUM_SIZE_WHEN_EXPAND = 4096;
 private:
-    void*               buffer_;
+    char*               buffer_;
     uint32_t            capacity_;
     uint32_t            off_;//offset into chain, the total number of bytes stored in the chain
     buffer_chain*       next_;
@@ -213,7 +219,7 @@ public:
     //behave the same as remove but do not return the removed data, just remove the first {len} bytes
     int64_t drain(uint32_t len);
     int64_t copy_out_from(void* data, uint32_t data_len, Iter start);
-    char* read_line(uint32_t *n_read_out, buffer_eol_style eol_style);
+    int64_t read_line(char * read_out, uint32_t n, buffer_eol_style eol_style);
 
     //search
     buffer_iter search(const char* what, uint32_t len, Iter start);
@@ -231,6 +237,7 @@ public:
     bool is_last_chain_with_data(const buffer_chain* current_chain) const;
     uint32_t total_len() const { return total_len_; }
     uint32_t chain_number() const {return this->chains_.size();}
+    bool validate_iter(const Iter& iter) const ;
 
 private:
     buffer_chain* push_back(buffer_chain&& chain);
@@ -238,7 +245,6 @@ private:
     buffer_chain* push_front(buffer_chain&& chain);
     buffer_chain* push_front(buffer_chain& chain);
     //validate {iter}, if {iter} is in current {chain_}, return true, otherwise return false
-    bool validate_iter(const Iter& iter) const ;
     buffer_chain& first() { return chains_.front(); }
     const buffer_chain& first() const { return chains_.front();}
     buffer_chain& last() { return chains_.back(); }
