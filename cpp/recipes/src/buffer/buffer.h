@@ -186,10 +186,10 @@ public:
     //* add the data to the end of the buffer
     //will change the total_len_
     template <typename T>
-    int append(const T& data);
+    int64_t append(const T& data);
     // int append(const buffer& other, uint32_t data_len);
     //append {data_len} bytes from other, start from {start}
-    int append(const buffer& other, uint32_t data_len, Iter start);
+    int64_t append(const buffer& other, uint32_t data_len, Iter start);
     //append a whole chain into the buffer
     //it could resize the last_chain_with_data due to the memory allocation strategy
     //will change the total_len_
@@ -210,7 +210,7 @@ public:
     //if size is greater than the number of bytes in the buffer, the function returns null
     //otherwise pullup returns the first byte in the buffer
     //* note that if the size is the same as first_chunk_length will do nothing
-    unsigned char* pullup(int size);
+    unsigned char* pullup(int64_t size);
 
     //remove the first datalen bytes to the {data}
     //if total length is small than data_len, all data will be copied
@@ -282,11 +282,11 @@ int buffer_chain::append(const T& data)
 }
 
 template <typename T>
-int buffer::append(const T& data)
+int64_t buffer::append(const T& data)
 {
     uint32_t size_needed = sizeof(T);
     auto chain = expand_if_needed(size_needed);
-    if(chain == 0) return -1;
+    if(chain == nullptr) return -1;
     chain->append(data);
     this->total_len_ += size_needed;
     last_chain_with_data_ = chain;

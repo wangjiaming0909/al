@@ -17,7 +17,7 @@ buffer_iter::buffer_iter( const buffer* buffer_ptr
 
 }
 
-const buffer_iter buffer_iter::NULL_ITER = buffer_iter{0, 0, 0, 0, 0};
+const buffer_iter buffer_iter::NULL_ITER = buffer_iter{nullptr, nullptr, 0, 0, 0};
 
 buffer_iter& buffer_iter::operator+(uint32_t forward_steps)
 {
@@ -57,7 +57,7 @@ buffer_iter& buffer_iter::operator+(uint32_t forward_steps)
 bool buffer_iter::operator>(const buffer_iter& other)
 {
     //其中有任何一个buffer是0就不比较了，直接返回false
-    if(buffer_ == 0 || other.buffer_ == 0) return false;
+    if(buffer_ == nullptr || other.buffer_ == nullptr) return false;
     // 根本就不是同一个buffer的
     if(other.buffer_ != buffer_ ) return false;
 
@@ -73,16 +73,16 @@ bool buffer_iter::operator<(const buffer_iter& other)
 
 bool buffer_iter::operator==(const buffer_iter& other)
 {
-    if(buffer_ == 0 || other.buffer_ == 0) return false;
+    if(buffer_ == nullptr || other.buffer_ == nullptr) return false;
     if(other.buffer_ != buffer_ ) return false;
     if(!buffer_->validate_iter(other) || !other.buffer_->validate_iter(*this)) return false;
     return offset_of_buffer_ == other.offset_of_buffer_;
 }
 
 buffer_chain::buffer_chain(buffer* parent, uint32_t capacity) 
-    : buffer_(0)
+    : buffer_(nullptr)
     , off_(0)
-    , next_(0)
+    , next_(nullptr)
     , parent_(parent)
     , misalign_(0)
 {
@@ -103,7 +103,7 @@ buffer_chain::buffer_chain(buffer* parent, uint32_t capacity)
 
 buffer_chain::~buffer_chain()
 {
-    if(buffer_ != 0) 
+    if(buffer_ != nullptr)
         free(buffer_);
 }
 
@@ -116,11 +116,11 @@ buffer_chain::buffer_chain(buffer_chain&& other)
     parent_ = other.parent_;
     misalign_ = other.misalign_;
 
-    other.buffer_ = 0;
+    other.buffer_ = nullptr;
     other.capacity_ = 0;
     other.off_ = 0;
-    other.next_ = 0;
-    other.parent_ = 0;
+    other.next_ = nullptr;
+    other.parent_ = nullptr;
     other.misalign_ = 0;
 }
 
@@ -167,7 +167,7 @@ buffer_chain& buffer_chain::operator= (const buffer_chain& other)
 
     if(capacity_ < other.capacity_)
     {
-        if(buffer_ != 0) 
+        if(buffer_ != nullptr)
             free(buffer_);
         capacity_ = other.capacity_;
         buffer_ = static_cast<char*>(::calloc(capacity_, 1));
@@ -178,6 +178,7 @@ buffer_chain& buffer_chain::operator= (const buffer_chain& other)
     off_ = other.size();
     parent_ = other.parent_;
     misalign_ = 0;
+    return *this;
 }
 
 uint32_t buffer_chain::append(const buffer_chain& chain)
@@ -247,13 +248,13 @@ uint32_t buffer_chain::calculate_actual_capacity(uint32_t given_capacity)
 
 buffer::buffer() 
     : chains_()
-    , last_chain_with_data_(0)
+    , last_chain_with_data_(nullptr)
     , total_len_(0)
 {
 
 }
 
-buffer::buffer(const buffer& other) : chains_(), last_chain_with_data_(0), total_len_(0)
+buffer::buffer(const buffer& other) : chains_(), last_chain_with_data_(nullptr), total_len_(0)
 {
     this->chains_ = other.chains_;
     update_last_chain_with_data(other);
@@ -261,7 +262,7 @@ buffer::buffer(const buffer& other) : chains_(), last_chain_with_data_(0), total
     this->total_len_ = other.total_len_;
 }
 
-buffer::buffer(const buffer& other, uint32_t data_len) : chains_(), last_chain_with_data_(0), total_len_(0)
+buffer::buffer(const buffer& other, uint32_t data_len) : chains_(), last_chain_with_data_(nullptr), total_len_(0)
 {
     if(other.total_len_ == 0 || data_len == 0) 
     {
@@ -298,7 +299,7 @@ buffer::buffer(const buffer& other, uint32_t data_len) : chains_(), last_chain_w
     total_len_ = data_len;
 }
 
-buffer::buffer(const buffer& other, uint32_t data_len, Iter start) : chains_(), last_chain_with_data_(0), total_len_(0)
+buffer::buffer(const buffer& other, uint32_t data_len, Iter start) : chains_(), last_chain_with_data_(nullptr), total_len_(0)
 {
     if(!other.validate_iter(start) || data_len == 0 || other.total_len_ == 0) 
     {
@@ -333,7 +334,7 @@ buffer::buffer(const buffer& other, uint32_t data_len, Iter start) : chains_(), 
     }
 
     //get to the last chain or current chain can cover {remain_to_copy}
-    assert(current_chain != 0 && "current should not be nullptr");
+    assert(current_chain != nullptr && "current should not be nullptr");
 
     if(start_from_begin)
         append(buffer_chain{*current_chain, remain_to_copy, current_chain->begin()});
@@ -357,7 +358,7 @@ buffer_chain* buffer::push_back(buffer_chain&& chain)
         auto& last_chain = chains_.back();
         chains_.push_back(std::move(chain));
         last_chain.next_ = &chains_.back();
-        chains_.back().set_next_chain(0);
+        chains_.back().set_next_chain(nullptr);
     }
     return &chains_.back();
 }
@@ -374,7 +375,7 @@ buffer_chain* buffer::push_back(const buffer_chain& chain)
         auto& last_chain = chains_.back();
         chains_.push_back(chain);
         last_chain.next_ = &chains_.back();
-        chains_.back().set_next_chain(0);
+        chains_.back().set_next_chain(nullptr);
     }
 
     return &chains_.back();
@@ -383,7 +384,7 @@ buffer_chain* buffer::push_back(const buffer_chain& chain)
 //同样的, push_front并不关心数据的问题， 仅仅是向chains的头部中添加一个chain
 buffer_chain* buffer::push_front(buffer_chain&& chain)
 {
-    buffer_chain* first_chain = chains_.size() == 0 ? 0 : &chains_.front();
+    buffer_chain* first_chain = chains_.size() == 0 ? nullptr : &chains_.front();
     chains_.push_front(std::move(chain));
 
     chains_.front().next_ = first_chain;
@@ -392,7 +393,7 @@ buffer_chain* buffer::push_front(buffer_chain&& chain)
 
 buffer_chain* buffer::push_front(buffer_chain& chain)
 {
-    buffer_chain* first_chain = chains_.size() == 0 ? 0 : &chains_.front();
+    buffer_chain* first_chain = chains_.size() == 0 ? nullptr : &chains_.front();
     chains_.push_front(chain);
     chains_.front().next_ = first_chain;
     return &chains_.front();
@@ -414,7 +415,7 @@ buffer::Iter buffer::iter_of_chain(const buffer_chain& chain)
     uint32_t offset_of_buffer = 0;
     buffer_chain* current_chain = &this->chains_.front();
 
-    while(current_chain != 0 && current_chain != &chain)
+    while(current_chain != nullptr && current_chain != &chain)
     {
         // ASSERT_CHAIN_FULL(current_chain)
         offset_of_buffer += current_chain->chain_capacity();
@@ -422,7 +423,7 @@ buffer::Iter buffer::iter_of_chain(const buffer_chain& chain)
     }
 
     //the chain is not found
-    if(current_chain == 0)
+    if(current_chain == nullptr)
     {
         return Iter::NULL_ITER;
     }
@@ -437,6 +438,7 @@ buffer& buffer::operator=(const buffer& other)
     chains_ = other.chains_;
     total_len_ = other.total_len_;
     update_last_chain_with_data(other);
+    return *this;
 }
 
 uint32_t buffer::first_chain_length()
@@ -445,7 +447,7 @@ uint32_t buffer::first_chain_length()
     return chains_.front().size();
 }
 
-int buffer::append(const buffer& other, uint32_t data_len, Iter start)
+int64_t buffer::append(const buffer& other, uint32_t data_len, Iter start)
 {
     if(!other.validate_iter(start) || other.total_len_ == 0 || data_len == 0)
     {
@@ -484,7 +486,7 @@ int buffer::append(const buffer& other, uint32_t data_len, Iter start)
     }
 
     //get to the last chain or current chain can cover {remain_to_copy}
-    assert(current_chain != 0 && "current should not be nullptr");
+    assert(current_chain != nullptr && "current should not be nullptr");
 
     if(start_from_begin)
     {
@@ -514,7 +516,7 @@ int64_t buffer::append(const buffer_chain &chain)//TODO copy too much
     }
     else
     {//已经expand了,因此从头开始copy, 其中可能之前并没有任何数据,因此last_chain_with_data_ == 0
-        assert(last_chain_with_data_ == 0 || last_chain_with_data_->next_ == current_chain);
+        assert(last_chain_with_data_ == nullptr || last_chain_with_data_->next_ == current_chain);
         ::memcpy(current_chain->buffer_, chain.get_start_buffer(), size);
     }
 
@@ -526,7 +528,7 @@ int64_t buffer::append(const buffer_chain &chain)//TODO copy too much
 
 int64_t buffer::append(buffer_chain &&chain)
 {
-    if(last_chain_with_data_ != 0)
+    if(last_chain_with_data_ != nullptr)
     {
         auto * last_chain = free_trailing_empty_chains();
         chains_.push_back(std::move(chain));
@@ -536,7 +538,7 @@ int64_t buffer::append(buffer_chain &&chain)
     {
         chains_.push_back(std::move(chain));
     }
-    chains_.back().next_ = 0;
+    chains_.back().next_ = nullptr;
     chains_.back().parent_ = this;
     return chains_.back().size();//!!
 }
@@ -556,7 +558,7 @@ int buffer::prepend(const buffer& other, uint32_t data_len, Iter start)
     
 }
 
-unsigned char* buffer::pullup(int size)
+unsigned char* buffer::pullup(int64_t size)
 {
     //如果size 比 total_len_ 大, 那么将不能保证第一个node可以达到size的大小,因此返回nullptr
     if(size == 0 || size > total_len_)
@@ -571,7 +573,7 @@ unsigned char* buffer::pullup(int size)
         return static_cast<unsigned char*>(first_chain->get_start_buffer());
 
     //第一个chain不够
-    uint32_t remain_to_pullup = size - first_chain->size();
+    int64_t remain_to_pullup = size - first_chain->size();
 
     //如果first_chain的free size可以塞下多出来的部分, 那么就可以不移动任何元素，直接拷贝多出来的部分
     if(first_chain->chain_free_space() >= remain_to_pullup)
@@ -583,7 +585,7 @@ unsigned char* buffer::pullup(int size)
     }
     else//并不能塞下多出来的部分,重新分配一个chain, 保证第一个chain size >= size
     {
-        buffer_chain chain{this, size};
+        buffer_chain chain{this, static_cast<uint32_t>(size)};
         chain = *first_chain;//此处做了align, 设置了chain的next
         chains_.pop_front();
         chains_.push_front(std::move(chain));
@@ -593,7 +595,7 @@ unsigned char* buffer::pullup(int size)
     buffer_chain *current_chain = first_chain->next();
 
     //current_chian可能是就是last_chain_with_data_, 但是current_chain不可能是空chain
-    while( current_chain != 0 && remain_to_pullup >= current_chain->size())
+    while( current_chain != nullptr && remain_to_pullup >= current_chain->size())
     {
         assert(current_chain->size() > 0);
         remain_to_pullup -= current_chain->size();
@@ -606,7 +608,7 @@ unsigned char* buffer::pullup(int size)
     //current_chain == 0 或者 只需要 current_chain 中的一部分
     if(remain_to_pullup != 0)//还有一部分需要拷贝
     {
-        first_chain->append(*current_chain, remain_to_pullup, current_chain->begin());
+        first_chain->append(*current_chain, static_cast<uint32_t>(remain_to_pullup), current_chain->begin());
         current_chain->misalign_ += remain_to_pullup;
     }
 
@@ -616,9 +618,9 @@ unsigned char* buffer::pullup(int size)
 
 int64_t buffer::remove(/*out*/void* data, uint32_t data_len)
 {
-    if(data == 0 || data_len == 0) return -1;
+    if(data == nullptr || data_len == 0) return -1;
     //根本就没有数据 or 数据不够
-    if(last_chain_with_data_ == 0 || total_len_ < data_len) return -1;
+    if(last_chain_with_data_ == nullptr || total_len_ < data_len)  return -1;
 
     //数据够
     buffer_chain * current_chain = &chains_.front();
@@ -630,7 +632,7 @@ int64_t buffer::remove(/*out*/void* data, uint32_t data_len)
         if(current_chain->size() <= remain_to_remove)
         {
             //remove this chain
-            assert(current_chain != 0);
+            assert(current_chain != nullptr);
             assert(current_chain->size() > 0);
             ::memcpy(data + dest_start_pos, current_chain->get_start_buffer(), current_chain->size());
             remain_to_remove -= current_chain->size();
@@ -682,6 +684,8 @@ int64_t buffer::read_line(char * read_out, uint32_t n, buffer_eol_style eol_styl
     uint32_t eol_len = 0;
     auto it = search_eol(&eol_len, eol_style, begin());
     if(!it.is_valid()) return -1;
+    //如果得了n个字节，但是并没有读到换行符，那么就返回-1, 表示read_out不够存下一行的数据
+    if(n < it.offset_of_buffer_) return -1;
 
     int64_t bytes_read = remove(read_out, it.offset_of_buffer_);
     drain(eol_len);
@@ -713,7 +717,7 @@ buffer_iter buffer::search_range(const char* what, uint32_t len, Iter start, Ite
 
     for(;
         current_chain && current_chain->size() > 0;
-        current_chain = next_chain, next_chain = current_chain ? current_chain->next_ : 0, off = current_chain ? current_chain->misalign_ : 0)
+        current_chain = next_chain, next_chain = current_chain ? current_chain->next_ : nullptr, off = current_chain ? current_chain->misalign_ : 0)
     {
         if(current_chain == last_chain) off = last_off;
 
@@ -762,7 +766,7 @@ bool buffer::buffer_memcmp(const char* source, uint32_t len, Iter start)
         remain_to_compare -= size_going_to_compare;
         off_of_source += size_going_to_compare;
 
-        if(next_chain == 0) break;
+        if(next_chain == nullptr) break;
         current_chain = next_chain;
         next_chain = current_chain->next_;
         off = current_chain->misalign_;
@@ -773,7 +777,7 @@ bool buffer::buffer_memcmp(const char* source, uint32_t len, Iter start)
 
 buffer_iter buffer::search_eol(uint32_t* eol_len_out, buffer_eol_style eol_style, Iter start)
 {
-    if(eol_len_out == 0 || !validate_iter(start) || total_len_ == 0)
+    if(eol_len_out == nullptr || !validate_iter(start) || total_len_ == 0)
     {
         return Iter::NULL_ITER;
     }
@@ -830,7 +834,7 @@ int buffer::peek(std::vector<const buffer_iovec*> vec_out, uint32_t len, Iter st
 
 inline bool buffer::is_last_chain_with_data(const buffer_chain* current_chain) const
 {
-    if(current_chain == 0 || current_chain != last_chain_with_data_)
+    if(current_chain == nullptr || current_chain != last_chain_with_data_)
         return false;
     return true;
 }
@@ -920,7 +924,7 @@ buffer_chain* buffer::free_trailing_empty_chains()
     //no data at all
     if(total_len_ == 0)
     {
-        chains_.clear(); return 0;
+        chains_.clear(); return nullptr;
     }
     assert(chain->get_offset() > 0);
     
@@ -934,7 +938,7 @@ buffer_chain* buffer::free_trailing_empty_chains()
     --back_iter;
     while(back_iter != start_iter) {
         chains_.pop_back();
-        chains_.back().set_next_chain(0);
+        chains_.back().set_next_chain(nullptr);
         --back_iter;
     }
     return chain;
@@ -965,5 +969,5 @@ void buffer::update_next_field_after_copy()
         current_chain->next_ = &*it;
         current_chain = &*it;
     }
-    chains_.back().next_ = 0;
+    chains_.back().next_ = nullptr;
 }

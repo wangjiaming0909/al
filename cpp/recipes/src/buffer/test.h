@@ -16,7 +16,7 @@ class dummy_class
 public:
     dummy_class()
     {
-        std::srand(std::time(0));
+        std::srand(std::time(nullptr));
         memset(buffer_, std::rand() / (RAND_MAX), DUMMY_CLASS_SIZE);
     }
 private:
@@ -36,7 +36,7 @@ template <unsigned int N>
 struct SizableClass_WithData{
     SizableClass_WithData()
     {
-        std::srand(std::time(0));
+        std::srand(std::time(nullptr));
         memset(buffer_, std::rand(), N);
     }
     char buffer_[N];
@@ -65,10 +65,10 @@ void test_buffer_chain_constructor()
     buf1.append(SizableClass<64>());
     const buffer_chain& chain1 = buf1.get_chains().front();
     buffer_chain chain2{chain1};
-    assert(chain2.next() == 0);
+    assert(chain2.next() == nullptr);
     assert(chain2.size() == 64);
     assert(chain2.get_offset() == 64);
-    int ret = chain2.set_misalign(4);
+    int64_t ret = chain2.set_misalign(4);
     assert(ret == 4);
     assert(chain2.size() == 64 - 4);
 
@@ -80,11 +80,11 @@ void test_buffer_chain_constructor()
     //expceted exception
     try {//iter不是chain2的iter
         buffer_chain chain4{chain2, 16, chain1.begin()};
-    }catch(std::exception& e){}
+    }catch(std::exception&){}
 
     try {//iter达到末尾了,没有可以复制的内容了
         buffer_chain chain4{chain2, 16, chain2.end() + 1};
-    }catch(std::exception& e){}
+    }catch(std::exception&){}
     //TODO 没有测到iter在misalign_之前时的情况, 因为好像不能获得这个iter
     
 }
@@ -144,7 +144,7 @@ void test_construct_and_append_buffer(){
     assert(buf.chain_number() == 2);
     const auto& chains = buf.get_chains();
     assert(chains.front().next() == &chains.back());
-    assert(chains.back().next() == 0);
+    assert(chains.back().next() == nullptr);
 
     assert(buf.buffer_length() == (length + 900 + 100));
     buf.append(SizableClass<1024>());
@@ -157,8 +157,8 @@ void test_construct_and_append_buffer(){
     assert(buf5.chain_number() == 2);
     const auto& first_chain_of_buf5 = buf5.get_chains().front();
     assert(first_chain_of_buf5.next() == &buf5.get_chains().back());
-    assert(buf5.get_chains().back().next() == 0);
-    assert((double)first_chain_of_buf5.get_offset() > (first_chain_of_buf5.chain_capacity() * 7 / 8.0));
+    assert(buf5.get_chains().back().next() == nullptr);
+    assert(static_cast<double>(first_chain_of_buf5.get_offset()) > (first_chain_of_buf5.chain_capacity() * 7 / 8.0));
 }
 
 void test_operator_equal()
@@ -233,7 +233,7 @@ void test_pullup()
     buf1.append(SizableClass<default_size - 1>());
     const auto* first_chain = &buf1.get_chains().front();
     const auto* next_chain = first_chain->next();
-    assert(next_chain == 0);
+    assert(next_chain == nullptr);
     assert(first_chain->chain_capacity() == default_size);
     assert(buf1.buffer_length() == default_size - 1);
     assert(buf1.chain_number() == 1);
@@ -242,7 +242,7 @@ void test_pullup()
     next_chain = first_chain->next();
     assert(buf1.buffer_length() == default_size - 1 + sizeof (int));
     assert(buf1.chain_number() == 2);
-    assert(next_chain != 0);
+    assert(next_chain != nullptr);
     assert(next_chain->size() == sizeof (int));
     assert(buf1.last_chain_with_data() == next_chain);
 
@@ -290,7 +290,7 @@ void test_pullup()
     assert(buf4.get_chains().size() == 1);
     assert(first_chain->chain_capacity() >= size);
     assert(first_chain->size() == size);
-    assert(next_chain == 0);
+    assert(next_chain == nullptr);
 /*-----------------------------only two chains----------------------------------------*/
 }
 
@@ -390,7 +390,7 @@ void test_pullup_with_more_chains()
     assert(buf7.chain_number() == 1);
     assert(first_chain->chain_capacity() >= size_going_to_pullup);
     assert(first_chain->size() == size_going_to_pullup);
-    assert(next_chain == 0);
+    assert(next_chain == nullptr);
     assert(p == first_chain->get_buffer());
     ret = ::memcmp(p, first_chain->get_buffer(), first_chain->size());
     assert(ret == 0);
@@ -461,7 +461,7 @@ void test_remove()
     assert(buf4.get_chains().size() == 0);
     assert(buf4.buffer_length() == 0);
 
-    if(p != 0)
+    if(p != nullptr)
         free(p);
 }
 
