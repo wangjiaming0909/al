@@ -545,17 +545,17 @@ int64_t buffer::append(buffer_chain &&chain)
 
 int64_t buffer::append_printf(const char* fmt, ...)
 {
-
+    return 0;
 }
 
 int64_t buffer::append_vprintf(const char* fmt, va_list ap)
 {
-
+    return 0;
 }
 
 int buffer::prepend(const buffer& other, uint32_t data_len, Iter start)
 {
-    
+    return 0;
 }
 
 unsigned char* buffer::pullup(int64_t size)
@@ -773,6 +773,7 @@ bool buffer::buffer_memcmp(const char* source, uint32_t len, Iter start)
     }
 
     if(remain_to_compare == 0)  return true;
+    return false;
 }
 
 buffer_iter buffer::search_eol(uint32_t* eol_len_out, buffer_eol_style eol_style, Iter start)
@@ -829,7 +830,7 @@ buffer_iter buffer::search_eol(uint32_t* eol_len_out, buffer_eol_style eol_style
 
 int buffer::peek(std::vector<const buffer_iovec*> vec_out, uint32_t len, Iter start)
 {
-
+    return 0;
 }
 
 inline bool buffer::is_last_chain_with_data(const buffer_chain* current_chain) const
@@ -956,6 +957,7 @@ buffer_chain* buffer::update_last_chain_with_data(const buffer& other)
         (&*other_start != other.last_chain_with_data_); 
         start++, other_start++);
     last_chain_with_data_ = &*start;
+    return last_chain_with_data_;
 }
 
 void buffer::update_next_field_after_copy()

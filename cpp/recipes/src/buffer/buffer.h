@@ -296,7 +296,7 @@ int64_t buffer::append(const T& data)
 template <typename T>
 int buffer::prepend(const T& data)
 {
-
+    return 0;
 }
 
 #endif // _BUFFER_H_
