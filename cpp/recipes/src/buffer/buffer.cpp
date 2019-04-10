@@ -34,7 +34,7 @@ buffer_iter& buffer_iter::operator+(uint32_t forward_steps)
     }
 
 //    int forward_chain_numbers = -1;
-    uint32_t steps_can_forward_in_current_chain = chain_->get_offset() - this->offset_of_chain_;
+    int64_t steps_can_forward_in_current_chain = chain_->get_offset() - this->offset_of_chain_;
     assert(steps_can_forward_in_current_chain >= 0 && "offset of a chain should > offset_of_chain in buffer_iter");
     uint32_t remain_steps = forward_steps;
 
