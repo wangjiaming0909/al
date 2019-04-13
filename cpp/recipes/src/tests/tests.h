@@ -67,7 +67,8 @@ void test_vsnprintf(const char* fmt, ...)
     ::memset(p, 1, 63);
     va_list v;
     va_start(v, fmt);
-    ::vsnprintf(p, 63, fmt, v);//虽然传递了63作为参数，其实从fmt中只取了62个字符，第63个字符为'\0'
+    //当传递的字符串因为比63大而被截断时，返回的本因写入的长度（no '\0'）,因此当传入c_64的时候，返回值其实是64,虽然传递给vsnprintf中第二个参数是63
+    int ret = ::vsnprintf(p, 63, fmt, v);//虽然传递了63作为参数，其实从fmt中只取了62个字符，第63个字符为'\0'
     va_end(v);
 
     ::free(p);
