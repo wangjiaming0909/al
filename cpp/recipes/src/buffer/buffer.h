@@ -96,7 +96,10 @@ public:
     uint32_t size() const { return off_ - misalign_; }
     uint32_t chain_free_space() const {return capacity_ - off_;}
     template <typename T>
-    int append(const T& data);
+    int64_t append(const T& data);
+    //have to make sure that data_len <= free space
+    int64_t append(const void* data, uint32_t data_len);
+
     //chain.size 必须要小于this 的free space
     uint32_t append(const buffer_chain& chain);
     uint32_t append(const buffer_chain& chain, uint32_t len, Iter start);
@@ -195,6 +198,7 @@ public:
     //will change the total_len_
     int64_t append(const buffer_chain &chain);
     int64_t append(buffer_chain &&chain);
+    int64_t append(const char* data, uint32_t data_len);
     int64_t append_printf(const char *fmt, ...);
     int64_t append_vprintf(const char* fmt, va_list ap);
 
@@ -273,12 +277,12 @@ public:
 };
 
 template <typename T>
-int buffer_chain::append(const T& data)
+int64_t buffer_chain::append(const T& data)
 {
     if(this->chain_free_space() < sizeof(data)) return -1;
     ::memcpy(static_cast<char*>(buffer_) + this->off_, &data, sizeof(T));
     this->off_ += sizeof(T);
-    return 0;
+    return sizeof(T);
 }
 
 template <typename T>

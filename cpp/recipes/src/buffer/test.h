@@ -702,7 +702,21 @@ void test_buffer_append_printf()
     assert(ret == 256);
     assert(buf2.chain_number() == 2);
     assert(buf2.total_len() == 900 + 256);
+}
 
+void test_buffer_append_data()
+{
+    buffer buf;
+    SizableClass_WithChar<128> s1;
+    const char* p = s1.buffer_;
+    buf.append(p, 128);
+    assert(buf.chain_number() == 1);
+    assert(buf.total_len() == 128);
+    assert(buf.last_chain_with_data()->size() == 128);
+    assert(memcmp(p, buf.last_chain_with_data()->get_buffer(), 128) == 0);
+
+    buf.append_printf("%s", "123");
+    assert(buf.total_len() == 128 + 3);
 }
 
 void run_tests()
@@ -722,6 +736,7 @@ void run_tests()
     test_buffer_search_eol();
     test_buffer_read_line();
     test_buffer_append_printf();
+    test_buffer_append_data();
 }
 
 } //namespace buffer_test

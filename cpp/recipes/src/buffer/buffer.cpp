@@ -201,6 +201,16 @@ uint32_t buffer_chain::append(const buffer_chain& chain, uint32_t len, Iter star
     return len;
 }
 
+int64_t buffer_chain::append(const void* data, uint32_t data_len)
+{
+    if(data == 0 || data_len == 0) return -1;
+
+    if(chain_free_space() < data_len) return -1;
+
+    ::memcpy(buffer_ + off_, data, data_len);
+    off_ += data_len;
+}
+
 bool buffer_chain::validate_iter(Iter it) const
 {
     if( it.chain_ != this || 
@@ -541,6 +551,19 @@ int64_t buffer::append(buffer_chain &&chain)
     chains_.back().next_ = nullptr;
     chains_.back().parent_ = this;
     return chains_.back().size();//!!
+}
+
+int64_t buffer::append(const char* data, uint32_t data_len)
+{
+    if(data == 0 || data_len == 0) return -1;
+
+    buffer_chain* data_chain = expand_if_needed(data_len);
+    if(data_chain->chain_free_space() < data_len) return -1;//for expand error
+
+    data_chain->append(data, data_len);
+    total_len_ += data_len;
+    last_chain_with_data_ = data_chain;
+    return data_len;
 }
 
 int64_t buffer::append_printf(const char* fmt, ...)
