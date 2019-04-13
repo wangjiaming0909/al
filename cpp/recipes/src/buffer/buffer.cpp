@@ -545,7 +545,45 @@ int64_t buffer::append(buffer_chain &&chain)
 
 int64_t buffer::append_printf(const char* fmt, ...)
 {
-    return 0;
+    if(fmt == 0)
+    {
+        LOG(WARNING) << "fmt error: " << fmt;
+        return -1;
+    }
+    int ret = 0;
+    buffer_chain* data_chain = expand_if_needed(64);
+    char* data_p = data_chain->buffer_ + data_chain->off_;
+    uint32_t data_size = data_chain->chain_free_space();
+
+    for(;;)
+    {
+        va_list va;
+        va_start(va, fmt);
+        int vs = vsnprintf(data_p, data_size, fmt, va);
+        va_end(va);
+
+        if(vs < 0) return vs;//vsnprintf return error
+
+        if(buffer_chain::MAXIMUM_CHAIN_SIZE < static_cast<u_int32_t>(vs))//fmt 字串太长
+        {
+            LOG(WARNING) << "Too long for a chain, size: " << vs;
+            return -1;
+        }
+
+        if((uint32_t)vs < data_size)//data_size可以塞下fmt字串
+        {
+            data_chain->off_ += static_cast<u_int32_t>(vs);
+            total_len_ += static_cast<u_int32_t>(vs);
+            ret = vs;
+            last_chain_with_data_ = data_chain;
+            break;
+        }
+
+        data_chain = expand_if_needed(static_cast<u_int32_t>(vs) + 1);
+        data_p = data_chain->buffer_ + data_chain->off_;
+        data_size = data_chain->chain_free_space();
+    }
+    return ret;
 }
 
 int64_t buffer::append_vprintf(const char* fmt, va_list ap)

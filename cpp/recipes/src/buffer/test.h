@@ -662,6 +662,49 @@ void test_buffer_read_line()
     free(data);
 }
 
+void test_buffer_append_printf()
+{
+    //the last_chain_with_data have enough space for formatted string
+    buffer buf;
+    buf.append(SizableClass_WithChar<64>());
+    const char* fmt = "%s";
+    const char* c1 = "0123456789";
+
+    buf.append_printf(fmt, c1);
+    assert(buf.chain_number() == 1);
+    assert(buf.buffer_length() == 64 + 10);
+    const buffer_chain* last_chain = buf.last_chain_with_data();
+    const char* p = static_cast<const char*>(last_chain->get_buffer()) + last_chain->get_misalign() + 64;
+    assert(memcmp(p, c1, 10) == 0);
+    assert(last_chain->get_offset() == 64 + 10);
+    assert(buf.total_len() == 64 + 10);
+
+    //have enough space for the formatted string after expand at the first time
+    buffer buf1;
+    buf1.append(SizableClass_WithChar<1020>());
+
+    int64_t ret = buf1.append_printf(fmt, c1);
+    assert(ret == 10);
+    assert(buf1.chain_number() == 2);
+    assert(buf1.total_len() == 1020 + 10);
+    assert(buf1.last_chain_with_data()->get_offset() == 10);
+    last_chain = buf1.last_chain_with_data();
+    p = static_cast<const char*>(last_chain->get_buffer()) + last_chain->get_misalign();
+    assert(memcmp(p, c1, 10) == 0);
+
+    //the first time, donot have enugh space for formatted string, after expand should have enough space
+    buffer buf2;
+    buf2.append(SizableClass_WithChar<900>());
+
+    char* c2 = static_cast<char*>(::calloc(256, 1));
+    ::memset(c2, 1, 256);
+    ret = buf2.append_printf(fmt, c2);
+    assert(ret == 256);
+    assert(buf2.chain_number() == 2);
+    assert(buf2.total_len() == 900 + 256);
+
+}
+
 void run_tests()
 {
     test_construct_and_append_buffer();
@@ -678,6 +721,7 @@ void run_tests()
     test_buffer_iter();
     test_buffer_search_eol();
     test_buffer_read_line();
+    test_buffer_append_printf();
 }
 
 } //namespace buffer_test
