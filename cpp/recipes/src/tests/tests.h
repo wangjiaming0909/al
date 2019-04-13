@@ -2,6 +2,7 @@
 #include <functional>
 #include <string>
 #include <vector>
+#include <cstdio>
 using namespace std;
 using namespace placeholders;
 
@@ -55,5 +56,20 @@ void test_bind()
     std::vector<int> v{};
     v.push_back(1);
     v.emplace_back(2);
+}
+
+static const char* c_63 = "012345678901234567890123456789012345678901234567890123456789123";
+static const char* c_64 = "0123456789012345678901234567890123456789012345678901234567890123";
+
+void test_vsnprintf(const char* fmt, ...)
+{
+    char* const p = (char*)::calloc(64, 1);
+    ::memset(p, 1, 63);
+    va_list v;
+    va_start(v, fmt);
+    ::vsnprintf(p, 63, fmt, v);//虽然传递了63作为参数，其实从fmt中只取了62个字符，第63个字符为'\0'
+    va_end(v);
+
+    ::free(p);
 }
 
