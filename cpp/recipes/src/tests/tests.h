@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <cstdio>
+#include "boost/heap/priority_queue.hpp"
 using namespace std;
 using namespace placeholders;
 
@@ -72,5 +73,10 @@ void test_vsnprintf(const char* fmt, ...)
     va_end(v);
 
     ::free(p);
+}
+
+void test_asd()
+{
+    boost::heap::priority_queue<int> pq{};
 }
 

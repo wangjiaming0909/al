@@ -17,10 +17,6 @@
 #define TESTING 1
 #endif
 
-#ifndef uint32_t
-#define uint32_t unsigned int
-#endif
-
 enum class buffer_eol_style{
     BUFFER_EOL_LF, //'\n'
     BUFFER_EOL_CRLF_STRICT, //"\r\n"
