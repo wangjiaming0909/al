@@ -7,6 +7,7 @@ aux_source_directory(src/bytebuf SRC_DIR)
 aux_source_directory(src/buffer SRC_DIR)
 aux_source_directory(src/tests SRC_DIR)
 aux_source_directory(src/guid_map SRC_DIR)
+aux_source_directory(src/design_patterns SRC_DIR)
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
 set( CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -ggdb -O0 -Wfatal-errors " )

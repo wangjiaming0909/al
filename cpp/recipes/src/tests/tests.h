@@ -3,7 +3,6 @@
 #include <string>
 #include <vector>
 #include <cstdio>
-#include "boost/heap/priority_queue.hpp"
 using namespace std;
 using namespace placeholders;
 
@@ -59,8 +58,8 @@ void test_bind()
     v.emplace_back(2);
 }
 
-static const char* c_63 = "012345678901234567890123456789012345678901234567890123456789123";
-static const char* c_64 = "0123456789012345678901234567890123456789012345678901234567890123";
+// static const char* c_63 = "012345678901234567890123456789012345678901234567890123456789123";
+// static const char* c_64 = "0123456789012345678901234567890123456789012345678901234567890123";
 
 void test_vsnprintf(const char* fmt, ...)
 {
@@ -69,14 +68,9 @@ void test_vsnprintf(const char* fmt, ...)
     va_list v;
     va_start(v, fmt);
     //当传递的字符串因为比63大而被截断时，返回的本因写入的长度（no '\0'）,因此当传入c_64的时候，返回值其实是64,虽然传递给vsnprintf中第二个参数是63
-    int ret = ::vsnprintf(p, 63, fmt, v);//虽然传递了63作为参数，其实从fmt中只取了62个字符，第63个字符为'\0'
+   ::vsnprintf(p, 63, fmt, v);//虽然传递了63作为参数，其实从fmt中只取了62个字符，第63个字符为'\0'
     va_end(v);
 
     ::free(p);
-}
-
-void test_asd()
-{
-    boost::heap::priority_queue<int> pq{};
 }
 
