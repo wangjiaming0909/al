@@ -1,12 +1,11 @@
+#ifndef SOLID_OPEN_CLOSE_H_
+#define SOLID_OPEN_CLOSE_H_
 #include <string>
 #include <vector>
 #include <iostream>
 
 namespace design_patterns
 {
-    
-
-
 enum class Color{Green, Red, Blue};
 enum class Size{Small, Medium, Large};
 
@@ -143,3 +142,4 @@ void OC_test()
 
 }
 } // design_patterns
+#endif
