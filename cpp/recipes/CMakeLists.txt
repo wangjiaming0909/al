@@ -10,7 +10,7 @@ aux_source_directory(src/guid_map SRC_DIR)
 aux_source_directory(src/design_patterns SRC_DIR)
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
-set( CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -ggdb -O0 -Wfatal-errors " )
+set( CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -ggdb -O3 -Wfatal-errors " )
 include_directories("src")
 include_directories("C:\\Users\\Jiaming\\Desktop\\boost_1_69_0")
 ADD_DEFINITIONS(-DTESTING)

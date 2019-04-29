@@ -4,21 +4,25 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/**",
-                "C:/Users/Jiaming/Desktop/boost_1_69_0"
+                "C:/Users/Jiaming/Desktop/boost_1_69_0",
+                "C:/MinGW/lib/gcc/mingw32/8.2.0/include/c++"
             ],
             "browse": {
                 "path": [
+                    "C:/MinGW/lib/gcc/mingw32/8.2.0/include/c++",
+                    "C:/Users/Jiaming/Desktop/boost_1_69_0"
                 ]
             },
             "defines": [
                 "_DEBUG",
                 "UNICODE",
-                "_UNICODE"
+                "_UNICODE",
+                "_GLIBCXX_HAS_GTHREADS"
             ],
-            "compilerPath": "C:\\MinGW\\bin\\gcc.exe",
+            "compilerPath": "C:\\MinGW\\bin\\g++.exe",
             "cStandard": "c11",
             "cppStandard": "c++17",
-            "intelliSenseMode": "clang-x64"
+            "intelliSenseMode":"gcc-x64"
         }
     ],
     "version": 4
