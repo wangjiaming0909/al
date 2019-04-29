@@ -11,6 +11,11 @@ aux_source_directory(src/design_patterns SRC_DIR)
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
 set( CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -ggdb -O3 -Wfatal-errors " )
+
+find_package(Threads)
+target_link_libraries(recipes ${CMAKE_THREAD_LIBS_INIT})
+
+
 include_directories("src")
 include_directories("C:\\Users\\Jiaming\\Desktop\\boost_1_69_0")
 ADD_DEFINITIONS(-DTESTING)
