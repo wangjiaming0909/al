@@ -5,6 +5,7 @@
 #include "guid_map/test.h"
 #include "design_patterns/SOLID_Open_Close.h"
 #include "design_patterns/maybemonad.h"
+#include "design_patterns/thread_safe_singleton.h"
 
 using namespace std;
 
@@ -20,7 +21,8 @@ int main()
     // guid_map_test::run_tests();
 
 //    design_patterns::OC_test();
-    design_patterns::Monad_test();
+    // design_patterns::Monad_test();
+    design_patterns::thread_safe_singleton_test();
 
     cout << "Hello World!" << endl;
     return 0;
