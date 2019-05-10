@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <cstdio>
+#include <memory>
 using namespace std;
 using namespace placeholders;
 
@@ -72,5 +73,11 @@ void test_vsnprintf(const char* fmt, ...)
     va_end(v);
 
     ::free(p);
+}
+
+
+void test_shared_ptr()
+{
+    shared_ptr<string> str = make_shared<string>("123");
 }
 

@@ -26,7 +26,9 @@ int main()
 //    design_patterns::OC_test();
     // design_patterns::Monad_test();
     // design_patterns::thread_safe_singleton_test();
-    easylogging::test();
+    // easylogging::test();
+
+    test_shared_ptr();
 
     cout << "Hello World!" << endl;
     return 0;

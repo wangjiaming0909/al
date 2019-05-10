@@ -11,7 +11,7 @@ aux_source_directory(src/design_patterns SRC_DIR)
 aux_source_directory(src/easylogging SRC_DIR)
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
-set( CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -ggdb -O3 -Wfatal-errors " )
+set( CMAKE_CXX_FLAGS "-Wall -Wextra -std=c++17 -ggdb -O0 -Wfatal-errors " )
 
 find_package(Threads)
 target_link_libraries(recipes ${CMAKE_THREAD_LIBS_INIT})
