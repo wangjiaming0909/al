@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdio>
 #include <memory>
+#include <variant>
 using namespace std;
 using namespace placeholders;
 
@@ -77,7 +78,11 @@ void test_vsnprintf(const char* fmt, ...)
 
 void test_variant()
 {
-
+    std::variant<int, double> v;
+    v = 1.1;
+    auto d = std::get<double>(v);
+    auto i = std::get<int>(v);
+    cout << d << endl;
 }
 
 void test_shared_ptr()

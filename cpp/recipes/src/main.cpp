@@ -28,7 +28,8 @@ int main()
     // design_patterns::thread_safe_singleton_test();
     // easylogging::test();
 
-    test_shared_ptr();
+    // test_shared_ptr();
+    test_variant();
 
     cout << "Hello World!" << endl;
     return 0;
