@@ -74,3 +74,7 @@ void test_vsnprintf(const char* fmt, ...)
     ::free(p);
 }
 
+void test_variant()
+{
+
+}
