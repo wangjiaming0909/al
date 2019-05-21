@@ -6,8 +6,11 @@
 #include "design_patterns/SOLID_Open_Close.h"
 #include "design_patterns/maybemonad.h"
 #include "design_patterns/thread_safe_singleton.h"
+#include "easylogging/test_easylogging.h"
 
 using namespace std;
+
+INITIALIZE_EASYLOGGINGPP
 
 int main()
 {
@@ -22,7 +25,10 @@ int main()
 
 //    design_patterns::OC_test();
     // design_patterns::Monad_test();
-    design_patterns::thread_safe_singleton_test();
+    // design_patterns::thread_safe_singleton_test();
+    // easylogging::test();
+
+    test_shared_ptr();
 
     cout << "Hello World!" << endl;
     return 0;

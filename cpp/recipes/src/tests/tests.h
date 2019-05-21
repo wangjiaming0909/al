@@ -3,6 +3,7 @@
 #include <string>
 #include <vector>
 #include <cstdio>
+#include <memory>
 using namespace std;
 using namespace placeholders;
 
@@ -78,3 +79,9 @@ void test_variant()
 {
 
 }
+
+void test_shared_ptr()
+{
+    shared_ptr<string> str = make_shared<string>("123");
+}
+

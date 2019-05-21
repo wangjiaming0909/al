@@ -1,11 +1,18 @@
 {
     "files.associations": {
+        "*.makefile": "makefile",
+        "*.proj": "msbuild",
+        "*.cjson": "jsonc",
+        "*.wxss": "css",
+        "*.wxs": "javascript",
         "vector": "cpp",
         "array": "cpp",
         "deque": "cpp",
         "list": "cpp",
         "unordered_map": "cpp",
         "initializer_list": "cpp",
-        "string_view": "cpp"
-    }
+        "string_view": "cpp",
+        "chrono": "cpp"
+    },
+    "C_Cpp.dimInactiveRegions": false
 }
