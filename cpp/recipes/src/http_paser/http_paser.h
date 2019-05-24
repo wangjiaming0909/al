@@ -439,5 +439,5 @@ void http_parser_set_max_header_size(uint32_t size);
 // }
 // #endif
 
-#endif //linux
+#endif //__gnu_linux__
 #endif

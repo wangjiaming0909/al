@@ -2497,4 +2497,4 @@ void
 http_parser_set_max_header_size(uint32_t size) {
   max_header_size = size;
 }
-#endif //linux
+#endif //__gnu_linux__
