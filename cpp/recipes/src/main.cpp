@@ -6,11 +6,12 @@
 #include "design_patterns/SOLID_Open_Close.h"
 #include "design_patterns/maybemonad.h"
 #include "design_patterns/thread_safe_singleton.h"
-#include "easylogging/test_easylogging.h"
+// #include "easylogging/test_easylogging.h"
+#include "http_paser/test.h"
 
 using namespace std;
 
-INITIALIZE_EASYLOGGINGPP
+// INITIALIZE_EASYLOGGINGPP
 
 int main()
 {
@@ -29,7 +30,9 @@ int main()
     // easylogging::test();
 
     // test_shared_ptr();
-    test_variant();
+    // test_variant();
+
+    http_paser_test::test();
 
     cout << "Hello World!" << endl;
     return 0;

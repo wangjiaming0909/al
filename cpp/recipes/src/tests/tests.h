@@ -4,7 +4,13 @@
 #include <vector>
 #include <cstdio>
 #include <memory>
+
+#ifdef __GNUC__
+#if __GNUC__ >= 7
 #include <variant>
+#endif //__GNUC__
+#endif //__GNUC__ >= 7
+
 using namespace std;
 using namespace placeholders;
 
@@ -78,11 +84,15 @@ void test_vsnprintf(const char* fmt, ...)
 
 void test_variant()
 {
+#ifdef __GNUC__
+#if __GNUC__ >= 7
     std::variant<int, double> v;
     v = 1.1;
     auto d = std::get<double>(v);
-    auto i = std::get<int>(v);
+    // auto i = std::get<int>(v);
     cout << d << endl;
+#endif // __GNUC__
+#endif // __GNUC__ >= 7
 }
 
 void test_shared_ptr()
