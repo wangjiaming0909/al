@@ -3,10 +3,11 @@
 
 
 #include <iostream>
-#include "http_paser/http_paser.h"
+#include "http_parser/http_parser.h"
+
 using namespace std;
 
-namespace http_paser_test
+namespace http_parser_test
 {
 
 void test()
@@ -16,7 +17,7 @@ void test()
     const char *site = "http://www.github.com/wangjiaming0909";
     http_parser_parse_url(site, strlen(site), 0, &url);
 #endif //__gnu_linux__
-    cout << 123 << endl;
+    cout << "testing http_parser" << endl;
 }
 
 }

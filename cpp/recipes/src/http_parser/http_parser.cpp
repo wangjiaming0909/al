@@ -19,7 +19,7 @@
  * IN THE SOFTWARE.
  */
 #ifdef __gnu_linux__
-#include "http_paser/http_paser.h"
+#include "http_parser/http_parser.h"
 #include <assert.h>
 #include <stddef.h>
 #include <ctype.h>

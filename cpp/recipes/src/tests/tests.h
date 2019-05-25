@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdio>
 #include <memory>
+#include "boost/range.hpp"
 
 #ifdef __GNUC__
 #if __GNUC__ >= 7
@@ -98,5 +99,10 @@ void test_variant()
 void test_shared_ptr()
 {
     shared_ptr<string> str = make_shared<string>("123");
+}
+
+void test_boost_range()
+{
+
 }
 
