@@ -14,7 +14,8 @@
         "string_view": "cpp",
         "chrono": "cpp",
         "type_traits": "cpp",
-        "cstdint": "cpp"
+        "cstdint": "cpp",
+        "*.tcc": "cpp"
     },
     "C_Cpp.dimInactiveRegions": false
 }

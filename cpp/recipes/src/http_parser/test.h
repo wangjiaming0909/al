@@ -5,6 +5,7 @@
 #include <iostream>
 #include "http_parser/http_parser.h"
 #include "boost/range.hpp"
+#include <vector>
 
 using namespace std;
 
@@ -17,15 +18,32 @@ public:
     NotDefaultConstructableClass(int _){}
 };
 
+class NOTDestructable
+{
+public:
+    ~NOTDestructable() = delete;
+};
+
+
 void test_traits()
 {
+    std::vector<string> vstr{};
+    //when construct vector, it didn't check if T has default constructor
+    std::vector<NotDefaultConstructableClass> v{};
+    // v.resize(12);
+
     cout << std::is_trivially_default_constructible<NotDefaultConstructableClass>::value << endl;
     using const_char = std::add_const<char*>::type;
     const_char c = "asd";
     cout << c << endl;
 
-    std::remove_const_t<const_char> p = "a";
-    cout << p << endl;
+    cout << typeid(std::remove_const_t<const_char>).name() << endl;
+
+    cout << std::is_destructible<NotDefaultConstructableClass>::value << endl;
+    cout << std::is_destructible<NOTDestructable>::value << endl;
+    cout << std::is_destructible<void>::value << endl;
+    //为什么const char*也是destructible的???
+    cout << std::is_destructible<const_char>::value << endl;
 }
 
 
