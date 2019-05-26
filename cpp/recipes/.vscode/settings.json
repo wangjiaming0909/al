@@ -12,7 +12,9 @@
         "unordered_map": "cpp",
         "initializer_list": "cpp",
         "string_view": "cpp",
-        "chrono": "cpp"
+        "chrono": "cpp",
+        "type_traits": "cpp",
+        "cstdint": "cpp"
     },
     "C_Cpp.dimInactiveRegions": false
 }

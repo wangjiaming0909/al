@@ -12,7 +12,7 @@ URLParser::~URLParser()
 
 void URLParser::init(const_string_piece_t urlVal)
 {
-    std::find(urlVal, urlVal + 10, "://");
+    // std::find(urlVal, urlVal + 10, "://");
 }
 
 
