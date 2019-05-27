@@ -83,7 +83,18 @@ void test()
     cout << difference << endl;
     cout << p << endl;
 
-
+    const char* ppp = "abcdefg";
+    using it_t = const char*;
+    using value_t = std::iterator_traits<const char*>::value_type;
+    it_t begin = ppp + 1;
+    it_t end = ppp + 7;
+    value_t value = *ppp;
+    auto index = std::find(begin, end, "fg");
+    if(index == nullptr)
+    {
+        // cout << "index is null" << endl;
+    }
+    cout << "index: " << index << endl;
 
 
     // boost::range_iterator<char> string_piece;

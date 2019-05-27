@@ -32,8 +32,8 @@ int main()
     // test_shared_ptr();
     // test_variant();
 
-    // http_parser_test::test();
-    http_parser_test::test_traits();
+    http_parser_test::test();
+    // http_parser_test::test_traits();
 
     cout << "Hello World!" << endl;
     return 0;

@@ -10,6 +10,7 @@ aux_source_directory(src/guid_map SRC_DIR)
 aux_source_directory(src/design_patterns SRC_DIR)
 #aux_source_directory(src/easylogging SRC_DIR)
 aux_source_directory(src/http_parser SRC_DIR)
+aux_source_directory(src/string_piece SRC_DIR)
 
 
 add_executable(${PROJECT_NAME} ${SRC_DIR})
