@@ -7,7 +7,8 @@
 #include "design_patterns/maybemonad.h"
 #include "design_patterns/thread_safe_singleton.h"
 // #include "easylogging/test_easylogging.h"
-#include "http_parser/test.h"
+// #include "http_parser/test.h"
+#include "string_piece/test.h"
 
 using namespace std;
 
@@ -32,8 +33,10 @@ int main()
     // test_shared_ptr();
     // test_variant();
 
-    http_parser_test::test();
+    // http_parser_test::test();
     // http_parser_test::test_traits();
+
+    string_piece_test::test();
 
     cout << "Hello World!" << endl;
     return 0;
