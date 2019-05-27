@@ -28,6 +28,9 @@ public:
 void test_traits()
 {
     std::vector<string> vstr{};
+    using it_t = std::vector<string>::iterator;
+    it_t begin = vstr.begin();
+    cout << begin.base();
     //when construct vector, it didn't check if T has default constructor
     std::vector<NotDefaultConstructableClass> v{};
     // v.resize(12);
@@ -44,6 +47,22 @@ void test_traits()
     cout << std::is_destructible<void>::value << endl;
     //为什么const char*也是destructible的???
     cout << std::is_destructible<const_char>::value << endl;
+
+    cout << "------------------------------------------" << endl;
+    const char* cc = "asdasd";
+    // using vector_it_t = std::vector<char>::iterator;
+
+    // vector_it_t begin_it = c;
+
+
+    std::string str = cc;
+    std::string::const_iterator beg = str.cbegin();
+
+    // std::find(beg, str.end(), "/");
+    auto index = str.find('s');
+    cout << index << endl;
+    index = str.find("asd");
+    cout << index << endl;
 }
 
 
@@ -53,6 +72,7 @@ void test()
     struct http_parser_url url;
     const char *site = "http://www.github.com/wangjiaming0909";
     http_parser_parse_url(site, strlen(site), 0, &url);
+#endif //__gnu_linux__
 
     using it_traits = std::iterator_traits<const char*>;
     it_traits::pointer p = "asd";
@@ -63,9 +83,11 @@ void test()
     cout << difference << endl;
     cout << p << endl;
 
+
+
+
     // boost::range_iterator<char> string_piece;
     // boost::range_result_iterator<char>
-#endif //__gnu_linux__
     cout << "testing http_parser" << endl;
 }
 
