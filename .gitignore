@@ -117,3 +117,6 @@ cpp/recipes/recipes.config
 cpp/recipes/recipes.creator
 cpp/recipes/recipes.includes
 cpp/recipes/recipes.files
+
+**/bin/*
+**/obj/*
