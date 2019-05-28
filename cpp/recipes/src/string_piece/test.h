@@ -23,9 +23,9 @@ void test()
     cout << "index: " << index << endl;
 
     std::string strstr = "123456";
-    string_piece::mutable_string_piece str3{strstr};
+    // string_piece::mutable_string_piece str3{strstr};
 
-    string_piece::const_string_piece str4{strstr};
+    // string_piece::const_string_piece str4{strstr};
     string_piece::mutable_string_piece str5{ptr};
 
 
