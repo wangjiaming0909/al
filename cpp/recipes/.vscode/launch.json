@@ -17,7 +17,7 @@
                 "externalConsole": true,
                 "MIMode": "gdb",
                 "internalConsoleOptions": "neverOpen",
-                "miDebuggerPath": "C:\\MinGW\\bin\\gdb.exe"
+                "miDebuggerPath": "C:\\Qt\\Qt5.12.2\\Tools\\mingw730_64\\bin\\gdb.exe"
             },
             "linux": {
                 "program": "${workspaceFolder}/build/recipes",

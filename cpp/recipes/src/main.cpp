@@ -38,7 +38,8 @@ int main()
     // http_parser_test::test_traits();
 
     // string_piece_test::test();
-    kmp_test::test_kmp();
+    // kmp_test::test_kmp();
+    kmp_test::test_kmp_search();
 
     cout << "Hello World!" << endl;
     return 0;

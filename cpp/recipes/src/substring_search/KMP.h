@@ -9,17 +9,6 @@
 
 namespace substring_search
 {
-size_t kmp_search(const char* text, const char* pattern)
-{
-    if(text == nullptr || pattern == nullptr)
-    {
-        return -1;
-    }
-    size_t text_len = strlen(text);
-    size_t pattern_len = strlen(pattern);
-    // auto search_table = build_search_table(pattern, pattern_len);
-}
-
 std::shared_ptr<std::vector<int>>
 build_search_table(const char* pattern, size_t len)
 {
@@ -29,58 +18,90 @@ build_search_table(const char* pattern, size_t len)
 
     search_table->push_back(-1);
 
-    int i = 1;
-    while(true)
+    bool isLastEqual = true;
+    for (size_t i = 1; i < len; i++)
     {
-        if(search_table->size() == len) break;
-        int valueIWant = search_table->back() + 1;
-        int compareIndex = i;
-        int currentValue = 0;
-
-        if(valueIWant == 1 && pattern[compareIndex - 1] == *pattern && pattern[valueIWant] == pattern[i])
-        {
-            currentValue = valueIWant;
-        }
-
-        if(valueIWant > 1 && pattern[compareIndex] == pattern[valueIWant])
-            currentValue = valueIWant;
-
-        search_table->push_back(currentValue);
-        i++;
+        int back = search_table->back();
+        if(isLastEqual)
+            search_table->push_back(++back);
+        else
+            search_table->push_back(0);
+        isLastEqual = pattern[i] == pattern[search_table->operator[](i)];
     }
+
     return search_table;
 }
 
-std::shared_ptr<std::vector<int>>
-build_search_table2(const char* pattern, size_t len)
+// std::shared_ptr<std::vector<int>>
+// build_search_table2(const char* pattern, size_t len)
+// {
+//     assert(pattern != nullptr);
+//     std::shared_ptr<std::vector<int>> search_table
+//     = std::make_shared<std::vector<int>>();
+
+//     search_table->push_back(-1);
+
+//     int i = 1;
+//     while(true)
+//     {
+//         if(search_table->size() == len) break;
+//         int valueIWant = search_table->back() + 1;
+//         int compareIndex = i;
+//         int currentValue = 0;
+
+//         while(pattern[valueIWant] == pattern[compareIndex] 
+//             && valueIWant >= 0)
+//         {
+//             valueIWant--;
+//             compareIndex--;
+//         }
+//         if(valueIWant < 0) currentValue = search_table->back() + 1;
+
+//         search_table->push_back(currentValue);
+//         i++;
+//     }
+//     return search_table;
+// }
+
+int kmp_search(const char* text, const char* pattern)
 {
-    assert(pattern != nullptr);
-    std::shared_ptr<std::vector<int>> search_table
-    = std::make_shared<std::vector<int>>();
+    if(text == nullptr || pattern == nullptr) return -1;
+    size_t text_len = strlen(text);
+    size_t pattern_len = strlen(pattern);
+    if(text_len == 0 || pattern_len == 0) return -1;
 
-    search_table->push_back(-1);
+    auto search_table = build_search_table(pattern, pattern_len);
 
-    int i = 1;
-    while(true)
+    int pattern_len_int = pattern_len;
+    int j = 0;
+    for (size_t i = 0; i < text_len; i++)
     {
-        if(search_table->size() == len) break;
-        int valueIWant = search_table->back() + 1;
-        int compareIndex = i;
-        int currentValue = 0;
-
-        while(pattern[valueIWant] == pattern[compareIndex] 
-            && valueIWant >= 0)
+        char t = text[i];
+        char p = pattern[j];
+        if(t == p)
         {
-            valueIWant--;
-            compareIndex--;
+            if(j == pattern_len_int - 1)
+                return i - pattern_len_int + 1;
+            j++;
+            continue;
         }
-        if(valueIWant < 0) currentValue = search_table->back() + 1;
 
-        search_table->push_back(currentValue);
-        i++;
+        //回退J
+        while(j != -1 && t != pattern[j])
+        {
+            j = search_table->operator[](j);
+        }
+        if(j == -1)
+        {
+            j = 0;
+        }else
+        {
+            j++;
+        }
     }
-    return search_table;
+    return -1;
 }
+
 }
 #endif
 

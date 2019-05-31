@@ -38,16 +38,16 @@ void test_build_search_table(build_search_table_callback build_search_table_call
     validate(build_search_table_call, "ABCDEFG", expectedTable);
 
     expectedTable.clear();
-    expectedTable = {-1, 0, 0, 0, 0, 1, 2, 3, 0, 0};
+    expectedTable = {-1, 0, 0, 0, 0, 1, 2, 3, 4, 0};
     validate(build_search_table_call, "chinchinla", expectedTable);
 
     expectedTable.clear();
-    expectedTable = {-1, 0, 0, 0, 1, 0, 0, 1, 2, 3, 4};
+    expectedTable = {-1, 0, 0, 1, 0, 0, 0, 1, 2, 3, 4};
     validate(build_search_table_call, "abaabbabaab", expectedTable);
 
     expectedTable.clear();
-    expectedTable = {-1, 0, 0, 0, 1, 0, 0, 1, 2, 3, 4};
-    validate(build_search_table_call, "abaabbabaab", expectedTable);
+    expectedTable = {-1, 0, 0, 1, 2};
+    validate(build_search_table_call, "ababb", expectedTable);
 }
 
 void bench_mark_test(const char* pattern)
@@ -60,7 +60,7 @@ void bench_mark_test(const char* pattern)
     }
     {
         utils::timer _{"with while"};
-        auto table = substring_search::build_search_table2(pattern, len);
+        auto table = substring_search::build_search_table(pattern, len);
         // print_search_table(*table);
     }
 }
@@ -95,7 +95,7 @@ void test_kmp()
         utils::timer _{"slower version of build search table"};
         for(int i = 0; i < 10; i++)
         {
-            test_build_search_table(substring_search::build_search_table2);
+            test_build_search_table(substring_search::build_search_table);
         }
     }
 
@@ -105,6 +105,34 @@ void test_kmp()
 
     SizableClass_WithChar<4096> random_data{};
     bench_mark_test(random_data.buffer_);
+}
+
+void test_kmp_search()
+{
+    const char* text = "ababshsbababaskjdbabababbabbabbabkljababbabaldjlwbababbabbabaklhsdbabbababbakhsdwbabbabababbasbdabbab";
+    const char* pattern = "ababb";
+    size_t index = substring_search::kmp_search(text, pattern);
+    std::cout << "index: " << index << std::endl;
+    assert(index == 20);
+
+    text = "aabraacadabraacaadabra";
+    pattern = "aacaa";
+    index = substring_search::kmp_search(text, pattern);
+    std::cout << "index: " << index << std::endl;
+    assert(index == 12);
+
+    text = "http://wangjiaming0909/unp";
+    pattern = "http";
+    index = substring_search::kmp_search(text, pattern);
+    std::cout << "index: " << index << std::endl;
+    assert(index == 0);
+
+    pattern = "://";
+    index = substring_search::kmp_search(text, pattern);
+    std::cout << "index: " << index << std::endl;
+    assert(index == 4);
+
+
 }
 
 
