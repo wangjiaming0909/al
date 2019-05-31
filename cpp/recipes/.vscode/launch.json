@@ -17,7 +17,7 @@
                 "externalConsole": true,
                 "MIMode": "gdb",
                 "internalConsoleOptions": "neverOpen",
-                "miDebuggerPath": "C:\\MinGW\\bin\\gdb.exe",
+                "miDebuggerPath": "C:\\MinGW\\bin\\gdb.exe"
             },
             "linux": {
                 "program": "${workspaceFolder}/build/recipes",
@@ -27,8 +27,8 @@
                 "environment": [],
                 "externalConsole": false,
                 "MIMode": "gdb",
-                "internalConsoleOptions":"openOnSessionStart",
-                "miDebuggerPath": "/usr/bin/gdb",
+                "internalConsoleOptions":"neverOpen",
+                "miDebuggerPath": "/usr/bin/gdb"
             },
             "stopAtEntry": true,
             "showDisplayString": true,

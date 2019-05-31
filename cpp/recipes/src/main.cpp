@@ -9,7 +9,7 @@
 // #include "easylogging/test_easylogging.h"
 // #include "http_parser/test.h"
 #include "string_piece/test.h"
-#include "substring_search/KMP.h"
+#include "substring_search/kmp_test.h"
 
 using namespace std;
 
@@ -38,7 +38,7 @@ int main()
     // http_parser_test::test_traits();
 
     // string_piece_test::test();
-    substring_search::test_kmp();
+    kmp_test::test_kmp();
 
     cout << "Hello World!" << endl;
     return 0;

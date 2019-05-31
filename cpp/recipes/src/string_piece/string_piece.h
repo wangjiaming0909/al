@@ -64,7 +64,8 @@ public:
 
     size_type find(Range<Iter> str)
     {
-
+        (void)str;
+        return 0;
     }
 
     Range<iterator> sub_string(size_type first, size_type len = std::string::npos)

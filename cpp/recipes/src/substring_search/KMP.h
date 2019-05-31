@@ -37,7 +37,7 @@ build_search_table(const char* pattern, size_t len)
         int compareIndex = i;
         int currentValue = 0;
 
-        if(valueIWant == 1 && pattern[compareIndex - 1] == *pattern)
+        if(valueIWant == 1 && pattern[compareIndex - 1] == *pattern && pattern[valueIWant] == pattern[i])
         {
             currentValue = valueIWant;
         }
@@ -45,62 +45,42 @@ build_search_table(const char* pattern, size_t len)
         if(valueIWant > 1 && pattern[compareIndex] == pattern[valueIWant])
             currentValue = valueIWant;
 
-        // while(pattern[valueIWant] == pattern[compareIndex] 
-        //     && valueIWant >= 0)
-        // {
-        //     valueIWant--;
-        //     compareIndex--;
-        // }
-        // if(valueIWant < 0) currentValue = search_table->back() + 1;
-
         search_table->push_back(currentValue);
         i++;
     }
     return search_table;
 }
 
-void test_build_search_table()
+std::shared_ptr<std::vector<int>>
+build_search_table2(const char* pattern, size_t len)
 {
-    const char* pattern = "ABABABAB";
-    size_t len = strlen(pattern);
-    auto table = build_search_table(pattern, len);
-    std::cout << "-";
-    std::cout << pattern << std::endl;
-    for(auto i : *table)
+    assert(pattern != nullptr);
+    std::shared_ptr<std::vector<int>> search_table
+    = std::make_shared<std::vector<int>>();
+
+    search_table->push_back(-1);
+
+    int i = 1;
+    while(true)
     {
-        std::cout << i;
+        if(search_table->size() == len) break;
+        int valueIWant = search_table->back() + 1;
+        int compareIndex = i;
+        int currentValue = 0;
+
+        while(pattern[valueIWant] == pattern[compareIndex] 
+            && valueIWant >= 0)
+        {
+            valueIWant--;
+            compareIndex--;
+        }
+        if(valueIWant < 0) currentValue = search_table->back() + 1;
+
+        search_table->push_back(currentValue);
+        i++;
     }
-    std::cout << std::endl;
-
-
-    std::vector<int> expectedTable = {-1, 0, 0, 1, 2, 3, 4, 5};
-    assert(*table == expectedTable);
-
-    pattern = "ABCDEFG";
-    len = strlen(pattern);
-    table = build_search_table(pattern, len);
-
-    expectedTable.clear();
-    expectedTable = {-1, 0, 0, 0, 0, 0, 0};
-    assert(*table == expectedTable);
-
-    pattern = "chinchinla";
-    len = strlen(pattern);
-    table = build_search_table(pattern, len);
-
-    expectedTable.clear();
-    expectedTable = {-1, 0, 0, 0, 0, 1, 2, 3, 0, 0};
-    assert(*table == expectedTable);
-
+    return search_table;
 }
-
-
-void test_kmp()
-{
-    test_build_search_table();
-    std::cout << 123 << std::endl;
-}
-
 }
 #endif
 

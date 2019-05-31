@@ -1,3 +1,5 @@
+#ifndef _RECIPES_BUFFER_TEST_H_
+#define _RECIPES_BUFFER_TEST_H_
 #include "buffer/buffer.h"
 #include <cassert>
 #include <string> 
@@ -740,3 +742,5 @@ void run_tests()
 }
 
 } //namespace buffer_test
+
+#endif //_RECIPES_BUFFER_TEST_H_

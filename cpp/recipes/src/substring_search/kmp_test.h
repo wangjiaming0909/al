@@ -1,0 +1,113 @@
+#ifndef _RECIPES_KMP_TEST_H_
+#define _RECIPES_KMP_TEST_H_
+
+#include "substring_search/KMP.h"
+#include "utils/timer.h"
+
+namespace kmp_test
+{
+void print_search_table(const std::vector<int>& search_table)
+{
+    for(auto i : search_table)
+    {
+        std::cout << i;
+    }
+    std::cout << std::endl;
+}
+
+using build_search_table_callback = std::shared_ptr<std::vector<int>> (*)(const char*, size_t);
+
+void validate(build_search_table_callback callback, const char* pattern, const std::vector<int>& expectedTable)
+{
+    size_t len = strlen(pattern);
+    auto table = callback(pattern, len);
+    // std::cout << "-";
+    // std::cout << pattern << std::endl;
+    // print_search_table(*table);
+
+    assert(*table == expectedTable);
+}
+
+void test_build_search_table(build_search_table_callback build_search_table_call)
+{
+    std::vector<int> expectedTable = {-1, 0, 0, 1, 2, 3, 4, 5};
+    validate(build_search_table_call, "ABABABAB", expectedTable);
+
+    expectedTable.clear();
+    expectedTable = {-1, 0, 0, 0, 0, 0, 0};
+    validate(build_search_table_call, "ABCDEFG", expectedTable);
+
+    expectedTable.clear();
+    expectedTable = {-1, 0, 0, 0, 0, 1, 2, 3, 0, 0};
+    validate(build_search_table_call, "chinchinla", expectedTable);
+
+    expectedTable.clear();
+    expectedTable = {-1, 0, 0, 0, 1, 0, 0, 1, 2, 3, 4};
+    validate(build_search_table_call, "abaabbabaab", expectedTable);
+
+    expectedTable.clear();
+    expectedTable = {-1, 0, 0, 0, 1, 0, 0, 1, 2, 3, 4};
+    validate(build_search_table_call, "abaabbabaab", expectedTable);
+}
+
+void bench_mark_test(const char* pattern)
+{
+    size_t len = strlen(pattern);
+    {
+        utils::timer _{"no while"};
+        auto table = substring_search::build_search_table(pattern, len);
+        // print_search_table(*table);
+    }
+    {
+        utils::timer _{"with while"};
+        auto table = substring_search::build_search_table2(pattern, len);
+        // print_search_table(*table);
+    }
+}
+
+static std::random_device rd;
+static std::mt19937 gen(rd());
+static std::uniform_int_distribution<> dis(33, 34);
+
+template <unsigned int N>
+struct SizableClass_WithChar{
+    SizableClass_WithChar()
+    {
+        for(uint32_t i = 0; i < N; i++)
+        {
+            buffer_[i] = dis(gen);
+        }
+    }
+    char buffer_[N];
+};
+
+void test_kmp()
+{
+    {
+        utils::timer _{"faster version of build search table"};
+        for(int i = 0; i < 10; i++)
+        {
+            test_build_search_table(substring_search::build_search_table);
+        }
+    }
+
+    {
+        utils::timer _{"slower version of build search table"};
+        for(int i = 0; i < 10; i++)
+        {
+            test_build_search_table(substring_search::build_search_table2);
+        }
+    }
+
+
+    const char* pattern = "ababshsbababaskjdbabababbabbabbabkljababbabaldjlwbababbabbabaklhsdbabbababbakhsdwbabbabababbasbdabbab";
+    bench_mark_test(pattern);
+
+    SizableClass_WithChar<4096> random_data{};
+    bench_mark_test(random_data.buffer_);
+}
+
+
+
+}
+#endif //_RECIPES_KMP_TEST_H_
