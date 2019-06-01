@@ -135,6 +135,32 @@ void test_kmp_search()
 
 }
 
+void test_kmp_search_without_0_end()
+{
+    const char* text = "ababshsbababaskjdbabababbabbabbabkljababbabaldjlwbababbabbabaklhsdbabbababbakhsdwbabbabababbasbdabbab";
+    const char* pattern = "ababb";
+    size_t index = substring_search::kmp_search(text, strlen(text), pattern, strlen(pattern));
+    std::cout << "index: " << index << std::endl;
+    assert(index == 20);
+
+    text = "aabraacadabraacaadabra";
+    pattern = "aacaa";
+    index = substring_search::kmp_search(text, strlen(text), pattern, strlen(pattern));
+    std::cout << "index: " << index << std::endl;
+    assert(index == 12);
+
+    text = "http://wangjiaming0909/unp";
+    pattern = "http";
+    index = substring_search::kmp_search(text, strlen(text), pattern, strlen(pattern));
+    std::cout << "index: " << index << std::endl;
+    assert(index == 0);
+
+    pattern = "://";
+    index = substring_search::kmp_search(text, strlen(text), pattern, strlen(pattern));
+    std::cout << "index: " << index << std::endl;
+    assert(index == 4);
+}
+
 
 
 }

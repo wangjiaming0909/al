@@ -6,6 +6,7 @@
 #include <algorithm>
 #include <stdexcept>
 #include <ostream>
+#include "substring_search/KMP.h"
 
 namespace string_piece
 {
@@ -27,7 +28,6 @@ template <typename Iter>
 class Range
 {
 public:
-
     using it_traits = std::iterator_traits<Iter>;
     using value_type = typename it_traits::value_type;
     using pointer = typename it_traits::pointer;
@@ -62,10 +62,10 @@ public:
         return it == end_ ? std::string::npos : (it - begin_);
     }
 
-    size_type find(Range<Iter> str)
+    template <typename T = Iter>
+    size_type find(const Range<T>& str)
     {
-        (void)str;
-        return 0;
+        return substring_search::kmp_search(cbegin(), size(), str.cbegin(), str.size());
     }
 
     Range<iterator> sub_string(size_type first, size_type len = std::string::npos)

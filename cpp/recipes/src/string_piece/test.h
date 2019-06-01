@@ -37,9 +37,15 @@ void test_sub_string2()
 
 void test_find()
 {
-
+    string_piece::const_string_piece text = "https://github.com/wangjiaming0909";
+    string_piece::const_string_piece pattern = "://";
+    auto pos = text.find(pattern);
+    cout << "pos: " << pos << endl;
+    assert(pos == 5);
+    string_piece::const_string_piece pattern1 = "https:";
+    pos = text.find(pattern1);
+    assert(pos == 0);
 }
-
 
 void test()
 {
@@ -70,6 +76,7 @@ void test()
 
     test_sub_string();
     test_sub_string2();
+    test_find();
 }
 
 }

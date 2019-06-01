@@ -15,7 +15,9 @@
         "chrono": "cpp",
         "type_traits": "cpp",
         "cstdint": "cpp",
-        "*.tcc": "cpp"
+        "*.tcc": "cpp",
+        "unordered_set": "cpp",
+        "*.ipp": "cpp"
     },
     "C_Cpp.dimInactiveRegions": false
 }

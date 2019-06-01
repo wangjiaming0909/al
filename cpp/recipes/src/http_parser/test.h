@@ -89,7 +89,7 @@ void test()
     it_t begin = ppp + 1;
     it_t end = ppp + 7;
     value_t value = *ppp;
-    auto index = std::find(begin, end, "fg");
+    auto index = std::find(begin, end, 'g');
     if(index == nullptr)
     {
         // cout << "index is null" << endl;

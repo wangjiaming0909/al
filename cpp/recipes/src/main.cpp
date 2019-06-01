@@ -7,7 +7,7 @@
 #include "design_patterns/maybemonad.h"
 #include "design_patterns/thread_safe_singleton.h"
 // #include "easylogging/test_easylogging.h"
-// #include "http_parser/test.h"
+#include "http_parser/test.h"
 #include "string_piece/test.h"
 #include "substring_search/kmp_test.h"
 
@@ -17,29 +17,30 @@ using namespace std;
 
 int main()
 {
-    // bytebuf_test::run_tests();
-//     buffer_test::run_tests();
-    // test_bind();
+    bytebuf_test::run_tests();
+    buffer_test::run_tests();
+    test_bind();
 
 //    test_vsnprintf("%s", c_63);
 //    test_vsnprintf("%s", c_64);
 
-    // guid_map_test::run_tests();
+    guid_map_test::run_tests();
 
-//    design_patterns::OC_test();
-    // design_patterns::Monad_test();
-    // design_patterns::thread_safe_singleton_test();
+    design_patterns::OC_test();
+    design_patterns::Monad_test();
+    design_patterns::thread_safe_singleton_test();
     // easylogging::test();
 
-    // test_shared_ptr();
-    // test_variant();
+    test_shared_ptr();
+    test_variant();
 
-    // http_parser_test::test();
-    // http_parser_test::test_traits();
+    http_parser_test::test();
+    http_parser_test::test_traits();
 
-    // string_piece_test::test();
-    // kmp_test::test_kmp();
+    string_piece_test::test();
+    kmp_test::test_kmp();
     kmp_test::test_kmp_search();
+    kmp_test::test_kmp_search_without_0_end();
 
     cout << "Hello World!" << endl;
     return 0;
