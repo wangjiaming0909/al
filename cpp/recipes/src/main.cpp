@@ -3,15 +3,16 @@
 #include "bytebuf/test.h"
 #include "tests/tests.h"
 #include "guid_map/test.h"
-#include "design_patterns/SOLID_Open_Close.h"
-#include "design_patterns/maybemonad.h"
-#include "design_patterns/thread_safe_singleton.h"
+#include "design_patterns/basic/SOLID_Open_Close.h"
+#include "design_patterns/basic/maybemonad.h"
+#include "design_patterns/basic/thread_safe_singleton.h"
 // #include "easylogging/test_easylogging.h"
 #include "http_parser/test.h"
 #include "string_piece/test.h"
 #include "substring_search/kmp_test.h"
-#include "design_patterns/builder.h"
-#include "design_patterns/groovy_builder.h"
+#include "design_patterns/builder/builder.h"
+#include "design_patterns/builder/groovy_builder.h"
+#include "design_patterns/factory/factory_method.h"
 
 using namespace std;
 
@@ -46,6 +47,7 @@ int main()
 
     design_patterns::test_build();
     design_patterns::test_groovy_builder();
+    design_patterns::test_factory_method();
 
     cout << "Hello World!" << endl;
     return 0;

@@ -9,8 +9,8 @@ namespace design_patterns
 {
 struct Tag
 {
-    Tag(const string& name, const string& text) : name(name), text(text){}
-    Tag(const string &name, const string &text, const vector<Tag> &children) : name(name), text(text), children(children){}
+    Tag(const string& name, const string& text) : name(name), text(text), children(), attributes(){}
+    Tag(const string &name, const string &text, const vector<Tag> &children) : name(name), text(text), children(children), attributes(){}
     string name;
     string text;
     vector<Tag> children;
@@ -40,6 +40,7 @@ void test_groovy_builder()
         IMG{"https://a.com/a.png"},
         IMG{"https://a.com/b.png"}
     };
+    cout << 123 << endl;
 }
 
 }
