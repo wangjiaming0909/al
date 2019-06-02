@@ -10,6 +10,7 @@
 #include "http_parser/test.h"
 #include "string_piece/test.h"
 #include "substring_search/kmp_test.h"
+#include "design_patterns/builder.h"
 
 using namespace std;
 
@@ -41,6 +42,8 @@ int main()
     kmp_test::test_kmp();
     kmp_test::test_kmp_search();
     kmp_test::test_kmp_search_without_0_end();
+
+    design_patterns::test_build();
 
     cout << "Hello World!" << endl;
     return 0;
