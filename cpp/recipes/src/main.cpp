@@ -15,6 +15,7 @@
 #include "design_patterns/factory/factory_method.h"
 #include "design_patterns/chain_of_responsibility/pointer_chain.h"
 #include "design_patterns/chain_of_responsibility/broke_chain.h"
+#include "design_patterns/prototype/prototype.h"
 
 using namespace std;
 
@@ -52,6 +53,7 @@ int main()
     design_patterns::test_factory_method();
     design_patterns::test_pointer_chain();
     design_patterns::test_broke_chain();
+    design_patterns::test_prototype();
 
     test_boost_signals2();
 
