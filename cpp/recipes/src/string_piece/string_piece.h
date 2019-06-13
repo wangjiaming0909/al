@@ -49,6 +49,13 @@ public:
 
     Range(const Range&) = default;
     Range(Range&&) = default;
+    Range &operator=(const Range &range) = default;
+
+    bool operator==(const Range& range) const
+    {
+        if(size() != range.size()) return false;
+        return strncmp(cbegin(), range.cbegin(), size()) == 0;
+    }
 
 public:
     iterator begin() {return begin_;}

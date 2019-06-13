@@ -6,6 +6,7 @@
 #include "http_parser/http_parser.h"
 #include "boost/range.hpp"
 #include <vector>
+#include "http_parser/URLParser.h"
 
 using namespace std;
 
@@ -102,6 +103,29 @@ void test()
     cout << "testing http_parser" << endl;
 }
 
+void test_URLParser()
+{
+    http::URLParser parser{"https://a.com/c/d"};
+
+    cout << parser.scheme() << endl;
+    cout << parser.host() << endl;
+    cout << parser.path() << endl;
+    cout << parser.port() << endl;
+
+    assert(parser.scheme().size() == 5);
+    string_piece::const_string_piece scheme = "https";
+    assert(parser.scheme() == scheme);
+
+    assert(parser.host().size() == 5);
+    string_piece::const_string_piece host = "a.com";
+    assert(parser.host() == host);
+
+    string_piece::const_string_piece path = "/c/d";
+    assert(parser.path().size() == 4);
+    assert(parser.path() == path);
+
+    assert(parser.port() == 0);
+}
 }
 
 

@@ -3,6 +3,7 @@
 
 #include <cstdint>
 #include "string_piece/string_piece.h"
+#include "http_parser/http_parser.h"
 
 namespace http
 {
@@ -23,23 +24,26 @@ public:
 
     void init(const_string_piece_t urlVal);
 
-    const string_piece_t& url() const { return url_; }
-    const string_piece_t& scheme() const { return scheme_; }
-    const string_piece_t& host() const {return host_;}
+    const const_string_piece_t& url() const { return url_; }
+    const const_string_piece_t& scheme() const { return scheme_; }
+    const const_string_piece_t& host() const {return host_;}
     uint16_t port() const {return port_;}
-    const string_piece_t& path() const {return path_;}
-    const string_piece_t& query() const {return query_;}
+    const const_string_piece_t& path() const {return path_;}
+    const const_string_piece_t& query() const {return query_;}
     bool valid() const {return valid_;}
 
 private:
-    string_piece_t      url_;
-    string_piece_t      scheme_;
-    string_piece_t      host_;
-    string_piece_t      path_;
-    string_piece_t      query_;
-    uint16_t            port_{0};
-    bool                valid_{false};
-    bool                initilized_{false};
+    void parse();
+
+private:
+    const_string_piece_t        url_;
+    const_string_piece_t        scheme_;
+    const_string_piece_t        host_;
+    const_string_piece_t        path_;
+    const_string_piece_t        query_;
+    uint16_t                    port_{0};
+    bool                        valid_{false};
+    bool                        initilized_{false};
 };
 
 

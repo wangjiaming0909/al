@@ -42,6 +42,7 @@ int main()
 
     http_parser_test::test();
     http_parser_test::test_traits();
+    http_parser_test::test_URLParser();
 
     string_piece_test::test();
     kmp_test::test_kmp();
