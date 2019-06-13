@@ -11,19 +11,39 @@ using namespace std;
 namespace design_patterns
 {
 
+
+class Query
+{
+public:
+    string creature_name;
+    enum Argument {attack, defence} argument;
+    int result;
+
+    Query(const string& name, Argument argument, int result)
+        : creature_name(name)
+        , argument(argument)
+        , result(result){}
+};
+
+class Game
+{
+public:
+    signal<void(Query&)> queries;
+};
+
 struct NewCreature
 {
-    NewCreature(const string& name, int attack, int defence)
-        : name(name)
+    NewCreature(Game& game, const string& name, int attack, int defence)
+        :game(game)
+        , name(name)
         , attack(attack)
         , defence(defence){ }
-    string name;
-    int attack;
-    int defence;
-
+    
     int getAttack()
     {
-
+        Query q{name, Query::Argument::attack, attack} ;
+        game.queries(q);
+        return q.result;
     }
     int getDefence()
     {
@@ -36,12 +56,19 @@ struct NewCreature
            << " attack: " << creature.attack 
            << " defence: " << creature.defence << endl;
     }
+
+private:
+    Game& game;
+    string name;
+    int attack;
+    int defence;
 };
 
 struct NewCreatureModifier
 {
-    NewCreature& targetCreature;
-    NewCreatureModifier(NewCreature& creature) : targetCreature(creature){}
+    NewCreatureModifier(Game& game, NewCreature& creature) 
+        : targetCreature(creature)
+        , game_(game){}
     virtual ~NewCreatureModifier(){}
 
     void add(NewCreatureModifier& modifier)
@@ -52,10 +79,12 @@ struct NewCreatureModifier
 
     void execute()
     {
-        if(next_) 
+        if(next_) next_->execute();
     }
 private:
+    NewCreature& targetCreature;
     NewCreatureModifier* next_;
+    Game& game_;
 };
 
 

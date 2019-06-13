@@ -5,6 +5,7 @@
 #include <cstdio>
 #include <memory>
 #include "boost/range.hpp"
+#include "boost/signals2.hpp"
 
 #ifdef __GNUC__
 #if __GNUC__ >= 7
@@ -40,13 +41,13 @@ int function3(string& s, int i)
 
 void test_bind()
 {
-    auto bind_func1 = std::bind(function1, _1, _2, 2);
+    auto bind_func1 = std::bind(function1, std::placeholders::_1, std::placeholders::_2, 2);
     bind_func1(1, "avc");
     string s{"abc"};
     bind_func1(1, std::move(s));
 
     int j = 0;
-    auto bind_func2 = std::bind(function2, _1, _2, j);
+    auto bind_func2 = std::bind(function2, std::placeholders::_1, std::placeholders::_2, j);
     int i = 0;
     cout << j << endl;
     cout << i << s << endl;
@@ -104,5 +105,15 @@ void test_shared_ptr()
 void test_boost_range()
 {
 
+}
+
+void test_boost_signals2()
+{
+    using namespace std;
+    boost::signals2::signal<void(string a)> s{};
+
+    auto con = s.connect([](string a){cout << a << endl;});
+
+    s("we are family;");
 }
 

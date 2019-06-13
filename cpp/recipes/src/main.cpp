@@ -53,6 +53,8 @@ int main()
     design_patterns::test_pointer_chain();
     design_patterns::test_broke_chain();
 
+    test_boost_signals2();
+
     cout << "Hello World!" << endl;
     return 0;
 }
