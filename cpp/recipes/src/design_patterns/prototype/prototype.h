@@ -73,6 +73,13 @@ int test_prototype()
     jane.work_address->suite = 101;
     cout << john << endl;
     cout << jane << endl;
+
+    auto clone = [](Contact c)
+    {
+        ostringstream oss;
+        boost::archive::text_oarchive oa(oss);
+        // oa << c;
+    };
 }
 }
 #endif //_DESIGN_PATTERNS_PROTOTYPE_H_

@@ -41,12 +41,28 @@ private:
 template<typename T> std::mutex thread_safe_singleton<T>::mutex_;
 template<typename T> std::shared_ptr<T> thread_safe_singleton<T>::instance_;
 
+template <typename T>
+class ThreadSafe_Singleton_WithoutLock
+{
+public:
+    static std::shared_ptr<T> getInstance()
+    {
+        static std::shared_ptr<T> instance = std::make_shared<T>();
+        return instance;
+    }
+};
+
 struct A
 {
-    A() : _(1000){}
+    A() : _(1000){
+        count++;
+    }
     std::string name = "abcd";
     std::vector<std::vector<std::string>> _;
+    static int count;
 };
+
+int A::count = 0;
 
 
 void thread_routine()
@@ -135,6 +151,13 @@ void thread_routine3()
     std::cout << std::this_thread::get_id() << " " << (*swithCallOnce).name << std::endl;
 }
 
+void thread_routine4()
+{
+    auto sWithoutLock = ThreadSafe_Singleton_WithoutLock<A>::getInstance();
+    std::this_thread::sleep_for(10ms);
+    std::cout << std::this_thread::get_id() << " " << (*sWithoutLock).count << std::endl;
+}
+
 template <typename Func> 
 void run_threads(Func f)
 {
@@ -155,8 +178,9 @@ void run_threads(Func f)
 
 void thread_safe_singleton_test(){
     // run_threads(thread_routine);         // not thread safe
-    run_threads(thread_routine2);           //safe
-    run_threads(thread_routine3);           //safe
+    // run_threads(thread_routine2);           //safe
+    // run_threads(thread_routine3);           //safe
+    run_threads(thread_routine4);
 }
 
 }

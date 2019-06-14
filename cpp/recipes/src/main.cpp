@@ -23,40 +23,40 @@ using namespace std;
 
 int main()
 {
-    bytebuf_test::run_tests();
-    buffer_test::run_tests();
-    test_bind();
+//    bytebuf_test::run_tests();
+//    buffer_test::run_tests();
+////    test_bind();
 
 //    test_vsnprintf("%s", c_63);
 //    test_vsnprintf("%s", c_64);
 
-    guid_map_test::run_tests();
+//    guid_map_test::run_tests();
 
-    design_patterns::OC_test();
-    design_patterns::Monad_test();
+//    design_patterns::OC_test();
+//    design_patterns::Monad_test();
     design_patterns::thread_safe_singleton_test();
     // easylogging::test();
 
-    test_shared_ptr();
-    test_variant();
+//    test_shared_ptr();
+//    test_variant();
 
-    http_parser_test::test();
-    http_parser_test::test_traits();
-    http_parser_test::test_URLParser();
+//    http_parser_test::test();
+//    http_parser_test::test_traits();
+//    http_parser_test::test_URLParser();
 
-    string_piece_test::test();
-    kmp_test::test_kmp();
-    kmp_test::test_kmp_search();
-    kmp_test::test_kmp_search_without_0_end();
+//    string_piece_test::test();
+//    kmp_test::test_kmp();
+//    kmp_test::test_kmp_search();
+//    kmp_test::test_kmp_search_without_0_end();
 
-    design_patterns::test_build();
-    design_patterns::test_groovy_builder();
-    design_patterns::test_factory_method();
-    design_patterns::test_pointer_chain();
-    design_patterns::test_broke_chain();
-    design_patterns::test_prototype();
+//    design_patterns::test_build();
+//    design_patterns::test_groovy_builder();
+//    design_patterns::test_factory_method();
+//    design_patterns::test_pointer_chain();
+//    design_patterns::test_broke_chain();
+//    design_patterns::test_prototype();
 
-    test_boost_signals2();
+//    test_boost_signals2();
 
     cout << "Hello World!" << endl;
     return 0;
