@@ -1,6 +1,8 @@
+import os.path;
 
-fileNameToWrite = 'tmpFile.txt';
 
-toWritePyFile = open(fileNameToWrite, 'w');
+fileNameToWrite = 'tests/eof.tmp';
+
+toWritePyFile = open(fileNameToWrite, 'a');
 toWritePyFile.write('123\n123\n123\n');
 toWritePyFile.flush();
