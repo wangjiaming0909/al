@@ -15,10 +15,13 @@ aux_source_directory(src/http SRC_DIR)
 aux_source_directory(src/string_piece SRC_DIR)
 aux_source_directory(src/substring_search SRC_DIR)
 aux_source_directory(src/utils SRC_DIR)
+aux_source_directory(src/gperf SRC_DIR)
+
 
 
 # for test main
 aux_source_directory(test TEST_DIR)
+aux_source_directory(src/gperf TEST_DIR)
 aux_source_directory(test/gperf TEST_DIR)
 aux_source_directory(src/buffer TEST_DIR)
 aux_source_directory(test/buffer TEST_DIR)
@@ -28,6 +31,8 @@ aux_source_directory(src/string_piece TEST_DIR)
 aux_source_directory(test/string_piece TEST_DIR)
 aux_source_directory(src/http_parser TEST_DIR)
 aux_source_directory(test/http_parser TEST_DIR)
+aux_source_directory(src/http TEST_DIR)
+aux_source_directory(test/http TEST_DIR)
 
 
 

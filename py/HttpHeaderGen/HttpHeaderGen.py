@@ -13,21 +13,18 @@ def getFileFullName(fileName):
 def genHttpHeaderForGperf(line):
     line = line + '';
     line = line.strip();
+    originLine = line;
     line = line.upper();
     line = line.replace(':', 'COLON_');
     line = line.replace('-', '_');
     line = 'HTTP_HEADER_' + line;
-    line = line + ', HttpHeaderCode::' + line;
+    line = originLine + ', HttpHeaderCode::' + line;
     return line
     
 
 def genHttpHeaders(line):
     line = line + '';
     line = line.strip();
-    line = line.upper();
-    line = line.replace(':', 'COLON_');
-    line = line.replace('-', '_');
-    line = 'HTTP_HEADER_' + line;
     return line;
 
 

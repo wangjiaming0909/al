@@ -15,4 +15,4 @@
 # -Z 指定生成的类名字, 不指定则为PerfectHash
 
 
-gperf -DG -K headerName -N isValidHttpHeader -L C++ -Z HttpCommomHeaderInternal -t HttpCommomHeadersHash.h.gperf > HttpCommomHeadersHash.h
+gperf -DG -K headerName -N isValidHttpHeader -L C++ -Z HttpCommomHeaderInternal -t HttpCommomHeadersHash.h.gperf > HttpCommomHeadersHash.cpp

@@ -11,7 +11,7 @@
 using namespace std;
 TEST(gperf, test_all)
 {
-    const char* fileName = "../src/gperf/headers.txt";
+    const char* fileName = "../src/gperf/HttpCommomHeaders.txt";
     ifstream ifs{fileName, ifs.in};
     if(!ifs.is_open())
     {
@@ -39,7 +39,7 @@ TEST(gperf, test_all)
 
 TEST(gperf, test_some_cases)
 {
-    const char* a1 = "HTTP_HEADER_COLON_AUTHORITY";
+    const char* a1 = ":Authority";
     auto ret = http::HttpCommomHeaderInternal::isValidHttpHeader(a1, strlen(a1));
     // cout << "header name: " 
     //     << ret->headerName 
@@ -53,15 +53,13 @@ TEST(gperf, test_some_cases)
     ret = http::HttpCommomHeaderInternal::isValidHttpHeader(a1, strlen(a1));
     ASSERT_TRUE(ret == 0);
 
-    a1 = "HTTP_HEADER_CONTENT_ENCODING";
+    a1 = "Content-Encoding";
     ret = http::HttpCommomHeaderInternal::isValidHttpHeader(a1, strlen(a1));
     ASSERT_TRUE(ret != 0);
     ASSERT_EQ(strcmp(ret->headerName, a1), 0);
     ASSERT_EQ(ret->headerCode, http::HttpHeaderCode::HTTP_HEADER_CONTENT_ENCODING);
 
-    a1 = "HTTP_HEADER_NONE";
+    a1 = "none";
     ret = http::HttpCommomHeaderInternal::isValidHttpHeader(a1, strlen(a1));
-    ASSERT_TRUE(ret != 0);
-    ASSERT_EQ(strcmp(ret->headerName, a1), 0);
-    ASSERT_EQ(ret->headerCode, http::HttpHeaderCode::HTTP_HEADER_NONE);
+    ASSERT_TRUE(ret == 0);
 }

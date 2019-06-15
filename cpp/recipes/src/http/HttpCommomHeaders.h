@@ -9,16 +9,9 @@ namespace http
 class HttpCommomHeaders
 {
 public:
-    static HttpHeaderCode getHeaderCode(const char* headerName, size_t len)
-    {
-        // const HttpHeader* header = 
-    }
+    static HttpHeaderCode getHeaderCode(const char* headerName, size_t len);
 
-    static HttpHeaderCode getHeaderCode(const std::string& headerName)
-    {
-
-    }
-
+    static HttpHeaderCode getHeaderCode(const std::string& headerName);
 };
 
 }
