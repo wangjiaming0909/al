@@ -74,12 +74,13 @@ int test_prototype()
     cout << john << endl;
     cout << jane << endl;
 
-    auto clone = [](Contact c)
-    {
-        ostringstream oss;
-        boost::archive::text_oarchive oa(oss);
-        // oa << c;
-    };
+    // auto clone = [](Contact c)
+    // {
+    //     ostringstream oss;
+    //     boost::archive::text_oarchive oa(oss);
+    //     // oa << c;
+    // };
+    return 0;
 }
 }
 #endif //_DESIGN_PATTERNS_PROTOTYPE_H_

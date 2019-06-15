@@ -13,14 +13,6 @@ public:
     ~HttpMethod();
 };
 
-HttpMethod::HttpMethod(/* args */)
-{
-}
-
-HttpMethod::~HttpMethod()
-{
-}
-
 
 }
 #endif // _HTTP_METHOD_H_

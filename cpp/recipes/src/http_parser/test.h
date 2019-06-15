@@ -16,7 +16,7 @@ namespace http_parser_test
 class NotDefaultConstructableClass
 {
 public:
-    NotDefaultConstructableClass(int _){}
+    NotDefaultConstructableClass(int){}
 };
 
 class NOTDestructable
@@ -37,7 +37,8 @@ void test_traits()
     // v.resize(12);
 
     cout << std::is_trivially_default_constructible<NotDefaultConstructableClass>::value << endl;
-    using const_char = std::add_const<char*>::type;
+    // using const_char = std::add_const<char*>::type;
+    using const_char = const char*;
     const_char c = "asd";
     cout << c << endl;
 
@@ -57,7 +58,7 @@ void test_traits()
 
 
     std::string str = cc;
-    std::string::const_iterator beg = str.cbegin();
+    // std::string::const_iterator beg = str.cbegin();
 
     // std::find(beg, str.end(), "/");
     auto index = str.find('s');
@@ -86,10 +87,10 @@ void test()
 
     const char* ppp = "abcdefg";
     using it_t = const char*;
-    using value_t = std::iterator_traits<const char*>::value_type;
+    // using value_t = std::iterator_traits<const char*>::value_type;
     it_t begin = ppp + 1;
     it_t end = ppp + 7;
-    value_t value = *ppp;
+    // value_t value = *ppp;
     auto index = std::find(begin, end, 'g');
     if(index == nullptr)
     {

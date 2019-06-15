@@ -70,7 +70,7 @@ public:
     }
 
     template <typename T = Iter>
-    size_type find(const Range<T>& str)
+    int find(const Range<T>& str)
     {
         return substring_search::kmp_search(cbegin(), size(), str.cbegin(), str.size());
     }

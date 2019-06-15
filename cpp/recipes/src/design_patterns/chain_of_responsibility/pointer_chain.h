@@ -23,6 +23,7 @@ public:
         os << "name: " << creature.name 
            << " attack: " << creature.attack 
            << " defence: " << creature.defence << endl;
+        return os;
     }
 };
 

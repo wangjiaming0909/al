@@ -12,14 +12,6 @@ public:
     ~HttpHeader();
 };
 
-HttpHeader::HttpHeader(/* args */)
-{
-}
-
-HttpHeader::~HttpHeader()
-{
-}
-
 
 }
 #endif // _HTTP_HEADER_H_

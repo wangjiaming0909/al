@@ -47,7 +47,7 @@ struct NewCreature
     }
     int getDefence()
     {
-
+        return defence;
     }
 
     friend ostream& operator<< (ostream& os, const NewCreature& creature)
@@ -55,6 +55,7 @@ struct NewCreature
         os << "name: " << creature.name 
            << " attack: " << creature.attack 
            << " defence: " << creature.defence << endl;
+        return os;
     }
 
 private:
