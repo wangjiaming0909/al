@@ -117,6 +117,8 @@ cpp/recipes/recipes.creator
 cpp/recipes/recipes.includes
 cpp/recipes/recipes.files
 
+**/ipch/**
+
 **/bin/*
 **/obj/*
 **/*.tmp
