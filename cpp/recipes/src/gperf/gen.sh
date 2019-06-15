@@ -12,5 +12,7 @@
 # -N：该选项允许用户修改查找函数的名称。默认名为 in_word_set()。
 # -t：该选项允许包含关键字结构。
 
+# -Z 指定生成的类名字, 不指定则为PerfectHash
 
-gperf -DG -K headerName -N isValidHttpHeader -L C++ -t HttpCommomHeaders.h.gperf > HttpCommomHeaders.h
+
+gperf -DG -K headerName -N isValidHttpHeader -L C++ -Z HttpCommomHeaderInternal -t HttpCommomHeadersHash.h.gperf > HttpCommomHeadersHash.h

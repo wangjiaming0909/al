@@ -1,8 +1,13 @@
 %{
+
+#ifndef _HTTP_COMMOM_HEADERS_HASH_H_
+#define _HTTP_COMMOM_HEADERS_HASH_H_
 #include <cstdint>
 #include <cstring>
 #include "HttpHeaderCode.h"
-using HttpHeaderCode = http::HttpHeaderCode;
+
+namespace http
+{
 %}
 struct HttpHeader
 {
@@ -105,3 +110,7 @@ HTTP_HEADER_X_THRIFT_PROTOCOL, HttpHeaderCode::HTTP_HEADER_X_THRIFT_PROTOCOL
 HTTP_HEADER_X_UA_COMPATIBLE, HttpHeaderCode::HTTP_HEADER_X_UA_COMPATIBLE
 HTTP_HEADER_X_WAP_PROFILE, HttpHeaderCode::HTTP_HEADER_X_WAP_PROFILE
 HTTP_HEADER_X_XSS_PROTECTION, HttpHeaderCode::HTTP_HEADER_X_XSS_PROTECTION
+%%
+} //namespace 
+
+#endif //_HTTP_COMMOM_HEADERS_HASH_H_

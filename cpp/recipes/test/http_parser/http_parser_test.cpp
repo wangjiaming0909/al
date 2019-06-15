@@ -1,12 +1,9 @@
-#ifndef _HTTP_PASER_TEST_H_
-#define _HTTP_PASER_TEST_H_
-
-
 #include <iostream>
 #include "http_parser/http_parser.h"
 #include "boost/range.hpp"
 #include <vector>
 #include "http_parser/URLParser.h"
+#include <gtest/gtest.h>
 
 using namespace std;
 
@@ -104,7 +101,7 @@ void test()
     cout << "testing http_parser" << endl;
 }
 
-void test_URLParser()
+TEST(http_parser, test_URLParser)
 {
     http::URLParser parser{"https://a.com/c/d"};
 
@@ -128,6 +125,3 @@ void test_URLParser()
     assert(parser.port() == 0);
 }
 }
-
-
-#endif // _HTTP_PASER_TEST_H_

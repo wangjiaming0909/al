@@ -27,11 +27,13 @@
         {
             "name": "linux",
             "includePath": [
-                "${workspaceFolder}/**"
+                "${workspaceFolder}/**",
+                "/usr/local/include"
             ],
             "browse": {
                 "path": [
-                    "${workspaceFolder}/**"
+                    "${workspaceFolder}/**",
+                    "/usr/local/include"
                 ]
             },
             "compilerPath": "/usr/bin/g++",

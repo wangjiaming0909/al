@@ -1,7 +1,5 @@
-#ifndef _STRING_PIECE_TEST_H_
-#define _STRING_PIECE_TEST_H_
-
 #include "string_piece/string_piece.h"
+#include <gtest/gtest.h>
 #include <iostream>
 #include <vector>
 #include <cassert>
@@ -10,7 +8,7 @@ using namespace std;
 namespace string_piece_test
 {
 
-void test_sub_string()
+TEST(string_piece, test_sub_string)
 {
     std::string str = "1234567890";
     string_piece::const_string_piece sp{str};
@@ -21,7 +19,7 @@ void test_sub_string()
     assert(subString.size() == str.length());
 }
 
-void test_sub_string2()
+TEST(string_piece, test_sub_string2)
 {
     const char* data = "123456789";
     char* ptr = static_cast<char*>(::calloc(10, 1));
@@ -35,7 +33,7 @@ void test_sub_string2()
     ::free(ptr);
 }
 
-void test_find()
+TEST(string_piece, test_find)
 {
     string_piece::const_string_piece text = "https://github.com/wangjiaming0909";
     string_piece::const_string_piece pattern = "://";
@@ -73,12 +71,6 @@ void test()
     // string_piece::Range<int *> int1{&*v.begin()};
 
     cout << 123 << endl;
-
-    test_sub_string();
-    test_sub_string2();
-    test_find();
 }
 
 }
-
-#endif // _STRING_PIECE_TEST_H_

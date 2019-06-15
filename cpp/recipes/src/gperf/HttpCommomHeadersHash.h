@@ -1,5 +1,5 @@
 /* C++ code produced by gperf version 3.1 */
-/* Command-line: gperf -DG -K headerName -N isValidHttpHeader -L C++ -t HttpCommomHeaders.h.gperf  */
+/* Command-line: gperf -DG -K headerName -N isValidHttpHeader -L C++ -Z HttpCommomHeaderInternal -t HttpCommomHeadersHash.h.gperf  */
 /* Computed positions: -k'13,20,34,$' */
 
 #if !((' ' == 32) && ('!' == 33) && ('"' == 34) && ('#' == 35) \
@@ -29,13 +29,18 @@
 #error "gperf generated tables don't work with this execution character set. Please report a bug to <bug-gperf@gnu.org>."
 #endif
 
-#line 1 "HttpCommomHeaders.h.gperf"
+#line 1 "HttpCommomHeadersHash.h.gperf"
 
+
+#ifndef _HTTP_COMMOM_HEADERS_HASH_H_
+#define _HTTP_COMMOM_HEADERS_HASH_H_
 #include <cstdint>
 #include <cstring>
 #include "HttpHeaderCode.h"
-using HttpHeaderCode = http::HttpHeaderCode;
-#line 7 "HttpCommomHeaders.h.gperf"
+
+namespace http
+{
+#line 12 "HttpCommomHeadersHash.h.gperf"
 struct HttpHeader
 {
     const char* headerName;
@@ -49,7 +54,7 @@ struct HttpHeader
 #define MAX_HASH_VALUE 200
 /* maximum key range = 182, duplicates = 0 */
 
-class Perfect_Hash
+class HttpCommomHeaderInternal
 {
 private:
   static inline unsigned int hash (const char *str, size_t len);
@@ -58,7 +63,7 @@ public:
 };
 
 inline unsigned int
-Perfect_Hash::hash (const char *str, size_t len)
+HttpCommomHeaderInternal::hash (const char *str, size_t len)
 {
   static unsigned char asso_values[] =
     {
@@ -127,195 +132,195 @@ Perfect_Hash::hash (const char *str, size_t len)
 
 static struct HttpHeader wordlist[] =
   {
-#line 37 "HttpCommomHeaders.h.gperf"
+#line 42 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ALT_SVC", HttpHeaderCode::HTTP_HEADER_ALT_SVC},
-#line 92 "HttpCommomHeaders.h.gperf"
+#line 97 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_VIA", HttpHeaderCode::HTTP_HEADER_VIA},
-#line 21 "HttpCommomHeaders.h.gperf"
+#line 26 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ACCEPT", HttpHeaderCode::HTTP_HEADER_ACCEPT},
-#line 35 "HttpCommomHeaders.h.gperf"
+#line 40 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_AGE", HttpHeaderCode::HTTP_HEADER_AGE},
-#line 22 "HttpCommomHeaders.h.gperf"
+#line 27 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ACCEPT_CHARSET", HttpHeaderCode::HTTP_HEADER_ACCEPT_CHARSET},
-#line 49 "HttpCommomHeaders.h.gperf"
+#line 54 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_COOKIE", HttpHeaderCode::HTTP_HEADER_COOKIE},
-#line 84 "HttpCommomHeaders.h.gperf"
+#line 89 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_TE", HttpHeaderCode::HTTP_HEADER_TE},
-#line 38 "HttpCommomHeaders.h.gperf"
+#line 43 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_AUTHORIZATION", HttpHeaderCode::HTTP_HEADER_AUTHORIZATION},
-#line 13 "HttpCommomHeaders.h.gperf"
+#line 18 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_NONE", HttpHeaderCode::HTTP_HEADER_NONE},
-#line 53 "HttpCommomHeaders.h.gperf"
+#line 58 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_EXPECT", HttpHeaderCode::HTTP_HEADER_EXPECT},
-#line 18 "HttpCommomHeaders.h.gperf"
+#line 23 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_COLON_SCHEME", HttpHeaderCode::HTTP_HEADER_COLON_SCHEME},
-#line 91 "HttpCommomHeaders.h.gperf"
+#line 96 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_VARY", HttpHeaderCode::HTTP_HEADER_VARY},
-#line 70 "HttpCommomHeaders.h.gperf"
+#line 75 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_PRAGMA", HttpHeaderCode::HTTP_HEADER_PRAGMA},
-#line 19 "HttpCommomHeaders.h.gperf"
+#line 24 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_COLON_STATUS", HttpHeaderCode::HTTP_HEADER_COLON_STATUS},
-#line 90 "HttpCommomHeaders.h.gperf"
+#line 95 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_VIP", HttpHeaderCode::HTTP_HEADER_VIP},
-#line 57 "HttpCommomHeaders.h.gperf"
+#line 62 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_HOST", HttpHeaderCode::HTTP_HEADER_HOST},
-#line 17 "HttpCommomHeaders.h.gperf"
+#line 22 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_COLON_PATH", HttpHeaderCode::HTTP_HEADER_COLON_PATH},
-#line 45 "HttpCommomHeaders.h.gperf"
+#line 50 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_CONTENT_LOCATION", HttpHeaderCode::HTTP_HEADER_CONTENT_LOCATION},
-#line 54 "HttpCommomHeaders.h.gperf"
+#line 59 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_EXPIRES", HttpHeaderCode::HTTP_HEADER_EXPIRES},
-#line 41 "HttpCommomHeaders.h.gperf"
+#line 46 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_CONTENT_DISPOSITION", HttpHeaderCode::HTTP_HEADER_CONTENT_DISPOSITION},
-#line 36 "HttpCommomHeaders.h.gperf"
+#line 41 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ALLOW", HttpHeaderCode::HTTP_HEADER_ALLOW},
-#line 46 "HttpCommomHeaders.h.gperf"
+#line 51 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_CONTENT_MD5", HttpHeaderCode::HTTP_HEADER_CONTENT_MD5},
-#line 48 "HttpCommomHeaders.h.gperf"
+#line 53 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_CONTENT_TYPE", HttpHeaderCode::HTTP_HEADER_CONTENT_TYPE},
-#line 47 "HttpCommomHeaders.h.gperf"
+#line 52 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_CONTENT_RANGE", HttpHeaderCode::HTTP_HEADER_CONTENT_RANGE},
-#line 43 "HttpCommomHeaders.h.gperf"
+#line 48 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_CONTENT_LANGUAGE", HttpHeaderCode::HTTP_HEADER_CONTENT_LANGUAGE},
-#line 27 "HttpCommomHeaders.h.gperf"
+#line 32 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS", HttpHeaderCode::HTTP_HEADER_ACCESS_CONTROL_ALLOW_CREDENTIALS},
-#line 33 "HttpCommomHeaders.h.gperf"
+#line 38 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ACCESS_CONTROL_REQUEST_HEADERS", HttpHeaderCode::HTTP_HEADER_ACCESS_CONTROL_REQUEST_HEADERS},
-#line 95 "HttpCommomHeaders.h.gperf"
+#line 100 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_X_ACCEL_REDIRECT", HttpHeaderCode::HTTP_HEADER_X_ACCEL_REDIRECT},
-#line 32 "HttpCommomHeaders.h.gperf"
+#line 37 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ACCESS_CONTROL_MAX_AGE", HttpHeaderCode::HTTP_HEADER_ACCESS_CONTROL_MAX_AGE},
-#line 69 "HttpCommomHeaders.h.gperf"
+#line 74 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_P3P", HttpHeaderCode::HTTP_HEADER_P3P},
-#line 44 "HttpCommomHeaders.h.gperf"
+#line 49 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_CONTENT_LENGTH", HttpHeaderCode::HTTP_HEADER_CONTENT_LENGTH},
-#line 79 "HttpCommomHeaders.h.gperf"
+#line 84 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_SEC_WEBSOCKET_ACCEPT", HttpHeaderCode::HTTP_HEADER_SEC_WEBSOCKET_ACCEPT},
-#line 86 "HttpCommomHeaders.h.gperf"
+#line 91 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_TRAILER", HttpHeaderCode::HTTP_HEADER_TRAILER},
-#line 31 "HttpCommomHeaders.h.gperf"
+#line 36 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ACCESS_CONTROL_EXPOSE_HEADERS", HttpHeaderCode::HTTP_HEADER_ACCESS_CONTROL_EXPOSE_HEADERS},
-#line 100 "HttpCommomHeaders.h.gperf"
+#line 105 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_X_FRAME_OPTIONS", HttpHeaderCode::HTTP_HEADER_X_FRAME_OPTIONS},
-#line 101 "HttpCommomHeaders.h.gperf"
+#line 106 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_X_POWERED_BY", HttpHeaderCode::HTTP_HEADER_X_POWERED_BY},
-#line 50 "HttpCommomHeaders.h.gperf"
+#line 55 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_DNT", HttpHeaderCode::HTTP_HEADER_DNT},
-#line 52 "HttpCommomHeaders.h.gperf"
+#line 57 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ETAG", HttpHeaderCode::HTTP_HEADER_ETAG},
-#line 74 "HttpCommomHeaders.h.gperf"
+#line 79 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_RANGE", HttpHeaderCode::HTTP_HEADER_RANGE},
-#line 80 "HttpCommomHeaders.h.gperf"
+#line 85 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_SERVER", HttpHeaderCode::HTTP_HEADER_SERVER},
-#line 78 "HttpCommomHeaders.h.gperf"
+#line 83 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_SEC_WEBSOCKET_KEY", HttpHeaderCode::HTTP_HEADER_SEC_WEBSOCKET_KEY},
-#line 28 "HttpCommomHeaders.h.gperf"
+#line 33 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS", HttpHeaderCode::HTTP_HEADER_ACCESS_CONTROL_ALLOW_HEADERS},
-#line 40 "HttpCommomHeaders.h.gperf"
+#line 45 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_CONNECTION", HttpHeaderCode::HTTP_HEADER_CONNECTION},
-#line 103 "HttpCommomHeaders.h.gperf"
+#line 108 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_X_REQUESTED_WITH", HttpHeaderCode::HTTP_HEADER_X_REQUESTED_WITH},
-#line 97 "HttpCommomHeaders.h.gperf"
+#line 102 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_X_CONTENT_TYPE_OPTIONS", HttpHeaderCode::HTTP_HEADER_X_CONTENT_TYPE_OPTIONS},
-#line 26 "HttpCommomHeaders.h.gperf"
+#line 31 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ACCEPT_RANGES", HttpHeaderCode::HTTP_HEADER_ACCEPT_RANGES},
-#line 51 "HttpCommomHeaders.h.gperf"
+#line 56 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_DATE", HttpHeaderCode::HTTP_HEADER_DATE},
-#line 24 "HttpCommomHeaders.h.gperf"
+#line 29 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ACCEPT_ENCODING", HttpHeaderCode::HTTP_HEADER_ACCEPT_ENCODING},
-#line 42 "HttpCommomHeaders.h.gperf"
+#line 47 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_CONTENT_ENCODING", HttpHeaderCode::HTTP_HEADER_CONTENT_ENCODING},
-#line 76 "HttpCommomHeaders.h.gperf"
+#line 81 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_REFRESH", HttpHeaderCode::HTTP_HEADER_REFRESH},
-#line 107 "HttpCommomHeaders.h.gperf"
+#line 112 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_X_XSS_PROTECTION", HttpHeaderCode::HTTP_HEADER_X_XSS_PROTECTION},
-#line 16 "HttpCommomHeaders.h.gperf"
+#line 21 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_COLON_METHOD", HttpHeaderCode::HTTP_HEADER_COLON_METHOD},
-#line 66 "HttpCommomHeaders.h.gperf"
+#line 71 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_LOCATION", HttpHeaderCode::HTTP_HEADER_LOCATION},
-#line 23 "HttpCommomHeaders.h.gperf"
+#line 28 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ACCEPT_DATETIME", HttpHeaderCode::HTTP_HEADER_ACCEPT_DATETIME},
-#line 68 "HttpCommomHeaders.h.gperf"
+#line 73 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ORIGIN", HttpHeaderCode::HTTP_HEADER_ORIGIN},
-#line 94 "HttpCommomHeaders.h.gperf"
+#line 99 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_WARNING", HttpHeaderCode::HTTP_HEADER_WARNING},
-#line 106 "HttpCommomHeaders.h.gperf"
+#line 111 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_X_WAP_PROFILE", HttpHeaderCode::HTTP_HEADER_X_WAP_PROFILE},
-#line 34 "HttpCommomHeaders.h.gperf"
+#line 39 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ACCESS_CONTROL_REQUEST_METHOD", HttpHeaderCode::HTTP_HEADER_ACCESS_CONTROL_REQUEST_METHOD},
-#line 93 "HttpCommomHeaders.h.gperf"
+#line 98 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_WWW_AUTHENTICATE", HttpHeaderCode::HTTP_HEADER_WWW_AUTHENTICATE},
-#line 82 "HttpCommomHeaders.h.gperf"
+#line 87 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_SEC_TOKEN_BINDING", HttpHeaderCode::HTTP_HEADER_SEC_TOKEN_BINDING},
-#line 61 "HttpCommomHeaders.h.gperf"
+#line 66 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_IF_RANGE", HttpHeaderCode::HTTP_HEADER_IF_RANGE},
-#line 85 "HttpCommomHeaders.h.gperf"
+#line 90 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_TIMESTAMP", HttpHeaderCode::HTTP_HEADER_TIMESTAMP},
-#line 25 "HttpCommomHeaders.h.gperf"
+#line 30 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ACCEPT_LANGUAGE", HttpHeaderCode::HTTP_HEADER_ACCEPT_LANGUAGE},
-#line 75 "HttpCommomHeaders.h.gperf"
+#line 80 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_REFERER", HttpHeaderCode::HTTP_HEADER_REFERER},
-#line 29 "HttpCommomHeaders.h.gperf"
+#line 34 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ACCESS_CONTROL_ALLOW_METHODS", HttpHeaderCode::HTTP_HEADER_ACCESS_CONTROL_ALLOW_METHODS},
-#line 105 "HttpCommomHeaders.h.gperf"
+#line 110 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_X_UA_COMPATIBLE", HttpHeaderCode::HTTP_HEADER_X_UA_COMPATIBLE},
-#line 104 "HttpCommomHeaders.h.gperf"
+#line 109 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_X_THRIFT_PROTOCOL", HttpHeaderCode::HTTP_HEADER_X_THRIFT_PROTOCOL},
-#line 102 "HttpCommomHeaders.h.gperf"
+#line 107 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_X_REAL_IP", HttpHeaderCode::HTTP_HEADER_X_REAL_IP},
-#line 56 "HttpCommomHeaders.h.gperf"
+#line 61 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_FRONT_END_HTTPS", HttpHeaderCode::HTTP_HEADER_FRONT_END_HTTPS},
-#line 30 "HttpCommomHeaders.h.gperf"
+#line 35 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN", HttpHeaderCode::HTTP_HEADER_ACCESS_CONTROL_ALLOW_ORIGIN},
-#line 60 "HttpCommomHeaders.h.gperf"
+#line 65 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_IF_NONE_MATCH", HttpHeaderCode::HTTP_HEADER_IF_NONE_MATCH},
-#line 83 "HttpCommomHeaders.h.gperf"
+#line 88 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_STRICT_TRANSPORT_SECURITY", HttpHeaderCode::HTTP_HEADER_STRICT_TRANSPORT_SECURITY},
-#line 87 "HttpCommomHeaders.h.gperf"
+#line 92 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_TRANSFER_ENCODING", HttpHeaderCode::HTTP_HEADER_TRANSFER_ENCODING},
-#line 58 "HttpCommomHeaders.h.gperf"
+#line 63 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_IF_MATCH", HttpHeaderCode::HTTP_HEADER_IF_MATCH},
-#line 67 "HttpCommomHeaders.h.gperf"
+#line 72 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_MAX_FORWARDS", HttpHeaderCode::HTTP_HEADER_MAX_FORWARDS},
-#line 98 "HttpCommomHeaders.h.gperf"
+#line 103 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_X_FORWARDED_FOR", HttpHeaderCode::HTTP_HEADER_X_FORWARDED_FOR},
-#line 73 "HttpCommomHeaders.h.gperf"
+#line 78 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_PROXY_CONNECTION", HttpHeaderCode::HTTP_HEADER_PROXY_CONNECTION},
-#line 88 "HttpCommomHeaders.h.gperf"
+#line 93 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_UPGRADE", HttpHeaderCode::HTTP_HEADER_UPGRADE},
-#line 20 "HttpCommomHeaders.h.gperf"
+#line 25 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_COLON_PROTOCOL", HttpHeaderCode::HTTP_HEADER_COLON_PROTOCOL},
-#line 14 "HttpCommomHeaders.h.gperf"
+#line 19 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_OTHER", HttpHeaderCode::HTTP_HEADER_OTHER},
-#line 55 "HttpCommomHeaders.h.gperf"
+#line 60 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_FROM", HttpHeaderCode::HTTP_HEADER_FROM},
-#line 89 "HttpCommomHeaders.h.gperf"
+#line 94 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_USER_AGENT", HttpHeaderCode::HTTP_HEADER_USER_AGENT},
-#line 15 "HttpCommomHeaders.h.gperf"
+#line 20 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_COLON_AUTHORITY", HttpHeaderCode::HTTP_HEADER_COLON_AUTHORITY},
-#line 81 "HttpCommomHeaders.h.gperf"
+#line 86 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_SET_COOKIE", HttpHeaderCode::HTTP_HEADER_SET_COOKIE},
-#line 96 "HttpCommomHeaders.h.gperf"
+#line 101 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_X_CONTENT_SECURITY_POLICY_REPORT_ONLY", HttpHeaderCode::HTTP_HEADER_X_CONTENT_SECURITY_POLICY_REPORT_ONLY},
-#line 62 "HttpCommomHeaders.h.gperf"
+#line 67 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_IF_UNMODIFIED_SINCE", HttpHeaderCode::HTTP_HEADER_IF_UNMODIFIED_SINCE},
-#line 72 "HttpCommomHeaders.h.gperf"
+#line 77 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_PROXY_AUTHORIZATION", HttpHeaderCode::HTTP_HEADER_PROXY_AUTHORIZATION},
-#line 99 "HttpCommomHeaders.h.gperf"
+#line 104 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_X_FORWARDED_PROTO", HttpHeaderCode::HTTP_HEADER_X_FORWARDED_PROTO},
-#line 39 "HttpCommomHeaders.h.gperf"
+#line 44 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_CACHE_CONTROL", HttpHeaderCode::HTTP_HEADER_CACHE_CONTROL},
-#line 59 "HttpCommomHeaders.h.gperf"
+#line 64 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_IF_MODIFIED_SINCE", HttpHeaderCode::HTTP_HEADER_IF_MODIFIED_SINCE},
-#line 71 "HttpCommomHeaders.h.gperf"
+#line 76 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_PROXY_AUTHENTICATE", HttpHeaderCode::HTTP_HEADER_PROXY_AUTHENTICATE},
-#line 65 "HttpCommomHeaders.h.gperf"
+#line 70 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_LINK", HttpHeaderCode::HTTP_HEADER_LINK},
-#line 77 "HttpCommomHeaders.h.gperf"
+#line 82 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_RETRY_AFTER", HttpHeaderCode::HTTP_HEADER_RETRY_AFTER},
-#line 63 "HttpCommomHeaders.h.gperf"
+#line 68 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_KEEP_ALIVE", HttpHeaderCode::HTTP_HEADER_KEEP_ALIVE},
-#line 64 "HttpCommomHeaders.h.gperf"
+#line 69 "HttpCommomHeadersHash.h.gperf"
     {"HTTP_HEADER_LAST_MODIFIED", HttpHeaderCode::HTTP_HEADER_LAST_MODIFIED}
   };
 
@@ -339,7 +344,7 @@ static signed char lookup[] =
   };
 
 struct HttpHeader *
-Perfect_Hash::isValidHttpHeader (const char *str, size_t len)
+HttpCommomHeaderInternal::isValidHttpHeader (const char *str, size_t len)
 {
   if (len <= MAX_WORD_LENGTH && len >= MIN_WORD_LENGTH)
     {
@@ -360,3 +365,8 @@ Perfect_Hash::isValidHttpHeader (const char *str, size_t len)
     }
   return 0;
 }
+#line 113 "HttpCommomHeadersHash.h.gperf"
+
+} //namespace 
+
+#endif //_HTTP_COMMOM_HEADERS_HASH_H_

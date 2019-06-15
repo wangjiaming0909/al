@@ -16,7 +16,7 @@
 // #include "design_patterns/chain_of_responsibility/pointer_chain.h"
 // #include "design_patterns/chain_of_responsibility/broke_chain.h"
 // #include "design_patterns/prototype/prototype.h"
-#include "gperf/test.h"
+// #include "gperf/test.h"
 
 using namespace std;
 
@@ -59,8 +59,8 @@ int main()
 
 //    test_boost_signals2();
 
-   gperf::test_gperf();
-   gperf::test_all();
+//    gperf::test_gperf();
+//    gperf::test_all();
 
     cout << "Hello World!" << endl;
     return 0;
