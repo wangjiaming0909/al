@@ -4,6 +4,7 @@
 #include <vector>
 #include <cstdio>
 #include <memory>
+#include <cstdarg>
 #include "boost/range.hpp"
 #include "boost/signals2.hpp"
 
@@ -15,6 +16,8 @@
 
 using namespace std;
 using namespace placeholders;
+
+#define FUNC_NAME std::cout << "------" << __func__ << "------" << std::endl;
 
 
 int function1(int i, string&& s, int j)
@@ -117,3 +120,62 @@ void test_boost_signals2()
     s("we are family;");
 }
 
+
+class TestClass
+{
+public: 
+    TestClass(int)
+    {
+        cout << "constructor 2" << endl;
+    }
+    TestClass()
+    {
+        cout << "constructor" << endl;
+    }
+    TestClass(const TestClass&)
+    {
+        cout << "copy constructor" << endl;
+    }
+    TestClass(TestClass&&)
+    {
+        cout << "move constructor" << endl;
+    }
+    ~TestClass()
+    {
+        // cout << "destructor" << endl;
+    }
+};
+
+void test_emplace_back()
+{
+    FUNC_NAME
+    std::vector<TestClass> v{};
+    // v.push_back(TestClass{});
+
+    v.emplace_back(TestClass{});
+    FUNC_NAME
+}
+
+void test_emplace_back1()
+{
+    FUNC_NAME
+    std::vector<TestClass> v{};
+    v.push_back(TestClass{});
+
+    // v.emplace_back(TestClass{});
+    FUNC_NAME
+}
+
+void test_emplace_back2()
+{
+    FUNC_NAME
+    std::vector<TestClass> v{};
+    v.reserve(10);
+    v.push_back(TestClass{});
+
+    v.emplace_back(TestClass{});
+    FUNC_NAME
+
+    v.push_back(1);
+    v.emplace_back(1);
+}

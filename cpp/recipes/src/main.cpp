@@ -1,7 +1,7 @@
 #include <iostream>
 // #include "buffer/test.h"
 // #include "bytebuf/test.h"
-// #include "tests/tests.h"
+#include "tests/tests.h"
 // #include "guid_map/test.h"
 // #include "design_patterns/basic/SOLID_Open_Close.h"
 // #include "design_patterns/basic/maybemonad.h"
@@ -17,6 +17,7 @@
 // #include "design_patterns/chain_of_responsibility/broke_chain.h"
 // #include "design_patterns/prototype/prototype.h"
 // #include "gperf/test.h"
+
 
 using namespace std;
 
@@ -61,6 +62,10 @@ int main()
 
 //    gperf::test_gperf();
 //    gperf::test_all();
+
+    test_emplace_back();
+    test_emplace_back1();
+    test_emplace_back2();
 
     cout << "Hello World!" << endl;
     return 0;

@@ -17,7 +17,8 @@
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE",
-                "_GLIBCXX_HAS_GTHREADS"
+                "_GLIBCXX_HAS_GTHREADS",
+                "TESTING"
             ],
             "compilerPath": "C:\\MinGW\\bin\\g++.exe",
             "cStandard": "c11",
@@ -36,6 +37,10 @@
                     "/usr/local/include"
                 ]
             },
+            "defines": 
+            [
+                "TESTING"
+            ],
             "compilerPath": "/usr/bin/g++",
             "cStandard": "c11",
             "cppStandard": "c++17",

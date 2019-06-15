@@ -528,8 +528,8 @@ TEST(buffer, test_buffer_search_range)
     ::memcpy(data, s1.buffer_ + 100, target_len);
 
     auto it = buf.search_range(data, target_len, buf.begin(), buf.end());
-    ASSERT_TRUE(it.chain() == buf.begin().chain());
-    ASSERT_TRUE(it.offset() == 100);
+    ASSERT_EQ(it.chain(), buf.begin().chain());
+    ASSERT_EQ(it.offset(), 100);
 
     //cross two chains
     ::memset(data, 0, data_size);
@@ -538,8 +538,8 @@ TEST(buffer, test_buffer_search_range)
     ::memcpy(data + 23, s2.buffer_, 4);
     ::memcpy(data + 23 + 4, s3.buffer_, 100 - 23 - 4);
     auto it2 = buf.search_range(data, target_len, buf.begin(), buf.end());
-    ASSERT_TRUE(it.chain() == buf.begin().chain());
-    ASSERT_TRUE(it2.offset() == 1000);
+    ASSERT_EQ(it.chain(), buf.begin().chain());
+    ASSERT_EQ(it2.offset(), 1000);
 }
 
 TEST(buffer, test_buffer_memcmp)
