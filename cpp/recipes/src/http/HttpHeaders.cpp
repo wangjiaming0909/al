@@ -98,12 +98,17 @@ void HttpHeaders::add(HttpHeaderCode code, std::string&& headerValue)
 {
     if(code == HttpHeaderCode::HTTP_HEADER_NONE || code == HttpHeaderCode::HTTP_HEADER_OTHER)
         return;
-    
+
+    codes_.push_back(code);
+    headerNames_.push_back(HttpCommomHeaders::getPointerWithHeaderCode(code));
+    headerValues_.emplace_back(std::move(headerValue));
 }
 
 bool HttpHeaders::remove(const std::string& headerName)
 {
+    CHECK_SIZE(headerName.size());
 
+    auto code = HttpCommomHeaders::getHeaderCode(headerName);
 }
 
 bool HttpHeaders::remove(const_string_piece headerName)
