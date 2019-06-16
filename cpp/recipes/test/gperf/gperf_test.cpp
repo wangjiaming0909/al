@@ -9,6 +9,12 @@
 #include "gperf/HttpCommomHeadersHash.h"
 
 using namespace std;
+
+void _2()
+{
+    (void)http::wordlist;
+}
+
 TEST(gperf, test_all)
 {
     const char* fileName = "../src/gperf/HttpCommomHeaders.txt";

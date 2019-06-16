@@ -150,4 +150,10 @@ char *copyFrom(const std::string &str)
     ::memcpy(data, str.data(), str.size());
     return data;
 }
+
+void __()
+{
+    (void)wordlist;
+}
+
 }

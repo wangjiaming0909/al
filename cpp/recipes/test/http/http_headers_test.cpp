@@ -6,6 +6,11 @@ using namespace http;
 namespace http_test
 {
 
+void _()
+{
+    (void)wordlist;
+}
+
 void assertHeadersSize(const HttpHeaders& headers, size_t size)
 {
     ASSERT_EQ(headers.size(), size);
@@ -15,21 +20,27 @@ void assertCodesSize(const HttpHeaders& headers, size_t size, int64_t capacity)
 {
     ASSERT_EQ(headers.getCodes().size(), size);
     if(capacity >= 0)
+    {
         ASSERT_EQ(headers.getCodes().capacity(), capacity);
+    }
 }
 
 void assertHeaderNameSize(const HttpHeaders& headers, size_t size, int64_t capacity)
 {
     ASSERT_EQ(headers.getHeaderNames().size(), size);
     if(capacity >= 0)
+    {
         ASSERT_EQ(headers.getHeaderNames().capacity(), capacity);
+    }
 }
 
 void assertHeaderValueSize(const HttpHeaders& headers, size_t size, int64_t capacity)
 {
     ASSERT_EQ(headers.getHeaderValues().size(), size);
     if(capacity >= 0)
+    {
         ASSERT_EQ(headers.getHeaderValues().capacity(), capacity);
+    }
 }
 
 TEST(http_headers, constructor)
