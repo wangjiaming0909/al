@@ -73,6 +73,11 @@ public:
 #endif //TESTING
 };
 
+#define CHECK_SIZE(size) \
+    if ((size) == 0)     \
+        return;
 
+char *copyFrom(string_piece::const_string_piece str);
+char *copyFrom(const std::string &str);
 }
 #endif // _HTTP_HEADER_H_

@@ -55,22 +55,50 @@ HttpHeaders::~HttpHeaders()
 
 void HttpHeaders::add(const_string_piece headerName, const_string_piece headerValue)
 {
+    CHECK_SIZE(headerName.size())
+    // CHECK_SIZE(headerValue.size())
 
+    auto code = HttpCommomHeaders::getHeaderCode(headerName.cbegin(), headerName.size());
+    codes_.push_back(code);
+
+    headerNames_.push_back(
+        code == HttpHeaderCode::HTTP_HEADER_OTHER ? copyFrom(headerName) : HttpCommomHeaders::getPointerWithHeaderCode(code)
+    );
+    headerValues_.emplace_back(headerValue.cbegin(), headerValue.size());
 }
 
 void HttpHeaders::add(const std::string& headerName, const std::string& headerValue)
 {
+    CHECK_SIZE(headerName.size())
+    // CHECK_SIZE(headerValue.size())
 
+    auto code = HttpCommomHeaders::getHeaderCode(headerName);
+    codes_.push_back(code);
+    headerNames_.push_back(
+        code == HttpHeaderCode::HTTP_HEADER_OTHER ? copyFrom(headerName) : HttpCommomHeaders::getPointerWithHeaderCode(code)
+    );
+    headerValues_.push_back(headerValue);
 }
 
 void HttpHeaders::add(const std::string& headerName, std::string&& headerValue)
 {
+    CHECK_SIZE(headerName.size())
+    // CHECK_SIZE(headerValue.size())
+
+    auto code = HttpCommomHeaders::getHeaderCode(headerName);
+    codes_.push_back(code);
+    headerNames_.push_back(
+        code == HttpHeaderCode::HTTP_HEADER_OTHER ? copyFrom(headerName) : HttpCommomHeaders::getPointerWithHeaderCode(code)
+    );
+    headerValues_.push_back(std::move(headerValue));
 
 }
 
 void HttpHeaders::add(HttpHeaderCode code, std::string&& headerValue)
 {
-
+    if(code == HttpHeaderCode::HTTP_HEADER_NONE || code == HttpHeaderCode::HTTP_HEADER_OTHER)
+        return;
+    
 }
 
 bool HttpHeaders::remove(const std::string& headerName)
@@ -103,10 +131,23 @@ void HttpHeaders::disposeHeaderNames()
     for(size_t i = 0; i < codes_.size(); i++)
     {
         if(HttpHeaderCode::HTTP_HEADER_OTHER == codes_[i])
-            free(const_cast<void*>(static_cast<const void*>(headerNames_[i])));
+            ::free(const_cast<void*>(static_cast<const void*>(headerNames_[i])));
     }
 }
 
 const size_t HttpHeaders::INIT_VECTOR_RESERVE_SIZE = 16;
 
+char *copyFrom(string_piece::const_string_piece str)
+{
+    return str.copy();
+}
+
+char *copyFrom(const std::string &str)
+{
+    if(str.size() == 0)
+        return 0;
+    char *data = static_cast<char *>(::calloc(str.size() + 1, 1));
+    ::memcpy(data, str.data(), str.size());
+    return data;
+}
 }

@@ -24,6 +24,27 @@ struct IsCharPointer<const char*> {
   typedef int type;
 };
 
+template <typename T>
+struct RemoveLowConst
+{
+    using type = T;
+};
+
+template <>
+struct RemoveLowConst<char*>
+{
+    using type = char *;
+};
+
+template <>
+struct RemoveLowConst<const char*>
+{
+    using type = char *;
+};
+
+template <typename T>
+using RemoveLowConst_t = typename RemoveLowConst<T>::type;
+
 template <typename Iter>
 class Range
 {
@@ -88,6 +109,19 @@ public:
     {
         return size_type(end_ - begin_);
     }
+
+    //allocate new memory for copying, remember to free it
+    RemoveLowConst_t<Iter> copy()
+    {
+        using address_t = RemoveLowConst_t<Iter>;
+        if (size() == 0)
+            return 0;
+
+        address_t data = static_cast<address_t>(::calloc(size() + 1, 1));
+        ::memcpy(data, cbegin(), size());
+        return data;
+    }
+
     template <typename T>
     friend std::ostream &operator<<(std::ostream &os, Range<T> str);
 

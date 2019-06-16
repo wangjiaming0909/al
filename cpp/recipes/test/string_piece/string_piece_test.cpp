@@ -45,6 +45,25 @@ TEST(string_piece, test_find)
     assert(pos == 0);
 }
 
+TEST(string_piece, copy)
+{
+    string_piece::const_string_piece url = "https://github.com/wangjiaming0909";
+    auto data = url.copy();
+    ASSERT_EQ(memcmp(data, url.cbegin(), url.size()), 0);
+    ASSERT_EQ(strlen(data), url.size());
+    free(data);
+
+    const char* data3 = "https://github.com/wangjiaming0909";
+    size_t len = strlen(data3);
+    char *ptr = static_cast<char *>(::calloc(len + 1, 1));
+    ::memcpy(ptr, data3, len);
+    string_piece::mutable_string_piece url2{ptr, ptr + len};
+    auto data2 = url2.copy();
+    ASSERT_EQ(memcmp(data2, url2.cbegin(), len), 0);
+    ASSERT_EQ(strlen(data2), url2.size());
+    free(data2);
+}
+
 void test()
 {
     string_piece::mutable_string_piece str{};
