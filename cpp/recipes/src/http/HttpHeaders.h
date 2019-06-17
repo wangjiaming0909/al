@@ -3,6 +3,7 @@
 
 #include <vector>
 #include <string>
+// #include <functional>
 #include "http/HttpCommomHeaders.h"
 #include "string_piece/string_piece.h"
 
@@ -30,7 +31,7 @@ class HttpHeaders
     using code_t = HttpHeaderCode;
     using mutable_string_piece = string_piece::mutable_string_piece;
     using const_string_piece = string_piece::const_string_piece;
-    using func_type = std::function<void(const vector_t<code_t>&, const vector_t<const char*>&, const vector_t<std::string>&, size_t&, size_t)>;
+    // using func_type = std::function<void(const vector_t<code_t>&, const vector_t<const char*>&, const vector_t<std::string>&, size_t&, size_t)>;
 public:
     HttpHeaders();
     HttpHeaders(const HttpHeaders& other);
@@ -67,6 +68,12 @@ private:
             func(codes_, headerNames_, headerValues_, codes_deleted_, pos);
             ptr++;
         }
+    }
+
+    template <typename Func>
+    void iterateOverHeaderNames(const std::string& headerName, Func&& func)
+    {
+        
     }
 private:
     static const size_t INIT_VECTOR_RESERVE_SIZE; 

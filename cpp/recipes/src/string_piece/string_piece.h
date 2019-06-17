@@ -139,6 +139,46 @@ std::ostream& operator<<(std::ostream& os, Range<T> str)
 using mutable_string_piece = Range<char*>;
 using const_string_piece = Range<const char*>;
 
+struct AsciiCaseSensitiveEqual
+{
+    bool operator()(char lhs, char rhs) const
+    {
+        return lhs == rhs;
+    }
+};
+
+struct AsciiCaseInsensitiveEqual
+{
+    bool operator()(char lhs, char rhs) const
+    {
+        char k = lhs ^ rhs;
+        if (k == 0) {
+        return true;
+        }
+        if (k != 32) {
+        return false;
+        }
+        k = lhs | rhs;
+        return (k >= 'a' && k <= 'z');
+    }
+};
+
+template <typename Iter>
+inline bool CaseInsensitiveEqual(const Range<Iter>& lhs, const Range<Iter>& rhs)
+{
+    if(lhs.size() != rhs.size()) return false;
+
+    return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), AsciiCaseInsensitiveEqual());
+}
+
+template <typename Iter>
+inline bool CaseSensitiveEqual(const Range<Iter>& lhs, const Range<Iter>& rhs)
+{
+    if(lhs.size() != rhs.size()) return false;
+
+    return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), AsciiCaseSensitiveEqual());
+}
+
 }
 #endif //_STRING_PIECE_H_
 
