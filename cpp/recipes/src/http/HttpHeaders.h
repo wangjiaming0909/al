@@ -27,8 +27,10 @@ class HttpHeaders
 {
     template <typename T>
     using vector_t = std::vector<T>;
+    using code_t = HttpHeaderCode;
     using mutable_string_piece = string_piece::mutable_string_piece;
     using const_string_piece = string_piece::const_string_piece;
+    using func_type = std::function<void(const vector_t<code_t>&, const vector_t<const char*>&, const vector_t<std::string>&, size_t&, size_t)>;
 public:
     HttpHeaders();
     HttpHeaders(const HttpHeaders& other);
@@ -52,7 +54,20 @@ public:
 private:
     void disposeHeaderNames();
     void clearAll();
-
+    template <typename Func>
+    //there could be duplicated headers in codes, so iterate over all of them
+    void iterateOverCodes(HttpHeaderCode code, Func&& func)
+    {
+        const HttpHeaderCode* ptr = codes_.data();
+        while(ptr)
+        {
+            ptr = (code_t*)::memchr(ptr, static_cast<int>(code), codes_.size() - (ptr - codes_.data()));
+            if(ptr == nullptr) break;
+            const size_t pos = ptr - codes_.data();
+            func(codes_, headerNames_, headerValues_, codes_deleted_, pos);
+            ptr++;
+        }
+    }
 private:
     static const size_t INIT_VECTOR_RESERVE_SIZE; 
 

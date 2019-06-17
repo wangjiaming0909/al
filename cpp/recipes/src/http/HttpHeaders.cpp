@@ -77,7 +77,7 @@ void HttpHeaders::add(const std::string& headerName, const std::string& headerVa
     headerNames_.push_back(
         code == HttpHeaderCode::HTTP_HEADER_OTHER ? copyFrom(headerName) : HttpCommomHeaders::getPointerWithHeaderCode(code)
     );
-    headerValues_.push_back(headerValue);
+    headerValues_.emplace_back(headerValue);
 }
 
 void HttpHeaders::add(const std::string& headerName, std::string&& headerValue)
@@ -90,8 +90,7 @@ void HttpHeaders::add(const std::string& headerName, std::string&& headerValue)
     headerNames_.push_back(
         code == HttpHeaderCode::HTTP_HEADER_OTHER ? copyFrom(headerName) : HttpCommomHeaders::getPointerWithHeaderCode(code)
     );
-    headerValues_.push_back(std::move(headerValue));
-
+    headerValues_.emplace_back(std::move(headerValue));
 }
 
 void HttpHeaders::add(HttpHeaderCode code, std::string&& headerValue)
@@ -106,19 +105,50 @@ void HttpHeaders::add(HttpHeaderCode code, std::string&& headerValue)
 
 bool HttpHeaders::remove(const std::string& headerName)
 {
-    CHECK_SIZE(headerName.size());
+    if(headerName.size() == 0) return false;
 
     auto code = HttpCommomHeaders::getHeaderCode(headerName);
+    if(code != HttpHeaderCode::HTTP_HEADER_OTHER)
+    {
+        return remove(code);
+    }
+    else
+    {
+
+    }
 }
 
 bool HttpHeaders::remove(const_string_piece headerName)
 {
+    if(headerName.size() == 0) return false;
+    auto code = HttpCommomHeaders::getHeaderCode(headerName.cbegin(), headerName.size());
+    if(code != HttpHeaderCode::HTTP_HEADER_OTHER)
+    {
+        return remove(code);
+    }
+    else
+    {
 
+    }
 }
 
 bool HttpHeaders::remove(HttpHeaderCode code)
 {
-
+    bool remvoed = false;
+    iterateOverCodes(code, 
+        [this, &remvoed](
+            std::vector<HttpHeaderCode>& codes,
+            std::vector<const char*>& headerNames,
+            std::vector<std::string>& headerValues,
+            size_t& codes_deleted, 
+            size_t pos)
+        {
+            codes[pos] = HttpHeaderCode::HTTP_HEADER_NONE;
+            codes_deleted++;
+            remvoed = true;
+        }
+    );
+    return remvoed;
 }
 
 void HttpHeaders::clearAll()
