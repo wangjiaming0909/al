@@ -163,21 +163,143 @@ struct AsciiCaseInsensitiveEqual
     }
 };
 
-template <typename Iter>
-inline bool CaseInsensitiveEqual(const Range<Iter>& lhs, const Range<Iter>& rhs)
+template <typename T, typename U>
+struct CaseInSensitiveEqual
 {
-    if(lhs.size() != rhs.size()) return false;
+    bool operator()(const T& lhs, const U& rhs)
+    {
+        if(lhs.size() != rhs.size()) return false;
+        return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), AsciiCaseInsensitiveEqual());
+    }
+    bool operator()(const U& lhs, const T& rhs)
+    {
+        if(lhs.size() != rhs.size()) return false;
+        return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), AsciiCaseInsensitiveEqual());
+    }
+};
 
-    return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), AsciiCaseInsensitiveEqual());
-}
-
-template <typename Iter>
-inline bool CaseSensitiveEqual(const Range<Iter>& lhs, const Range<Iter>& rhs)
+template <typename T>
+struct CaseInSensitiveEqual<T, T>
 {
-    if(lhs.size() != rhs.size()) return false;
+    bool operator()(const T& lhs, const T& rhs)
+    {
+        if(lhs.size() != rhs.size()) return false;
+        return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), AsciiCaseInsensitiveEqual());
+    }
+};
 
-    return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), AsciiCaseSensitiveEqual());
-}
+
+template <typename T>
+struct CaseInSensitiveEqual<T, const char*>
+{
+    bool operator()(const T& lhs, const char* rhs)
+    {
+        auto rhs_T = T(rhs);
+        return CaseInSensitiveEqual<T, T>()(lhs, rhs_T);
+    }
+    bool operator()(const char* lhs, const T& rhs)
+    {
+        auto lhs_T = T(lhs);
+        return CaseInSensitiveEqual<T, T>()(lhs_T, rhs);
+    }
+};
+
+template <typename T>
+struct CaseInSensitiveEqual<const char*, T>
+{
+    bool operator()(const T& lhs, const char* rhs)
+    {
+        auto rhs_T = T(rhs);
+        return CaseInSensitiveEqual<T, T>()(lhs, rhs_T);
+    }
+    bool operator()(const char* lhs, const T& rhs)
+    {
+        auto lhs_T = T(lhs);
+        return CaseInSensitiveEqual<T, T>()(lhs_T, rhs);
+    }
+};
+
+template <typename T>
+struct CaseInSensitiveEqual<T, char*>
+{
+    bool operator()(const T& lhs, const char* rhs)
+    {
+        auto rhs_T = T(rhs);
+        return CaseInSensitiveEqual<T, T>()(lhs, rhs_T);
+    }
+    bool operator()(const char* lhs, const T& rhs)
+    {
+        auto lhs_T = T(lhs);
+        return CaseInSensitiveEqual<T, T>()(lhs_T, rhs);
+    }
+};
+
+template <typename T>
+struct CaseInSensitiveEqual<char*, T>
+{
+    bool operator()(const T& lhs, const char* rhs)
+    {
+        auto rhs_T = T(rhs);
+        return CaseInSensitiveEqual<T, T>()(lhs, rhs_T);
+    }
+    bool operator()(const char* lhs, const T& rhs)
+    {
+        auto lhs_T = T(lhs);
+        return CaseInSensitiveEqual<T, T>()(lhs_T, rhs);
+    }
+};
+
+// template <typename T, typename U>
+// bool CaseInSensitiveEqual(const T&lhs, const U&rhs)
+// {
+//     if(lhs.size() != rhs.size()) return false;
+//     return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), AsciiCaseInsensitiveEqual());
+// }
+
+// template <typename T> //std::string or range
+// inline bool CaseInSensitiveEqual(const T& lhs, const T&rhs)
+// {
+//     if(lhs.size() != rhs.size()) return false;
+//     return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), AsciiCaseInsensitiveEqual());
+// }
+
+// template <typename T> //std::string or range
+// inline bool CaseSensitiveEqual(const T& lhs, const T& rhs)
+// {
+//     if(lhs.size() != rhs.size()) return false;
+//     return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), AsciiCaseSensitiveEqual());
+// }
+
+// template <typename Iter>
+// inline bool CaseInsensitiveEqual(const Range<Iter>& lhs, const Range<Iter>& rhs)
+// {
+//     if(lhs.size() != rhs.size()) return false;
+
+//     return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), AsciiCaseInsensitiveEqual());
+// }
+
+// inline bool CaseInsensitiveEqual(const std::string& lhs, const std::string& rhs)
+// {
+//     if(lhs.size() != rhs.size()) return false;
+
+//     return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), AsciiCaseInsensitiveEqual());
+// }
+
+// template <typename Iter>
+// inline bool CaseSensitiveEqual(const Range<Iter>& lhs, const Range<Iter>& rhs)
+// {
+//     if(lhs.size() != rhs.size()) return false;
+
+//     return std::equal(lhs.cbegin(), lhs.cend(), rhs.cbegin(), AsciiCaseSensitiveEqual());
+// }
+
+// inline bool CaseSensitiveEqual(const std::string& lhs, const std::string& rhs)
+// {
+//     if(lhs.size() != rhs.size()) return false;
+
+//     return std::equal(lhs.cbegin(), )
+// }
+
 
 }
 #endif //_STRING_PIECE_H_

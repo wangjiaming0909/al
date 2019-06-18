@@ -157,4 +157,9 @@ TEST(http_headers, add_using_string_piece)
     ASSERT_EQ(memcmp(headers.getHeaderNames().back(), headerName3.cbegin(), headerName3.size()), 0);
     ASSERT_EQ(headers.getHeaderValues().back(), std::string(headerValue3.cbegin(), headerValue3.size()));
 }
+
+TEST(http_headers, remove)
+{
+    
+}
 }

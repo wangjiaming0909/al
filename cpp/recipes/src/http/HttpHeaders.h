@@ -47,7 +47,7 @@ public:
     void add(const std::string& headerName, std::string&& headerValue);
     void add(HttpHeaderCode code, std::string&& headerValue);
 
-    bool remove(const std::string& headerName);
+    bool removeWithStdString(const std::string& headerName);
     bool remove(const_string_piece headerName);
     bool remove(HttpHeaderCode code);
 
@@ -59,7 +59,7 @@ private:
     //there could be duplicated headers in codes, so iterate over all of them
     void iterateOverCodes(HttpHeaderCode code, Func&& func)
     {
-        const HttpHeaderCode* ptr = codes_.data();
+        const code_t* ptr = codes_.data();
         while(ptr)
         {
             ptr = (code_t*)::memchr(ptr, static_cast<int>(code), codes_.size() - (ptr - codes_.data()));
@@ -71,9 +71,23 @@ private:
     }
 
     template <typename Func>
-    void iterateOverHeaderNames(const std::string& headerName, Func&& func)
+    void iterateOverOtherHeaderNames(const_string_piece headerName, Func&& func)
     {
-        
+        iterateOverCodes(HttpHeaderCode::HTTP_HEADER_OTHER, 
+            [&](
+                std::vector<HttpHeaderCode>& codes,
+                std::vector<const char*>& headerNames,
+                std::vector<std::string>& headerValues,
+                size_t& codes_deleted, 
+                size_t pos)
+            {
+                if(string_piece::CaseInSensitiveEqual<const_string_piece, const char*>()(headerNames[pos], headerName))
+                {
+                    func(codes, headerNames, headerValues, codes_deleted, pos);
+                }
+            }
+        );
+
     }
 private:
     static const size_t INIT_VECTOR_RESERVE_SIZE; 

@@ -103,23 +103,14 @@ void HttpHeaders::add(HttpHeaderCode code, std::string&& headerValue)
     headerValues_.emplace_back(std::move(headerValue));
 }
 
-bool HttpHeaders::remove(const std::string& headerName)
+bool HttpHeaders::removeWithStdString(const std::string& headerName)
 {
-    if(headerName.size() == 0) return false;
-
-    auto code = HttpCommomHeaders::getHeaderCode(headerName);
-    if(code != HttpHeaderCode::HTTP_HEADER_OTHER)
-    {
-        return remove(code);
-    }
-    else
-    {
-
-    }
+    return remove(headerName);
 }
 
 bool HttpHeaders::remove(const_string_piece headerName)
 {
+    bool removed = false;
     if(headerName.size() == 0) return false;
     auto code = HttpCommomHeaders::getHeaderCode(headerName.cbegin(), headerName.size());
     if(code != HttpHeaderCode::HTTP_HEADER_OTHER)
@@ -128,7 +119,19 @@ bool HttpHeaders::remove(const_string_piece headerName)
     }
     else
     {
-
+        iterateOverOtherHeaderNames(headerName,
+            [&](
+                std::vector<HttpHeaderCode>& codes,
+                std::vector<const char*>&,
+                std::vector<std::string>&,
+                size_t& codes_deleted, 
+                size_t pos)
+            {
+                codes[pos] = HttpHeaderCode::HTTP_HEADER_NONE;
+                codes_deleted++;
+                removed = true;
+            }
+        );
     }
 }
 
@@ -136,10 +139,10 @@ bool HttpHeaders::remove(HttpHeaderCode code)
 {
     bool remvoed = false;
     iterateOverCodes(code, 
-        [this, &remvoed](
+        [&](
             std::vector<HttpHeaderCode>& codes,
-            std::vector<const char*>& headerNames,
-            std::vector<std::string>& headerValues,
+            std::vector<const char*>&,
+            std::vector<std::string>&,
             size_t& codes_deleted, 
             size_t pos)
         {

@@ -64,6 +64,27 @@ TEST(string_piece, copy)
     free(data2);
 }
 
+TEST(string_piece, CaseInsensitiveEqual)
+{
+    string_piece::const_string_piece url = "https";
+    const string str = "HTTPS";
+    const char* ptr = "Https";
+
+    auto ret = string_piece::CaseInSensitiveEqual<string_piece::const_string_piece, const char*>()(ptr, url);
+    ASSERT_EQ(ret, true);
+    ret = string_piece::CaseInSensitiveEqual<const char*, string_piece::const_string_piece>()(ptr, url);
+    ASSERT_EQ(ret, true);
+
+    ret = string_piece::CaseInSensitiveEqual<string_piece::const_string_piece, const char*>()(url, ptr);
+    ASSERT_EQ(ret, true);
+
+    ret = string_piece::CaseInSensitiveEqual<std::string, const char*>()(ptr, str);
+    ASSERT_EQ(ret, true);
+
+    ret = string_piece::CaseInSensitiveEqual<std::string, string_piece::const_string_piece>()(url, str);
+    ASSERT_EQ(ret, true);
+}
+
 void test()
 {
     string_piece::mutable_string_piece str{};
