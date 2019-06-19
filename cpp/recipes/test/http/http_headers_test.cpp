@@ -160,6 +160,24 @@ TEST(http_headers, add_using_string_piece)
 
 TEST(http_headers, remove)
 {
-    
+    string_piece::const_string_piece headerName1 = "Cache-Control";
+    string_piece::const_string_piece headerValue1 = "private";
+    string_piece::const_string_piece headerName2 = "Content-Encoding";
+    string_piece::const_string_piece headerValue2 = "gzip";
+
+    HttpHeaders header{};
+    header.add(headerName1, headerValue1);
+
+    auto removed = header.remove(headerName1);
+    ASSERT_EQ(removed, true);
+    ASSERT_EQ(header.size(), 0);
+
+    header.add(headerName1, headerValue1);
+    header.add(headerName1, headerValue1);
+    header.add(headerName2, headerValue2);
+    removed = header.remove(headerName1);
+    ASSERT_EQ(removed, true);
+    ASSERT_EQ(header.size(), 1);
+    ASSERT_EQ(header.getCodesDeleted(), 3);
 }
 }

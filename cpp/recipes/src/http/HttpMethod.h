@@ -4,14 +4,23 @@
 namespace http
 {
 
-class HttpMethod
+enum class HTTPMethod
 {
-private:
-    /* data */
-public:
-    HttpMethod(/* args */);
-    ~HttpMethod();
+    GET,
+    POST,
+    OPTIONS,
+    DELETE,
+    HEAD,
+    CONNECT,
+    PUT,
+    TRACE,
+    PATCH,
+    SUB,
+    PUB,
+    UNSUB
 };
+
+
 
 
 }

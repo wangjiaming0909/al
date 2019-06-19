@@ -3,14 +3,4 @@
 namespace http
 {
 
-
-HttpMethod::HttpMethod(/* args */)
-{
-}
-
-HttpMethod::~HttpMethod()
-{
-}
-
-
 }
