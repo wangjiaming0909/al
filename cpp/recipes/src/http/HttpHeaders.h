@@ -81,7 +81,7 @@ private:
                 size_t& codes_deleted, 
                 size_t pos)
             {
-                if(string_piece::CaseInSensitiveEqual<const_string_piece, const char*>()(headerNames[pos], headerName))
+                if(headerName.caseInsensitiveEqual(headerNames[pos]))
                 {
                     func(codes, headerNames, headerValues, codes_deleted, pos);
                 }

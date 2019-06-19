@@ -7,43 +7,34 @@
 #include <stdexcept>
 #include <ostream>
 #include "substring_search/KMP.h"
+#include "utils/type_traits.h"
 
 namespace string_piece
 {
-template <class T>
-struct IsCharPointer {};
 
-template <>
-struct IsCharPointer<char*> {
-  typedef int type;
-};
-
-template <>
-struct IsCharPointer<const char*> {
-  typedef int const_type;
-  typedef int type;
-};
-
-template <typename T>
-struct RemoveLowConst
+struct AsciiCaseSensitiveEqual
 {
-    using type = T;
+    bool operator()(char lhs, char rhs) const
+    {
+        return lhs == rhs;
+    }
 };
 
-template <>
-struct RemoveLowConst<char*>
+struct AsciiCaseInsensitiveEqual
 {
-    using type = char *;
+    bool operator()(char lhs, char rhs) const
+    {
+        char k = lhs ^ rhs;
+        if (k == 0) {
+        return true;
+        }
+        if (k != 32) {
+        return false;
+        }
+        k = lhs | rhs;
+        return (k >= 'a' && k <= 'z');
+    }
 };
-
-template <>
-struct RemoveLowConst<const char*>
-{
-    using type = char *;
-};
-
-template <typename T>
-using RemoveLowConst_t = typename RemoveLowConst<T>::type;
 
 template <typename Iter>
 class Range
@@ -64,7 +55,7 @@ public:
     Range(iterator begin, size_type size) : begin_(begin), end_(begin + size){}
 
     //应该只在Iter时包含const时才能调用此构造函数
-    template <typename T = Iter, typename IsCharPointer<T>::const_type = 0>
+    template <typename T = Iter, typename recipes::IsCharPointer<T>::const_type = 0>
     Range(const std::string &str) : begin_(str.data()), end_(str.data() + str.size()) {}
     Range(iterator begin) : begin_(begin), end_(begin_ + ::strlen(begin_)){}
 
@@ -105,15 +96,22 @@ public:
         return Range(begin_ + first, std::min(len, size() - first));
     }
 
+    bool caseInsensitiveEqual(recipes::AddLowConst_t<Iter> str)
+    {
+        Range<recipes::AddLowConst_t<Iter>> str_range{str};
+        if(str_range.size() != size()) return false;
+        return std::equal(cbegin(), cend(), str_range.cbegin(), AsciiCaseInsensitiveEqual());
+    }
+
     constexpr size_type size() const 
     {
         return size_type(end_ - begin_);
     }
 
     //allocate new memory for copying, remember to free it
-    RemoveLowConst_t<Iter> copy()
+    recipes::RemoveLowConst_t<Iter> copy()
     {
-        using address_t = RemoveLowConst_t<Iter>;
+        using address_t = recipes::RemoveLowConst_t<Iter>;
         if (size() == 0)
             return 0;
 
@@ -138,30 +136,6 @@ std::ostream& operator<<(std::ostream& os, Range<T> str)
 
 using mutable_string_piece = Range<char*>;
 using const_string_piece = Range<const char*>;
-
-struct AsciiCaseSensitiveEqual
-{
-    bool operator()(char lhs, char rhs) const
-    {
-        return lhs == rhs;
-    }
-};
-
-struct AsciiCaseInsensitiveEqual
-{
-    bool operator()(char lhs, char rhs) const
-    {
-        char k = lhs ^ rhs;
-        if (k == 0) {
-        return true;
-        }
-        if (k != 32) {
-        return false;
-        }
-        k = lhs | rhs;
-        return (k >= 'a' && k <= 'z');
-    }
-};
 
 template <typename T, typename U>
 struct CaseInSensitiveEqual

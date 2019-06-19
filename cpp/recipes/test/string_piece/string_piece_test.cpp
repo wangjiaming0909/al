@@ -85,6 +85,27 @@ TEST(string_piece, CaseInsensitiveEqual)
     ASSERT_EQ(ret, true);
 }
 
+TEST(string_piece, CaseInsensitiveEqual_member_function)
+{
+    const char* ptr = "HTTPS";
+    auto* ptr2 = const_cast<char*>(ptr);
+    const char* ptr3 = "Https";
+    string_piece::const_string_piece url = "https";
+    string_piece::mutable_string_piece url2 = const_cast<char*>(ptr3);
+
+    auto ret = url.caseInsensitiveEqual(ptr);
+    ASSERT_EQ(ret, true);
+
+    ret = url.caseInsensitiveEqual(ptr2);
+    ASSERT_EQ(ret, true);
+
+    ret = url2.caseInsensitiveEqual(ptr);
+    ASSERT_EQ(ret, true);
+
+    ret = url2.caseInsensitiveEqual(ptr2);
+    ASSERT_EQ(ret, true);
+}
+
 void test()
 {
     string_piece::mutable_string_piece str{};
