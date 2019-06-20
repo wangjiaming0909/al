@@ -20,7 +20,7 @@ const std::vector<std::string> getHttpMethodString()
 boost::optional<HTTPMethod> stringToMethod(string_piece::const_string_piece methodName)
 {
     const auto& methodStrings = getHttpMethodString();
-    for(int i = 0; i < methodStrings.size(); i++)
+    for(size_t i = 0; i < methodStrings.size(); i++)
     {
         if(methodName.caseInsensitiveEqual(methodStrings[i].c_str()))
         {

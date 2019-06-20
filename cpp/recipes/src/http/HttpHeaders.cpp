@@ -1,4 +1,5 @@
 #include "http/HttpHeaders.h"
+#include <exception>
 
 namespace http{
 
@@ -40,12 +41,14 @@ HttpHeaders::HttpHeaders(HttpHeaders&& other)
 
 HttpHeaders& HttpHeaders::operator=(const HttpHeaders& other)
 {
-
+    (void)other;
+    throw new std::exception();
 }
 
 HttpHeaders& HttpHeaders::operator=(HttpHeaders&& other)
 {
-
+    (void)other;
+    throw new std::exception();
 }
 
 HttpHeaders::~HttpHeaders()
@@ -133,6 +136,7 @@ bool HttpHeaders::remove(const_string_piece headerName)
             }
         );
     }
+    return removed;
 }
 
 bool HttpHeaders::remove(HttpHeaderCode code)
