@@ -47,10 +47,13 @@ target_link_libraries(recipes ${CMAKE_THREAD_LIBS_INIT})
 target_link_libraries(gtests -pthread)
 target_link_libraries(gtests /usr/local/lib/libgtest.a)
 target_link_libraries(gtests /usr/local/lib/libgmock.a)
+target_link_libraries(gtests /boost_1_68_0/stage/lib/libboost_timer.a)
+target_link_libraries(gtests /boost_1_68_0/stage/lib/libboost_chrono.a)
   
 
 include_directories("src")
 #include_directories("C:\\Users\\Jiaming\\Desktop\\boost_1_69_0")
+include_directories("/boost_1_68_0")
 ADD_DEFINITIONS(-DTESTING)
 ADD_DEFINITIONS(-DELPP_THREAD_SAFE)
 #ADD_DEFINITIONS(-DELPP_NO_DEFAULT_LOG_FILE)

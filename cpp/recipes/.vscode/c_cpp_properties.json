@@ -29,12 +29,14 @@
             "name": "linux",
             "includePath": [
                 "${workspaceFolder}/**",
-                "/usr/local/include"
+                "/usr/local/include",
+                "/boost_1_70_0"
             ],
             "browse": {
                 "path": [
                     "${workspaceFolder}/**",
-                    "/usr/local/include"
+                    "/usr/local/include",
+                    "/boost_1_70_0"
                 ]
             },
             "defines": 
