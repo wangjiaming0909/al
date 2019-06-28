@@ -63,9 +63,12 @@ int main()
 //    gperf::test_gperf();
 //    gperf::test_all();
 
-    test_emplace_back();
-    test_emplace_back1();
-    test_emplace_back2();
+    // test_emplace_back();
+    // test_emplace_back1();
+    // test_emplace_back2();
+
+    // test_intrusive();
+    intrusive_benchmark2(); 
 
     cout << "Hello World!" << endl;
     return 0;

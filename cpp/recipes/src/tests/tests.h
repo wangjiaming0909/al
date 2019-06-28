@@ -7,6 +7,9 @@
 #include <cstdarg>
 #include "boost/range.hpp"
 #include "boost/signals2.hpp"
+#include "boost/intrusive/slist.hpp"
+#include "boost/intrusive/list.hpp"
+#include "utils/timer.h"
 
 #ifdef __GNUC__
 #if __GNUC__ >= 7
@@ -178,4 +181,111 @@ void test_emplace_back2()
 
     v.push_back(1);
     v.emplace_back(1);
+}
+
+struct Point : boost::intrusive::slist_base_hook<>
+{
+    Point(size_t size) : size_(size){}
+    size_t size_;
+};
+
+void test_instrusive()
+{
+    using namespace boost::intrusive;
+    Point p1{1}, p2{2}, p3{3};
+
+    slist<Point> list{};
+    // list.push_back(p1);
+    list.push_front(p1);
+    list.push_front(p2);
+    list.push_front(p3);
+
+    for (auto it = list.cbegin(); it != list.cend(); it++)
+    {
+        cout << it->size_ << endl;
+    }
+}
+
+template <typename T>
+std::unique_ptr<std::vector<T>> initialize_Points(size_t size)
+{
+    std::unique_ptr<std::vector<T>> ret = std::make_unique<std::vector<T>>();
+    for (size_t i = 0; i < size; i++)
+    {
+        ret->emplace_back(i);
+    }
+    return ret;
+}
+
+struct Point2
+{
+    Point2(size_t size) : size_(size){}
+    size_t size_;
+};
+
+void intrusive_benchmark()
+{
+    size_t size = 100000;
+    using namespace boost::intrusive;
+
+    auto points = initialize_Points<Point>(size);
+    auto points2 = initialize_Points<Point2>(size);
+
+    {//if the elements have been constructed, using intrusive is faster than std::list
+        utils::timer _{"intrusive list"};
+        slist<Point> list{};
+        for (size_t i = 0; i < size; i++)
+        {
+            list.push_front(points->operator[](i));
+        }
+    }
+
+    {
+        utils::timer _{"std::list"};
+        std::list<Point2*> list{};
+        for (size_t i = 0; i < size; i++)
+        {
+            list.push_back(&points2->operator[](i));
+        }
+    }
+}
+
+void intrusive_benchmark2()
+{
+    size_t size = 100000;
+    using namespace boost::intrusive;
+
+    {//if adding the time of constructing elements, the std list is faster than intrusive list
+        utils::timer _{"intrusive list"};
+        auto points = initialize_Points<Point>(size);
+        slist<Point> list{};
+        for (size_t i = 0; i < size; i++)
+        {
+            list.push_front(points->operator[](i));
+        }
+    }
+
+    {
+        utils::timer _{"std list"};
+        std::list<Point2> list{};
+        for (size_t i = 0; i < size; i++)
+        {
+            list.emplace_front(i);
+        }
+    }
+}
+
+struct Node : public boost::intrusive::list_base_hook<>
+{
+    Node(size_t size) : size_(size){}
+    size_t size_;
+};
+
+void intrusive_list()
+{
+    boost::intrusive::list<Node, boost::intrusive::constant_time_size<false>> list;
+
+    Node n1{1}, n2{2};
+    list.push_back(n1);
+    size_t size = list.size();
 }
