@@ -106,6 +106,14 @@ void test_variant()
 void test_shared_ptr()
 {
     shared_ptr<string> str = make_shared<string>("123");
+
+    weak_ptr<string> w_str = str;
+    cout << w_str.expired() << endl;
+    cout << "unique: " << str.unique() << endl;
+    str.reset();
+    cout << w_str.expired() << endl;
+
+    unique_ptr<string> u_ptr = make_unique<string>("123");
 }
 
 void test_boost_range()
@@ -287,5 +295,52 @@ void intrusive_list()
 
     Node n1{1}, n2{2};
     list.push_back(n1);
-    size_t size = list.size();
+}
+
+void intrusive_using_base_hook_test()
+{
+    using namespace boost::intrusive;
+
+    class MyTag{ };
+    using TagType = tag<MyTag>;
+    using list_hook_type = list_base_hook<TagType, link_mode<safe_link>>;
+    struct MyNode : public list_hook_type//void* as pointer type
+    {
+        MyNode(int size) : size_(size){}
+        size_t size_;
+    };
+
+    MyNode node1{1}, node2{2};
+    assert(node1.is_linked() == false);
+    assert(node2.is_linked() == false);
+
+    using list_type = boost::intrusive::list<MyNode, base_hook<list_hook_type>, constant_time_size<true>, size_type<std::size_t>>;
+
+    list_type l{};
+    assert(l.constant_time_size == true);
+
+    l.push_back(node1);
+    assert(node1.is_linked() == true);
+    assert(l.size() == 1);
+    l.push_back(node2);
+    assert(node2.is_linked() == true);
+    assert(l.size() == 2);
+
+
+    for (auto it = l.cbegin(); it != l.cend(); it++)
+    {
+        cout << it->size_ << endl;
+    }
+
+    l.erase(l.begin());
+    assert(node1.is_linked() == false);
+    assert(l.size() == 1);
+    assert(&l.front() == &node2);
+}
+
+void intrusive_using_member_hook_test()
+{
+    using namespace boost::intrusive;
+
+
 }
