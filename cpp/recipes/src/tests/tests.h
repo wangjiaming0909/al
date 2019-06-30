@@ -341,6 +341,26 @@ void intrusive_using_base_hook_test()
 void intrusive_using_member_hook_test()
 {
     using namespace boost::intrusive;
+}
 
+struct ClassWithNestedClass{
+public:
+    ClassWithNestedClass(const string& name) : name_(name){}
+    struct NestedClass{
+        void print(const ClassWithNestedClass& c)//nested class can access the private fields of outer class
+        {
+            cout << c.name_ << endl;
+        }
+        friend class ClassWithNestedClass;
+    };
 
+private:
+    string name_;
+};
+
+void test_nestedClass()
+{
+    ClassWithNestedClass c{"abcd"};
+    ClassWithNestedClass::NestedClass nc{};
+    nc.print(c);
 }

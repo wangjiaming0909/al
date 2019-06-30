@@ -69,7 +69,8 @@ int main()
 
     // test_intrusive();
     // intrusive_benchmark2();
-    intrusive_using_base_hook_test();
+    // intrusive_using_base_hook_test();
+test_nestedClass();
 
 cout << "Hello World!" << endl;
 return 0;
