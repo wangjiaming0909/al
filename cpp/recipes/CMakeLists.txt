@@ -43,6 +43,8 @@ SET(CMAKE_CXX_COMPILER g++)
 
 find_package(Threads)
 target_link_libraries(recipes ${CMAKE_THREAD_LIBS_INIT})
+target_link_libraries(recipes /boost_1_70_0/stage/lib/libboost_timer.a)
+target_link_libraries(recipes /boost_1_70_0/stage/lib/libboost_chrono.a)
 
 target_link_libraries(gtests -pthread)
 target_link_libraries(gtests /usr/local/lib/libgtest.a)

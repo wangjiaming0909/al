@@ -8,6 +8,8 @@
 #include "boost/range.hpp"
 #include "boost/signals2.hpp"
 #include "boost/intrusive/slist.hpp"
+#include "boost/intrusive/list.hpp"
+#include "utils/timer.h"
 
 #ifdef __GNUC__
 #if __GNUC__ >= 7
@@ -105,6 +107,14 @@ void test_variant()
 void test_shared_ptr()
 {
     shared_ptr<string> str = make_shared<string>("123");
+
+    weak_ptr<string> w_str = str;
+    cout << w_str.expired() << endl;
+    cout << "unique: " << str.unique() << endl;
+    str.reset();
+    cout << w_str.expired() << endl;
+
+    unique_ptr<string> u_ptr = make_unique<string>("123");
 }
 
 void test_boost_range()
@@ -180,23 +190,179 @@ void test_emplace_back2()
     v.emplace_back(1);
 }
 
-struct Point : public boost::intrusive::slist_base_hook<>
+struct Point : boost::intrusive::slist_base_hook<>
 {
-    Point(size_t size) : size(size) {}
-    size_t size;
+    Point(size_t size) : size_(size) {}
+    size_t size_;
 };
 
-void test_boost_intrusive_list()
+void test_instrusive()
 {
-    // boost::intrusive::slist<Point> list{};
-    // Point p1{1}, p2{2}, p3{3}, p4{4};
+    using namespace boost::intrusive;
+    Point p1{1}, p2{2}, p3{3};
+
+    slist<Point> list{};
     // list.push_back(p1);
+    list.push_front(p1);
+    list.push_front(p2);
+    list.push_front(p3);
 
-    // for (auto &p : list)
-    // {
-    //     cout << p.size << endl;
-    // }
+    for (auto it = list.cbegin(); it != list.cend(); it++)
+    {
+        cout << it->size_ << endl;
+    }
+}
 
-    char *p = (char *)malloc(10);
-    delete p;
+template <typename T>
+std::unique_ptr<std::vector<T>> initialize_Points(size_t size)
+{
+    std::unique_ptr<std::vector<T>> ret = std::make_unique<std::vector<T>>();
+    for (size_t i = 0; i < size; i++)
+    {
+        ret->emplace_back(i);
+    }
+    return ret;
+}
+
+struct Point2
+{
+    Point2(size_t size) : size_(size) {}
+    size_t size_;
+};
+
+void intrusive_benchmark()
+{
+    size_t size = 100000;
+    using namespace boost::intrusive;
+
+    auto points = initialize_Points<Point>(size);
+    auto points2 = initialize_Points<Point2>(size);
+
+    { //if the elements have been constructed, using intrusive is faster than std::list
+        utils::timer _{"intrusive list"};
+        slist<Point> list{};
+        for (size_t i = 0; i < size; i++)
+        {
+            list.push_front(points->operator[](i));
+        }
+    }
+
+    {
+        utils::timer _{"std::list"};
+        std::list<Point2 *> list{};
+        for (size_t i = 0; i < size; i++)
+        {
+            list.push_back(&points2->operator[](i));
+        }
+    }
+}
+
+void intrusive_benchmark2()
+{
+    size_t size = 100000;
+    using namespace boost::intrusive;
+
+    { //if adding the time of constructing elements, the std list is faster than intrusive list
+        utils::timer _{"intrusive list"};
+        auto points = initialize_Points<Point>(size);
+        slist<Point> list{};
+        for (size_t i = 0; i < size; i++)
+        {
+            list.push_front(points->operator[](i));
+        }
+    }
+
+    {
+        utils::timer _{"std list"};
+        std::list<Point2> list{};
+        for (size_t i = 0; i < size; i++)
+        {
+            list.emplace_front(i);
+        }
+    }
+}
+
+struct Node : public boost::intrusive::list_base_hook<>
+{
+    Node(size_t size) : size_(size) {}
+    size_t size_;
+};
+
+void intrusive_list()
+{
+    boost::intrusive::list<Node, boost::intrusive::constant_time_size<false>> list;
+
+    Node n1{1}, n2{2};
+    list.push_back(n1);
+}
+
+void intrusive_using_base_hook_test()
+{
+    using namespace boost::intrusive;
+
+    class MyTag
+    {
+    };
+    using TagType = tag<MyTag>;
+    using list_hook_type = list_base_hook<TagType, link_mode<safe_link>>;
+    struct MyNode : public list_hook_type //void* as pointer type
+    {
+        MyNode(int size) : size_(size) {}
+        size_t size_;
+    };
+
+    MyNode node1{1}, node2{2};
+    assert(node1.is_linked() == false);
+    assert(node2.is_linked() == false);
+
+    using list_type = boost::intrusive::list<MyNode, base_hook<list_hook_type>, constant_time_size<true>, size_type<std::size_t>>;
+
+    list_type l{};
+    assert(l.constant_time_size == true);
+
+    l.push_back(node1);
+    assert(node1.is_linked() == true);
+    assert(l.size() == 1);
+    l.push_back(node2);
+    assert(node2.is_linked() == true);
+    assert(l.size() == 2);
+
+    for (auto it = l.cbegin(); it != l.cend(); it++)
+    {
+        cout << it->size_ << endl;
+    }
+
+    l.erase(l.begin());
+    assert(node1.is_linked() == false);
+    assert(l.size() == 1);
+    assert(&l.front() == &node2);
+}
+
+void intrusive_using_member_hook_test()
+{
+    using namespace boost::intrusive;
+}
+
+struct ClassWithNestedClass
+{
+public:
+    ClassWithNestedClass(const string &name) : name_(name) {}
+    struct NestedClass
+    {
+        void print(const ClassWithNestedClass &c) //nested class can access the private fields of outer class
+        {
+            cout << c.name_ << endl;
+        }
+        friend class ClassWithNestedClass;
+    };
+
+private:
+    string name_;
+};
+
+void test_nestedClass()
+{
+    ClassWithNestedClass c{"abcd"};
+    ClassWithNestedClass::NestedClass nc{};
+    nc.print(c);
 }
