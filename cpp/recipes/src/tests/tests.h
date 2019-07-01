@@ -7,6 +7,7 @@
 #include <cstdarg>
 #include "boost/range.hpp"
 #include "boost/signals2.hpp"
+#include "boost/intrusive/slist.hpp"
 
 #ifdef __GNUC__
 #if __GNUC__ >= 7
@@ -19,23 +20,24 @@ using namespace placeholders;
 
 #define FUNC_NAME std::cout << "------" << __func__ << "------" << std::endl;
 
-
-int function1(int i, string&& s, int j)
+int function1(int i, string &&s, int j)
 {
-    cout << i << s << j << endl;;
+    cout << i << s << j << endl;
+    ;
     return i;
 }
 
-int function2(int& i, string& s, int& j)
+int function2(int &i, string &s, int &j)
 {
-    cout << i << s << j << endl;;
+    cout << i << s << j << endl;
+    ;
     i = 1;
     j = 1;
     s = "qqq";
     return 0;
 }
 
-int function3(string& s, int i)
+int function3(string &s, int i)
 {
     cout << s << i << endl;
     s = "qqqqqqqqq";
@@ -74,14 +76,14 @@ void test_bind()
 // static const char* c_63 = "012345678901234567890123456789012345678901234567890123456789123";
 // static const char* c_64 = "0123456789012345678901234567890123456789012345678901234567890123";
 
-void test_vsnprintf(const char* fmt, ...)
+void test_vsnprintf(const char *fmt, ...)
 {
-    char* const p = (char*)::calloc(64, 1);
+    char *const p = (char *)::calloc(64, 1);
     ::memset(p, 1, 63);
     va_list v;
     va_start(v, fmt);
     //当传递的字符串因为比63大而被截断时，返回的本因写入的长度（no '\0'）,因此当传入c_64的时候，返回值其实是64,虽然传递给vsnprintf中第二个参数是63
-   ::vsnprintf(p, 63, fmt, v);//虽然传递了63作为参数，其实从fmt中只取了62个字符，第63个字符为'\0'
+    ::vsnprintf(p, 63, fmt, v); //虽然传递了63作为参数，其实从fmt中只取了62个字符，第63个字符为'\0'
     va_end(v);
 
     ::free(p);
@@ -107,7 +109,6 @@ void test_shared_ptr()
 
 void test_boost_range()
 {
-
 }
 
 void test_boost_signals2()
@@ -115,15 +116,14 @@ void test_boost_signals2()
     using namespace std;
     boost::signals2::signal<void(string a)> s{};
 
-    auto con = s.connect([](string a){cout << a << endl;});
+    auto con = s.connect([](string a) { cout << a << endl; });
 
     s("we are family;");
 }
 
-
 class TestClass
 {
-public: 
+public:
     TestClass(int)
     {
         cout << "constructor 2" << endl;
@@ -132,11 +132,11 @@ public:
     {
         cout << "constructor" << endl;
     }
-    TestClass(const TestClass&)
+    TestClass(const TestClass &)
     {
         cout << "copy constructor" << endl;
     }
-    TestClass(TestClass&&)
+    TestClass(TestClass &&)
     {
         cout << "move constructor" << endl;
     }
@@ -178,4 +178,25 @@ void test_emplace_back2()
 
     v.push_back(1);
     v.emplace_back(1);
+}
+
+struct Point : public boost::intrusive::slist_base_hook<>
+{
+    Point(size_t size) : size(size) {}
+    size_t size;
+};
+
+void test_boost_intrusive_list()
+{
+    // boost::intrusive::slist<Point> list{};
+    // Point p1{1}, p2{2}, p3{3}, p4{4};
+    // list.push_back(p1);
+
+    // for (auto &p : list)
+    // {
+    //     cout << p.size << endl;
+    // }
+
+    char *p = (char *)malloc(10);
+    delete p;
 }
