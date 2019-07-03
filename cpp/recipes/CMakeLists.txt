@@ -16,6 +16,7 @@ aux_source_directory(src/string_piece SRC_DIR)
 aux_source_directory(src/substring_search SRC_DIR)
 aux_source_directory(src/utils SRC_DIR)
 aux_source_directory(src/gperf SRC_DIR)
+aux_source_directory(src/al SRC_DIR)
 
 
 

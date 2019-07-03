@@ -18,6 +18,7 @@
 // #include "design_patterns/prototype/prototype.h"
 // #include "gperf/test.h"
 
+#include "al/merge.h"
 
 using namespace std;
 
@@ -70,7 +71,9 @@ int main()
     // test_intrusive();
     // intrusive_benchmark2();
     // intrusive_using_base_hook_test();
-test_nestedClass();
+// test_nestedClass();
+
+al::test_mergeMultiSortedArray();
 
 cout << "Hello World!" << endl;
 return 0;
