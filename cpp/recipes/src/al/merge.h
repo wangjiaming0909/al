@@ -3,6 +3,7 @@
 #include <vector>
 #include <algorithm>
 #include <iostream>
+#include <cassert>
 #include "utils/timer.h"
 #include "MinHeap.h"
 namespace al
@@ -13,7 +14,7 @@ namespace al
  */
 
 //Add all the elements into one vector and sort it
-std::vector<double> mergeMultiSortedArray1(const std::vector<std::vector<double>>& arrays)
+std::vector<double> mergeMultiSortedArraySlow(const std::vector<std::vector<double>>& arrays)
 {
     std::vector<double> ret{};
     for(const auto &v : arrays)
@@ -24,7 +25,7 @@ std::vector<double> mergeMultiSortedArray1(const std::vector<std::vector<double>
         }
     }
 
-    std::sort(ret.begin(), ret.end());
+    std::sort(ret.begin(), ret.end());// O(Nlog(N))
     return ret;
 }
 
@@ -40,24 +41,24 @@ struct MergeNode
     bool operator==(const MergeNode& node) const {return value == node.value;}
 };
 
-std::vector<double> mergeMultiSortedArray2(std::vector<std::vector<double>> &arrays)
+std::vector<double> mergeMultiSortedArrayWithMinHeap(std::vector<std::vector<double>> &arrays)
 {
     std::vector<double> ret{};
     if(arrays.size() == 0) return ret;
     al::MinHeap<MergeNode> minHeap{};
 
     std::vector<std::decay<decltype(arrays[0])>::type::const_iterator> its;
-    for(size_t i = 0; i < arrays.size(); i++ )
+    for(size_t i = 0; i < arrays.size(); i++ ) //O(k)
     {
         its.push_back(arrays[i].cbegin());
     }
 
-    for(size_t i = 0; i < arrays.size(); i++)
+    for(size_t i = 0; i < arrays.size(); i++)//O(k)
     {
         minHeap.emplace(*its[i], i);
     }
     
-    while(true)
+    while(true)// 在 MinHeap中, 一共有K个元素, 一共进行了pop或者emplace N次 (N为所有的元素个数), 因此复杂度为: O(2Nlog(K))
     {
         MergeNode minNode = minHeap.top();
         ret.push_back(minNode.value);
@@ -99,24 +100,29 @@ void test_mergeMultiSortedArray()
     std::vector<double> ret{};
 
     {
-        utils::timer _{"mergeMultiSortedArray1"};//1.0551276s
-        ret = mergeMultiSortedArray1(arrays);
+        utils::timer _{"mergeMultiSortedArraySlow"};//1.0551276s
+        ret = mergeMultiSortedArraySlow(arrays);
     }
 
-    // for(size_t i = 0; i < ret.size(); i++)
-    // {
-        // std::cout << "index: " << i << " " << ret[i] << std::endl;
-    // }
+
+    double lastValue = -1;
+    for(size_t i = 0; i < ret.size(); i++)
+    {
+        assert(ret[i] >= lastValue);
+        lastValue = ret[i];
+    }
 
     {
         utils::timer _{"mergeMultiSortedArrays with minheap"};//1.069112s
-        ret = mergeMultiSortedArray2(arrays);
+        ret = mergeMultiSortedArrayWithMinHeap(arrays);
     }
 
-    // for(size_t i = 0; i < ret.size(); i++)
-    // {
-        // std::cout << "index: " << i << " " << ret[i] << std::endl;
-    // }
+    lastValue = -1;
+    for(size_t i = 0; i < ret.size(); i++)
+    {
+        assert(ret[i] >= lastValue);
+        lastValue = ret[i];
+    }
 
 }
 
