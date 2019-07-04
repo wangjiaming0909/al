@@ -14,7 +14,7 @@ class MinHeap
 public:
     using CompareType = std::greater<T>;
     using ContainerType = std::priority_queue<T, std::vector<T>, CompareType>;
-    using SizeType = typename ContainerType::SizeType;
+    using SizeType = typename ContainerType::size_type;
     explicit MinHeap() : container_(){}
 
     static std::shared_ptr<MinHeap> make_min_heap(const std::vector<T>& c)
