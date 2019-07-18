@@ -34,6 +34,7 @@ aux_source_directory(src/http_parser TEST_DIR)
 aux_source_directory(test/http_parser TEST_DIR)
 aux_source_directory(src/http TEST_DIR)
 aux_source_directory(test/http TEST_DIR)
+aux_source_directory(test/folly TEST_DIR)
 
 
 
