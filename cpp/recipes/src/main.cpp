@@ -73,7 +73,8 @@ int main()
     // intrusive_using_base_hook_test();
 // test_nestedClass();
 
-al::test_mergeMultiSortedArray();
+// al::test_mergeMultiSortedArray();
+    test_HHWheelTimer();
 
 cout << "Hello World!" << endl;
 return 0;

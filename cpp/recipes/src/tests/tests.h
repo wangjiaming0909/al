@@ -11,6 +11,10 @@
 #include "boost/intrusive/list.hpp"
 #include "utils/timer.h"
 
+#include <folly/folly-config.h>
+#include <folly/io/async/HHWheelTimer.h>
+#include <folly/io/async/EventBase.h>
+
 #ifdef __GNUC__
 #if __GNUC__ >= 7
 #include <variant>
@@ -365,4 +369,15 @@ void test_nestedClass()
     ClassWithNestedClass c{"abcd"};
     ClassWithNestedClass::NestedClass nc{};
     nc.print(c);
+}
+
+void test_HHWheelTimer()
+{
+    using namespace folly;
+    using namespace std::chrono_literals;
+    // EventBase eventBase;
+    EventBase base;
+
+    HHWheelTimer *t1 = new HHWheelTimer{&base};
+    t1->scheduleTimeoutFn(test_nestedClass, 2ms);
 }
