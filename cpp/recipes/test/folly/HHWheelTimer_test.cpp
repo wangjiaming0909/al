@@ -17,9 +17,8 @@ TEST(HHWheelTimer, normal_test)
 
     HHWheelTimer *timer = new HHWheelTimer{&base};
 
-    timer->scheduleTimeoutFn(timeoutFn, 1s);
+    timer->scheduleTimeoutFn(timeoutFn, 1ms);
     timer->scheduleTimeoutFn(timeoutFn, 2ms);
-    timer->scheduleTimeoutFn(timeoutFn, 3ms);
 
     base.loop();
 }
