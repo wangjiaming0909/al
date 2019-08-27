@@ -82,6 +82,9 @@ target_link_libraries(gtests dl)
 target_link_libraries(gtests pthread)
 target_link_libraries(gtests unwind)
 target_link_libraries(gtests /usr/lib/x86_64-linux-gnu/libc.a)
+target_link_libraries(gtests /usr/lib/x86_64-linux-gnu/libssl.a)
+target_link_libraries(gtests /usr/lib/x86_64-linux-gnu/libcrypto.a)
+target_link_libraries(gtests /usr/local/lib/libcurl.so)
   
 
 include_directories("src")
