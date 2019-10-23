@@ -19,7 +19,7 @@ set | srv, sif, loc, lif | ngx_http_rewrite_set
 rewrite_log | http, stv, sif, loc, lif | ngx_conf_set_flag_slot
 uninitialized_variable_warn | http, srv, sif, loc ,lif | ngx_conf_set_flag_slot
 
-## rewrite module 结构
+## rewrite module loc_conf结构体
 > ngx_http_rewrite_loc_conf_t
 ``` c
 typedef struct {
@@ -32,7 +32,7 @@ typedef struct {
 } ngx_http_rewrite_loc_conf_t;
 ```
 
-## if
+## if指令
 if 可以用 "=", "!=" 进行字符串比较：
 ```c
 if ($request_method = POST){
@@ -60,8 +60,14 @@ if ($http_user_agent ~ MSIE) {
 其他if可用的选项
 ```c
 //-f: 文件是否存在. -d: 目录是否存在 -e: 目录或者文件是否存在. -x: 文件是否可执行
+//!-f, !-d, !-e, !-x: 表示取反
 if (-f $request_filename) {//判断文件是否存在
 }
+```
+
+### code 分析
+```c
+ngx_http_rewrite_
 ```
 
 ## break
