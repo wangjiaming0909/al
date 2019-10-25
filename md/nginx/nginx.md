@@ -13,3 +13,18 @@ parser 在碰到http块时: 进入到`ngx_http_block`, 此函数是`ngx_http_mod
 - 7, init headers in hash
 - 8, 调用所有http模块的`post configuration`
 - 9, init variables??
+
+
+## ngx_http_block
+> nginx在解析http块下的其他子配置项时, 会将ngx_conf_t->ctx 指向 ngx_http_conf_ctx_t. 
+
+> 此对象是在ngx_conf_t 的pool 中创建的, 其包含了所有http模块的三个conf 指针, 因此用指针数组表示
+
+> 在遍历所有http module时, 调用create_x_conf时创建的所有conf都由这三个指针引用.
+```c
+typedef struct {
+    void        **main_conf;
+    void        **srv_conf;
+    void        **loc_conf;
+} ngx_http_conf_ctx_t;
+```

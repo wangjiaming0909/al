@@ -1,4 +1,11 @@
 # rewrite module
+rewrite模块为http的一个模块
+
+## 初始化流程
+#### 在解析配置文件时, 读到server 块之后, 会首先初始化所有http模块, 因此也会初始化rewrite模块
+#### 调用rewrite模块的create_main_conf, create_srv_conf, create_loc_conf, 但其实rewrite模块只有create_loc_conf, rewrite 也没有preconfiguration, 因此可能rewrite也没有什么变量需要初始化. 
+#### rewrite有merge location conf的函数
+
 
 ## rewrite module 的指令
 - rewrite
@@ -52,7 +59,7 @@ if ($request_method = POST){
 ```c
 if ($http_user_agent ~ MSIE) {
     //只要user_agent 包含MSIE 就会返回404
-    return 404;
+    return 404;//return 指令见  return
 }
 //正则表达式一般也不需要加引号，若含有特殊字符，可加引号
 ```
@@ -67,7 +74,15 @@ if (-f $request_filename) {//判断文件是否存在
 
 ### code 分析
 ```c
-ngx_http_rewrite_
+//if command
+    ngx_command_t 
+    { ngx_string("if"),
+      NGX_HTTP_SRV_CONF|NGX_HTTP_LOC_CONF|NGX_CONF_BLOCK|NGX_CONF_1MORE,
+      ngx_http_rewrite_if,//解析配置文件时, 读取到if时调用的响应函数
+      NGX_HTTP_LOC_CONF_OFFSET,
+      0,
+      NULL 
+    },
 ```
 
 ## break
