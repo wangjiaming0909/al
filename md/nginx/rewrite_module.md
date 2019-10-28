@@ -124,3 +124,35 @@ for (i = 0; cf->cycle->modules[i]; i++) {//遍历所有的http module, 创建 lo
 - 问题： 为什么rewrite if需要创建一个location块呢？？
 
 ## break
+break将下一步的code设置为: ngx_http_script_exit, 其实就是NULL, 表示当前rewrite phase结束, 即使当前块后还有别的if 等rewrite指令也不会再被执行到
+example:
+```c
+server{
+//...
+//break;//如果再server块下直接有一个break,那么就等于没有rewrite阶段,直接进如下一个http处理阶段
+if ($request_method ~ GET) {
+    break;
+    return 404 "find nothing!\n";//不会被执行
+}
+if ($request_method = GET) {//此if也不会被执行, 因为rewrite phase已经结束了
+    return 404;
+}
+//...
+}
+```
+
+## return
+1, 可以返回状态码和一条message
+
+- return 404 "$reqeust_filename Not found";
+
+2, 也可以返回一个url, status是302, 组装一个302的response包发给客户端
+
+- return http://192.168.0.2
+
+nginx 在处理时首先解析第二个参数, 尝试转换成整数, 
+- 失败就开始判断是否是以`http` 或者`https` 或者`schema`开头的, 尝试组装一个302的`response`包, 
+- 如果成功转换成整数,就用给定的`status code`和`message`组装一个`response`包
+
+
+## rewrite
