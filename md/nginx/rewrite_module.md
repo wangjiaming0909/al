@@ -21,7 +21,7 @@ directive | 可出现的块 | 解析配置遇到该指令时的响应函数
 rewrite | srv, sif, loc, lif | ngx_http_rewrite
 return | srv, sif, loc, lif | ngx_http_rewrite_return
 break | srv, sif, loc, lif | ngx_http_rewrite_break
-if | srv, loc, main | ngx_http_rewrite_if
+if | srv, loc | ngx_http_rewrite_if
 set | srv, sif, loc, lif | ngx_http_rewrite_set
 rewrite_log | http, stv, sif, loc, lif | ngx_conf_set_flag_slot
 uninitialized_variable_warn | http, srv, sif, loc ,lif | ngx_conf_set_flag_slot
@@ -84,5 +84,42 @@ if (-f $request_filename) {//判断文件是否存在
       NULL 
     },
 ```
+#### ngx_http_rewrite_if
+```c
+ctx = ngx_pcalloc(cf->pool, sizeof(ngx_http_conf_ctx_t));//首先创建ctx
+if (ctx == NULL) {
+    return NGX_CONF_ERROR;
+}
+
+pctx = cf->ctx;//cf是全局的conf
+ctx->main_conf = pctx->main_conf;
+ctx->srv_conf = pctx->srv_conf;
+
+ctx->loc_conf = ngx_pcalloc(cf->pool, sizeof(void *) * ngx_http_max_module);
+if (ctx->loc_conf == NULL) {
+    return NGX_CONF_ERROR;
+}
+
+for (i = 0; cf->cycle->modules[i]; i++) {//遍历所有的http module, 创建 location conf
+    if (cf->cycle->modules[i]->type != NGX_HTTP_MODULE) {
+        continue;
+    }
+
+    module = cf->cycle->modules[i]->ctx;
+
+    if (module->create_loc_conf) {
+
+        mconf = module->create_loc_conf(cf);
+        if (mconf == NULL) {
+            return NGX_CONF_ERROR;
+        }
+
+        ctx->loc_conf[cf->cycle->modules[i]->ctx_index] = mconf;
+    }
+}
+```
+- 此函数首先创建一个ctx, if只能放在server,或者location块中, 因此ctx首先将main和server conf指向全局conf的ctx中对应的conf, 也就是http块下的 main_conf, server_conf
+- 接下来分配自己loc conf的内存, 遍历所有http module, 创建loc conf, 塞到自己的loc conf数组中
+- 问题： 为什么rewrite if需要创建一个location块呢？？
 
 ## break
