@@ -66,11 +66,12 @@ if ($http_user_agent ~ MSIE) {
 
 其他if可用的选项
 ```c
-//-f: 文件是否存在. -d: 目录是否存在 -e: 目录或者文件是否存在. -x: 文件是否可执行
+//-f: 是否是一个文件. -d: 是否是一个目录 -e: 是否是一个文件或者目录. -x: 文件是否可执行
 //!-f, !-d, !-e, !-x: 表示取反
-if (-f $request_filename) {//判断文件是否存在
+if (-f $request_filename) {
 }
 ```
+以上几个if条件的响应函数都为`ngx_http_script_file_code`, 此函数会在rewrite phase被调用
 
 ### code 分析
 ```c
