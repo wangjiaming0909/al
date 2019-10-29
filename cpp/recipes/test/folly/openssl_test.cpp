@@ -1,12 +1,14 @@
 #include <openssl/ssl.h>
 #include <gtest/gtest.h>
-#include <curl/curl.h>
 #include <iostream>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
 #include <iostream>
+#include <fcntl.h>
+#include <unistd.h>
+#include <vector>
 
 
 TEST(OpenSSl, normal){
@@ -55,22 +57,50 @@ Accept-Language: zh-CN,zh;q=0.9,en-US;q=0.8,en;q=0.7\r\n\r\n";
 
     auto fd_method = BIO_f_ssl();
     auto buf = BIO_new(fd_method);
-    BIO_set_ssl(buf, ssl, BIO_NOCLOSE);
-    // BIO_set_fd(buf, fd, BIO_NOCLOSE);
-    
-    ret = BIO_write(buf, requestMessage, strlen(requestMessage));
-    if(ret <= 0)
+    auto r = SSL_write(ssl, requestMessage, strlen(requestMessage));
+    if (r <= 0)
     {
-        std::cout << "err bio_put" << strerror(errno) << std::endl;;
+        int err = SSL_get_error(ssl, r);
+        std::cout << "SSL_write error: " << err << std::endl;
+        FAIL();
     }
+    // BIO_set_ssl(buf, ssl, BIO_NOCLOSE);
+    // // BIO_set_fd(buf, fd, BIO_NOCLOSE);
+    
+    // ret = BIO_write(buf, requestMessage, strlen(requestMessage));
+    // if(ret <= 0)
+    // {
+    //     std::cout << "err bio_put" << strerror(errno) << std::endl;;
+    // }
 
     char* data = static_cast<char*>(::calloc(4096, 1));
-    ret = BIO_read(buf, data, 4096);
-    if(ret <= 0)
-    {
-        std::cout << "error bio_get: " << strerror(errno) << std::endl;
-    }
-    std::cout  << data << std::endl;
+    // while(true)
+    // {
+    //     r = SSL_read(ssl, data, 4096);
+    //     int err = SSL_get_error(ssl, r);
+    //     if (r <= 0)
+    //     {
+    //         std::cout << "SSL_read error: " << err << std::endl;
+    //         FAIL();
+    //     }
+
+    //     std::cout  << data << std::endl;
+    //     if (err == SSL_ERROR_WANT_READ)
+    //     {
+    //         break;
+    //     }
+    //     memset(data, 0, 4096);
+    // }
+    free(data);
+    std::vector<int> str{};
+    auto begin = str.begin();
+    auto a = *begin;
+
+    // ret = BIO_read(buf, data, 4096);
+    // if(ret <= 0)
+    // {
+    //     std::cout << "error bio_get: " << strerror(errno) << std::endl;
+    // }
 
 
     // BIO* mem = BIO_new(BIO_s_mem());
