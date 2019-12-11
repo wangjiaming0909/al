@@ -122,3 +122,6 @@ cpp/recipes/recipes.files
 **/bin/*
 **/obj/*
 **/*.tmp
+
+**/*.pyc
+**/*.swp
