@@ -17,6 +17,9 @@ class HeaderStatus(Enum):
     Without_Content_Disposition = 3
     With_Content_Length = 4
     Without_Content_Length = 5
+    Not_Respond_To_Range = 6
+    Range_Match = 7
+    Range_Not_Match = 8
 
 class RangeDownloader:
     start_ = 0
@@ -26,7 +29,7 @@ class RangeDownloader:
     url_ = ''
     http_ = None
     response_ = None
-    fileName_ = ''
+    fileName_ = 'DefaultFile'
     fileSize_ = 0
     isPartialData = False
 
@@ -47,9 +50,42 @@ class RangeDownloader:
             self.status_ = Status.NOT_FOUND
 
     def updateHeaderStatus(self):
-        contentEncoding = self.response_.headers.get('Content-Encoding')
-        if(contentEncoding != None and contentEncoding == 'chunked'):
+        transferEncoding = self.response_.headers.get('Transfer-Encoding')
+        if transferEncoding != None and transferEncoding == 'chunked':
             self.headerStatus_ = HeaderStatus.Chunked
+            return
+        
+        self.headerStatus_ = HeaderStatus.With_Content_Disposition
+        contentDisposition = self.response_.headers.get('Content-Disposition')
+        if contentDisposition == None:
+            print('No content disposition')
+            self.headerStatus_ = HeaderStatus.Without_Content_Disposition
+            return 
+
+        self.retriveFileName(contentDisposition)
+        contentRange = self.response_.headers.get('Content-Range')
+        if contentRange == None:
+            print('server does not respond to range header')
+            self.headerStatus_ = HeaderStatus.Not_Respond_To_Range
+            return
+        
+        self.retriveFileSize(contentRange)
+        if self.validRange(contentRange):
+            self.headerStatus_ = HeaderStatus.Range_Match
+        else:
+            self.headerStatus_ = HeaderStatus.Range_Not_Match
+
+    def validRange(self, contentRange):
+        return True
+
+    def retriveFileSize(self, contentRange):
+        self.fileSize_ = 1;
+
+
+    def retriveFileName(self, contentDispositionHeader):
+        contentDispositionHeader.find('')
+        self.fileName_ = ''
+        
 
     def download(self):
         self.response_ = self.http_.request('GET', self.url_)
