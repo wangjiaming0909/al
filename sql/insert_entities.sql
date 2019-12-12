@@ -1,4 +1,4 @@
---department
+-- department
 INSERT INTO department(dept_name, building, budget)
 	values('Biology', 'Watson', 90000);
 INSERT INTO department(dept_name, building, budget)
@@ -14,9 +14,9 @@ INSERT INTO department(dept_name, building, budget)
 INSERT INTO department(dept_name, building, budget)
 	values('Physics', 'Watson', 70000);
 
---department
+-- department
 
---course
+-- course
 INSERT INTO course(course_id, title, dept_name, credits) 
 	values('CS-101', 'Intro. to Comp Sci', 'Comp.Sci.', 4);
 INSERT INTO course(course_id, title, dept_name, credits) 
@@ -45,10 +45,10 @@ INSERT INTO course(course_id, title, dept_name, credits)
 	values('MU-199', 'Music Video Production', 'Music', 3);
 INSERT INTO course(course_id, title, dept_name, credits) 
 	values('PHY-101', 'Physical Principles', 'Physics', 4);
---course
+-- course
 
 
---instructor
+-- instructor
 INSERT INTO instructor(ID, name, dept_name, salary)
 	values('10101', 'Srinivasan', 'Comp.Sci.', 65000);
 INSERT INTO instructor(ID, name, dept_name, salary)
@@ -71,9 +71,9 @@ INSERT INTO instructor(ID, name, dept_name, salary)
 	values('59435', 'Yong', 'Finance', 50000);
 INSERT INTO instructor(ID, name, dept_name, salary)
 	values('46897', 'Ming', 'Elec.Eng.', 96000);
---instructor
+-- instructor
 
---section
+-- section
 INSERT INTO section(course_id, sec_id, semester, year_, building, room_number, time_slot_id)
 	values('BIO-101', 1, 'Summer', 2009, 'Painter', '514', 'B');
 INSERT INTO section(course_id, sec_id, semester, year_, building, room_number, time_slot_id)
@@ -104,9 +104,9 @@ INSERT INTO section(course_id, sec_id, semester, year_, building, room_number, t
 	values('MU-199', 1, 'Spring', 2010, 'Packard', '101', 'D');
 INSERT INTO section(course_id, sec_id, semester, year_, building, room_number, time_slot_id)
 	values('PHY-101', 1, 'Fall', 2009, 'Watson', '100', 'A');
---section
+-- section
 
---teaches
+-- teaches
 INSERT INTO teaches (ID, course_id, sec_id, semester, year_)
 	values('10101', 'CS-101', '1', 'Fall', 2009);
 INSERT INTO teaches (ID, course_id, sec_id, semester, year_)
@@ -131,16 +131,16 @@ INSERT INTO teaches (ID, course_id, sec_id, semester, year_)
 	values('12349', 'BIO-301', '1', 'Summer', 2010);
 INSERT INTO teaches (ID, course_id, sec_id, semester, year_)
 	values('10101', 'CS-190', '1', 'Spring', 2009);
---INSERT INTO teaches (ID, course_id, sec_id, semester, year_)
-	--values('10101', 'CS-390', '2', 'Spring', 2009);
+-- INSERT INTO teaches (ID, course_id, sec_id, semester, year_)
+	-- values('10101', 'CS-390', '2', 'Spring', 2009);
 INSERT INTO teaches (ID, course_id, sec_id, semester, year_)
 	values('10101', 'CS-319', '2', 'Spring', 2010);
 INSERT INTO teaches (ID, course_id, sec_id, semester, year_)
 	values('46897', 'EE-181', '1', 'Spring', 2009);
 
---teaches
+-- teaches
 
---student
+-- student
 INSERT INTO student (ID, name, dept_name, tot_cred)
 	VALUES ('00128', 'Zhang', 'Comp.Sci.', 102);
 INSERT INTO student (ID, name, dept_name, tot_cred)
@@ -167,9 +167,9 @@ INSERT INTO student (ID, name, dept_name, tot_cred)
 	VALUES ('98765', 'Bourikas', 'Elec.Eng.', 98);
 INSERT INTO student (ID, name, dept_name, tot_cred)
 	VALUES ('98988', 'Tanaka', 'Biology', 120);
---student
+-- student
 
---takes
+-- takes
 INSERT INTO takes (ID, course_id, sec_id, semester, year_, grade)
 	VALUES('00128', 'CS-101', '1', 'Fall', 2009, 'A');
 INSERT INTO takes (ID, course_id, sec_id, semester, year_, grade)
@@ -214,5 +214,5 @@ INSERT INTO takes (ID, course_id, sec_id, semester, year_, grade)
 	VALUES('98988', 'BIO-101', '1', 'Summer', 2009, 'A');
 INSERT INTO takes (ID, course_id, sec_id, semester, year_)
 	VALUES('98988', 'BIO-301', '1', 'Summer', 2010);
---takes
+-- takes
 

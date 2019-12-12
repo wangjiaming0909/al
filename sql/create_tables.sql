@@ -1,3 +1,4 @@
+use school;
 CREATE TABLE department(
 	dept_name varchar(20),
 	building varchar(15),
