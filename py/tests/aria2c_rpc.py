@@ -2,12 +2,14 @@ from urllib import request
 import json
 import sys
 import time
+#import os
 
 if len(sys.argv) < 2:
     print('argv error')
     exit(-1)
 url = sys.argv[1]
 
+#os.spawnl(os.P_DETACH, 'aria2c/aria2c.exe', '--conf-path=aria2c.conf')
 
 def getUrl(id, method, params):
     return json.dumps({'jsonrpc': '2.0',
@@ -37,23 +39,29 @@ if res.status != 200:
 data = res.read()
 data = json.loads(data)
 result = str(data['result'])
-print(data)
+#print(data)
 print(result)
 
 for i in range(0, 100):
-    time.sleep(2)
+    time.sleep(0.5)
 
     jsonReq = getReq(id, 'aria2.tellStatus', result)
 
-    print(jsonReq)
+    #print(jsonReq)
     res = request.urlopen(rpcUrl, jsonReq)
 
     if res.status != 200:
         print(res.data)
         exit(-1)
     j = json.loads(res.read())
-    print(j['result']['downloadSpeed'])
-    completed = j['result']['files']
+    print('speed: ' + j['result']['downloadSpeed'])
+    completed = j['result']['files'][0]['completedLength']
     total = j['result']['totalLength']
-    print(completed)
-    print(total)
+    if completed == '0' or total == '0':
+        print('waiting...')
+        continue
+    percent = float(completed) / float(total)
+    print(percent, '%')
+    if(percent == 1):
+        print('completed...')
+        break
