@@ -125,3 +125,6 @@ cpp/recipes/recipes.files
 
 **/*.pyc
 **/*.swp
+
+**/.vs/**/*
+**/Debug/**/*
