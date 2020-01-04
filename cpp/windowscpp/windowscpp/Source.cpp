@@ -25,7 +25,7 @@ void init()
 }
 void sendDownload(const std::string& url)
 {
-	std::string name = "ubuntu";
+	std::string name = "pc";
 	sockpp::inet_address target = sockpp::inet_address(name, 8000);
 	auto connector = sockpp::connector();
 	downloadmessage::Mess_WL mess{};
@@ -57,7 +57,10 @@ void sendDownload(const std::string& url)
 		cout << "error..." << endl;
 	}
 	free(d);
-	connector.close();
+	if (!connector.close())
+	{
+		cout << "close error..." << endl;
+	}
 }
 
 
@@ -71,16 +74,22 @@ int main(int argc, char** argv)
 	init();
 	std::string url = argv[1];
 
-	std::vector<std::thread*> threads{};
-	for (int i = 0; i < 10; i++)
+	int i = 9;
+	while (i == 9)
 	{
-		threads.push_back(new std::thread(sendDownload, std::ref(url)));
-	}
+		cout << "----------------------" << i << endl;
+		std::vector<std::thread*> threads{};
+		for (int i = 0; i < 1; i++)
+		{
+			threads.push_back(new std::thread(sendDownload, std::ref(url)));
+		}
 
-	for (int i = 0; i < 10; i++)
-	{
-		threads[i]->join();
-		delete threads[i];
+		for (int i = 0; i < 1; i++)
+		{
+			threads[i]->join();
+			delete threads[i];
+		}
+		i--;
 	}
 
 	return 0;

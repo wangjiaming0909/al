@@ -128,3 +128,4 @@ cpp/recipes/recipes.files
 
 **/.vs/**/*
 **/Debug/**/*
+**/google/**/*
