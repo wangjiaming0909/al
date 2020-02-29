@@ -4,6 +4,8 @@
 #include "proto/mess_wl.pb.h"
 #include <thread>
 #include <vector>
+#include "ConfigParser.h"
+#include "StateConnection.h"
 using namespace std;
 
 void init()
@@ -23,6 +25,7 @@ void init()
 		exit(1);
 	}
 }
+
 void sendDownload(const std::string& url)
 {
 	std::string name = "pc";
@@ -66,31 +69,63 @@ void sendDownload(const std::string& url)
 
 int main(int argc, char** argv)
 {
-	if (argc < 2)
-	{
-		cout << "url" << endl;
-		exit(-1);
-	}
+	//if (argc < 2)
+	//{
+	//	cout << "url" << endl;
+	//	exit(-1);
+	//}
 	init();
-	std::string url = argv[1];
+	//std::string url = argv[1];
 
-	int i = 9;
-	while (i == 9)
+	//int i = 9;
+	//while (i == 9)
+	//{
+	//	cout << "----------------------" << i << endl;
+	//	std::vector<std::thread*> threads{};
+	//	for (int i = 0; i < 1; i++)
+	//	{
+	//		threads.push_back(new std::thread(sendDownload, std::ref(url)));
+	//	}
+
+	//	for (int i = 0; i < 1; i++)
+	//	{
+	//		threads[i]->join();
+	//		delete threads[i];
+	//	}
+	//	i--;
+	//}
+
+	auto option = config::ConfigParser::parse();
+	cout << "host: " << option.targetHost << endl;
+	cout << "port: " << option.port << std::endl;
+
+	Connection conn{ "pc", 9090 };
+	cout << conn.getAddr().to_string() << endl;
+
+	Connection conn2{"192.168.0.2", 9090};
+	cout << conn2.getAddr().to_string() << endl;
+
+	try
 	{
-		cout << "----------------------" << i << endl;
-		std::vector<std::thread*> threads{};
-		for (int i = 0; i < 1; i++)
-		{
-			threads.push_back(new std::thread(sendDownload, std::ref(url)));
-		}
+		auto addr = sockpp::inet_address::resolve_name("pc");
+		auto addr2 = sockpp::inet_address::resolve_name("192.168.0.2");
+		in_addr a;
+		inet_pton(AF_INET, "192.168.0.2", &a);
+		sockpp::inet_address ad(addr, 90);
+		sockpp::inet_address ad2(addr2, 90);
+		sockaddr_in sockaddr{};
+		sockaddr.sin_family = AF_INET;
+		sockaddr.sin_port = 90;
+		sockaddr.sin_addr = a;
+		sockpp::inet_address ad3(sockaddr);
 
-		for (int i = 0; i < 1; i++)
-		{
-			threads[i]->join();
-			delete threads[i];
-		}
-		i--;
+		cout << ad.to_string() << endl;
+		cout << ad2.to_string() << endl;
+		cout << ad3.to_string() << endl;
 	}
-
+	catch (const std::exception & ex)
+	{
+		cout << ex.what() << endl;
+	}
 	return 0;
 }
