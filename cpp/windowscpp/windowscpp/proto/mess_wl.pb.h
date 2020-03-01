@@ -496,6 +496,7 @@ class Download_Response :
   enum : int {
     kIdFieldNumber = 1,
     kPercentFieldNumber = 2,
+    kStateFieldNumber = 3,
   };
   // required int32 id = 1;
   bool has_id() const;
@@ -523,6 +524,19 @@ class Download_Response :
   void _internal_set_percent(float value);
   public:
 
+  // required .downloadmessage.Download_Response.State state = 3;
+  bool has_state() const;
+  private:
+  bool _internal_has_state() const;
+  public:
+  void clear_state();
+  ::downloadmessage::Download_Response_State state() const;
+  void set_state(::downloadmessage::Download_Response_State value);
+  private:
+  ::downloadmessage::Download_Response_State _internal_state() const;
+  void _internal_set_state(::downloadmessage::Download_Response_State value);
+  public:
+
   // @@protoc_insertion_point(class_scope:downloadmessage.Download_Response)
  private:
   class _Internal;
@@ -535,6 +549,7 @@ class Download_Response :
   mutable ::PROTOBUF_NAMESPACE_ID::internal::CachedSize _cached_size_;
   ::PROTOBUF_NAMESPACE_ID::int32 id_;
   float percent_;
+  int state_;
   friend struct ::TableStruct_mess_5fwl_2eproto;
 };
 // ===================================================================
@@ -762,6 +777,35 @@ inline void Download_Response::_internal_set_percent(float value) {
 inline void Download_Response::set_percent(float value) {
   _internal_set_percent(value);
   // @@protoc_insertion_point(field_set:downloadmessage.Download_Response.percent)
+}
+
+// required .downloadmessage.Download_Response.State state = 3;
+inline bool Download_Response::_internal_has_state() const {
+  bool value = (_has_bits_[0] & 0x00000004u) != 0;
+  return value;
+}
+inline bool Download_Response::has_state() const {
+  return _internal_has_state();
+}
+inline void Download_Response::clear_state() {
+  state_ = 0;
+  _has_bits_[0] &= ~0x00000004u;
+}
+inline ::downloadmessage::Download_Response_State Download_Response::_internal_state() const {
+  return static_cast< ::downloadmessage::Download_Response_State >(state_);
+}
+inline ::downloadmessage::Download_Response_State Download_Response::state() const {
+  // @@protoc_insertion_point(field_get:downloadmessage.Download_Response.state)
+  return _internal_state();
+}
+inline void Download_Response::_internal_set_state(::downloadmessage::Download_Response_State value) {
+  assert(::downloadmessage::Download_Response_State_IsValid(value));
+  _has_bits_[0] |= 0x00000004u;
+  state_ = value;
+}
+inline void Download_Response::set_state(::downloadmessage::Download_Response_State value) {
+  _internal_set_state(value);
+  // @@protoc_insertion_point(field_set:downloadmessage.Download_Response.state)
 }
 
 #ifdef __GNUC__

@@ -140,6 +140,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="Buffer.cpp" />
     <ClCompile Include="ConfigParser.cpp" />
     <ClCompile Include="Connection.cpp" />
     <ClCompile Include="DownloadRequestConnection.cpp" />
@@ -149,6 +150,7 @@
     <ClCompile Include="utils\json11.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="Buffer.h" />
     <ClInclude Include="ConfigParser.h" />
     <ClInclude Include="Connection.h" />
     <ClInclude Include="DownloadRequestConnection.h" />

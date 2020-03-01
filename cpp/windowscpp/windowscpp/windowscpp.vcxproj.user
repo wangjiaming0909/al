@@ -1,7 +1,7 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="Current" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
-    <LocalDebuggerCommandArguments>https://github.com/myfreeer/cppreference2mshelp/releases/download/2019.12/cppreference-zh-20191207.chm</LocalDebuggerCommandArguments>
+    <LocalDebuggerCommandArguments>https://dl.hdslb.com/mobile/latest/iBiliPlayer-bili.apk</LocalDebuggerCommandArguments>
     <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
   </PropertyGroup>
 </Project>

@@ -69,13 +69,14 @@ void sendDownload(const std::string& url)
 
 int main(int argc, char** argv)
 {
-	//if (argc < 2)
-	//{
-	//	cout << "url" << endl;
-	//	exit(-1);
-	//}
+	if (argc < 2)
+	{
+		cout << "url" << endl;
+		exit(-1);
+	}
 	init();
-	//std::string url = argv[1];
+	std::string url = argv[1];
+	sendDownload(url);
 
 	//int i = 9;
 	//while (i == 9)
