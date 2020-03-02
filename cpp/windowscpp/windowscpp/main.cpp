@@ -76,7 +76,19 @@ int main(int argc, char** argv)
 	}
 	init();
 	std::string url = argv[1];
-	sendDownload(url);
+
+	std::shared_ptr<SimpleStateCallback> cb = std::make_shared<SimpleStateCallback>();
+	StateConnection con("150.0.168.192", 8000);
+	con.setCallback(cb->shared_from_this());
+	std::thread t{ &StateConnection::startStateLoop, &con };
+	using namespace chrono_literals;
+	std::this_thread::sleep_for(1s);
+	con.download(1, url);
+	con.download(2, url);
+	con.download(3, url);
+	std::this_thread::sleep_for(1s);
+	t.join();
+	//sendDownload(url);
 
 	//int i = 9;
 	//while (i == 9)
