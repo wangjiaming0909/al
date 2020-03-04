@@ -91,7 +91,7 @@ void StateConnection::dispatchMessage(const downloadmessage::Download_Response& 
 	switch (res.state())
 	{
 	case Download_Response_State_DOWNLOADING:
-		if (res.percent() < 1)
+		if (1 - res.percent() > 0.001)
 		{
 			callback_->update(res.id(), res);
 		}else
@@ -104,13 +104,14 @@ void StateConnection::dispatchMessage(const downloadmessage::Download_Response& 
 		callback_->removed(res.id());
 		break;
 	default:
+		std::cout << "default" << std::endl;
 		break;
 	}
 }
 
 void SimpleStateCallback::update(int id, const downloadmessage::Download_Response& res)
 {
-	std::cout << "updating id: " << id << " percent: " << res.percent() << std::endl;
+	std::cout << "updating id: " << id << " percent: " << res.percent() * 100 << "%" << std::endl;
 }
 
 void SimpleStateCallback::paused(int id)
@@ -127,4 +128,5 @@ void SimpleStateCallback::removed(int id)
 
 void SimpleStateCallback::finished(int id)
 {
+	std::cout << "id: " << id << " findished..." << std::endl;
 }

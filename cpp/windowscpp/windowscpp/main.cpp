@@ -75,19 +75,26 @@ int main(int argc, char** argv)
 		exit(-1);
 	}
 	init();
-	std::string url = argv[1];
+	std::string url1 = "https://cn.ultraiso.net/uiso9_cn.exe";
+	std::string url2 = "http://wppkg.baidupcs.com/issue/netdisk/yunguanjia/BaiduNetdisk_6.8.9.1.exe";
+	std::string url3 = "http://192.168.0.2/home/pi/downloads/1.mp4";
+	std::string url = "https://d1.music.126.net/dmusic/cloudmusicsetup2.7.1.198242.exe";
 
-	std::shared_ptr<SimpleStateCallback> cb = std::make_shared<SimpleStateCallback>();
-	StateConnection con("150.0.168.192", 8000);
-	con.setCallback(cb->shared_from_this());
-	std::thread t{ &StateConnection::startStateLoop, &con };
-	using namespace chrono_literals;
-	std::this_thread::sleep_for(1s);
-	con.download(1, url);
-	con.download(2, url);
-	con.download(3, url);
-	std::this_thread::sleep_for(1s);
-	t.join();
+	int times = 5;
+	while(times > 0){
+		std::shared_ptr<SimpleStateCallback> cb = std::make_shared<SimpleStateCallback>();
+		StateConnection con("150.0.168.192", 8000);
+		con.setCallback(cb->shared_from_this());
+		std::thread t{ &StateConnection::startStateLoop, &con };
+		using namespace chrono_literals;
+		con.download(1, url);
+		con.download(2, url);
+		std::this_thread::sleep_for(1s);
+		con.download(3, url2);
+		t.join();
+		times = 0;
+	}
+
 	//sendDownload(url);
 
 	//int i = 9;
