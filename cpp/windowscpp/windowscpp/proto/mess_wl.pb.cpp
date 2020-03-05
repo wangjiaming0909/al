@@ -300,11 +300,7 @@ const char* Mess_WL::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::in
       // required string url = 4;
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
-          auto str = _internal_mutable_url();
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
-          #ifndef NDEBUG
-          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "downloadmessage.Mess_WL.url");
-          #endif  // !NDEBUG
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParserUTF8Verify(_internal_mutable_url(), ptr, ctx, "downloadmessage.Mess_WL.url");
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -329,7 +325,7 @@ failure:
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* Mess_WL::_InternalSerialize(
+::PROTOBUF_NAMESPACE_ID::uint8* Mess_WL::InternalSerializeWithCachedSizesToArray(
     ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:downloadmessage.Mess_WL)
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
@@ -338,19 +334,19 @@ failure:
   cached_has_bits = _has_bits_[0];
   // required int32 len = 1;
   if (cached_has_bits & 0x00000002u) {
-    target = stream->EnsureSpace(target);
+    stream->EnsureSpace(&target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_len(), target);
   }
 
   // required int32 id = 2;
   if (cached_has_bits & 0x00000004u) {
-    target = stream->EnsureSpace(target);
+    stream->EnsureSpace(&target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(2, this->_internal_id(), target);
   }
 
   // required .downloadmessage.Mess_WL.DownloadCommand command = 3;
   if (cached_has_bits & 0x00000008u) {
-    target = stream->EnsureSpace(target);
+    stream->EnsureSpace(&target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
       3, this->_internal_command(), target);
   }
@@ -377,28 +373,28 @@ size_t Mess_WL::RequiredFieldsByteSizeFallback() const {
 // @@protoc_insertion_point(required_fields_byte_size_fallback_start:downloadmessage.Mess_WL)
   size_t total_size = 0;
 
-  if (_internal_has_url()) {
+  if (has_url()) {
     // required string url = 4;
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_url());
   }
 
-  if (_internal_has_len()) {
+  if (has_len()) {
     // required int32 len = 1;
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
         this->_internal_len());
   }
 
-  if (_internal_has_id()) {
+  if (has_id()) {
     // required int32 id = 2;
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
         this->_internal_id());
   }
 
-  if (_internal_has_command()) {
+  if (has_command()) {
     // required .downloadmessage.Mess_WL.DownloadCommand command = 3;
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_command());
@@ -652,7 +648,7 @@ failure:
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* Download_Response::_InternalSerialize(
+::PROTOBUF_NAMESPACE_ID::uint8* Download_Response::InternalSerializeWithCachedSizesToArray(
     ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:downloadmessage.Download_Response)
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
@@ -661,19 +657,19 @@ failure:
   cached_has_bits = _has_bits_[0];
   // required int32 id = 1;
   if (cached_has_bits & 0x00000001u) {
-    target = stream->EnsureSpace(target);
+    stream->EnsureSpace(&target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_id(), target);
   }
 
   // required float percent = 2;
   if (cached_has_bits & 0x00000002u) {
-    target = stream->EnsureSpace(target);
+    stream->EnsureSpace(&target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(2, this->_internal_percent(), target);
   }
 
   // required .downloadmessage.Download_Response.State state = 3;
   if (cached_has_bits & 0x00000004u) {
-    target = stream->EnsureSpace(target);
+    stream->EnsureSpace(&target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
       3, this->_internal_state(), target);
   }
@@ -690,19 +686,19 @@ size_t Download_Response::RequiredFieldsByteSizeFallback() const {
 // @@protoc_insertion_point(required_fields_byte_size_fallback_start:downloadmessage.Download_Response)
   size_t total_size = 0;
 
-  if (_internal_has_id()) {
+  if (has_id()) {
     // required int32 id = 1;
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
         this->_internal_id());
   }
 
-  if (_internal_has_percent()) {
+  if (has_percent()) {
     // required float percent = 2;
     total_size += 1 + 4;
   }
 
-  if (_internal_has_state()) {
+  if (has_state()) {
     // required .downloadmessage.Download_Response.State state = 3;
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_state());
