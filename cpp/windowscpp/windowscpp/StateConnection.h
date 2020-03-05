@@ -14,6 +14,7 @@ public:
 		virtual void resumed(int id) = 0;
 		virtual void removed(int id) = 0;
 		virtual void finished(int id) = 0;
+		virtual void failed(int id) = 0;
 	};
 	StateConnection(const std::string& addrStr, uint32_t port);
 
@@ -42,5 +43,6 @@ class SimpleStateCallback
 	virtual void resumed(int id) override;
 	virtual void removed(int id) override;
 	virtual void finished(int id) override;
+	virtual void failed(int id) override;
 };
 

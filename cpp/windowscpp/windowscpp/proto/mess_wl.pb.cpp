@@ -98,11 +98,11 @@ const char descriptor_table_protodef_mess_5fwl_2eproto[] PROTOBUF_SECTION_VARIAB
   "\030\003 \002(\0162(.downloadmessage.Mess_WL.Downloa"
   "dCommand\022\013\n\003url\030\004 \002(\t\"B\n\017DownloadCommand"
   "\022\014\n\010DOWNLOAD\020\000\022\t\n\005PAUSE\020\001\022\n\n\006RESUME\020\002\022\n\n"
-  "\006REMOVE\020\003\"\234\001\n\021Download_Response\022\n\n\002id\030\001 "
+  "\006REMOVE\020\003\"\266\001\n\021Download_Response\022\n\n\002id\030\001 "
   "\002(\005\022\017\n\007percent\030\002 \002(\002\0227\n\005state\030\003 \002(\0162(.do"
-  "wnloadmessage.Download_Response.State\"1\n"
+  "wnloadmessage.Download_Response.State\"K\n"
   "\005State\022\017\n\013DOWNLOADING\020\000\022\n\n\006PAUSED\020\001\022\013\n\007R"
-  "EMOVED\020\002"
+  "EMOVED\020\002\022\n\n\006FAILED\020\003\022\014\n\010FINISHED\020\004"
   ;
 static const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable*const descriptor_table_mess_5fwl_2eproto_deps[1] = {
 };
@@ -113,7 +113,7 @@ static ::PROTOBUF_NAMESPACE_ID::internal::SCCInfoBase*const descriptor_table_mes
 static ::PROTOBUF_NAMESPACE_ID::internal::once_flag descriptor_table_mess_5fwl_2eproto_once;
 static bool descriptor_table_mess_5fwl_2eproto_initialized = false;
 const ::PROTOBUF_NAMESPACE_ID::internal::DescriptorTable descriptor_table_mess_5fwl_2eproto = {
-  &descriptor_table_mess_5fwl_2eproto_initialized, descriptor_table_protodef_mess_5fwl_2eproto, "mess_wl.proto", 368,
+  &descriptor_table_mess_5fwl_2eproto_initialized, descriptor_table_protodef_mess_5fwl_2eproto, "mess_wl.proto", 394,
   &descriptor_table_mess_5fwl_2eproto_once, descriptor_table_mess_5fwl_2eproto_sccs, descriptor_table_mess_5fwl_2eproto_deps, 2, 0,
   schemas, file_default_instances, TableStruct_mess_5fwl_2eproto::offsets,
   file_level_metadata_mess_5fwl_2eproto, 2, file_level_enum_descriptors_mess_5fwl_2eproto, file_level_service_descriptors_mess_5fwl_2eproto,
@@ -156,6 +156,8 @@ bool Download_Response_State_IsValid(int value) {
     case 0:
     case 1:
     case 2:
+    case 3:
+    case 4:
       return true;
     default:
       return false;
@@ -166,6 +168,8 @@ bool Download_Response_State_IsValid(int value) {
 constexpr Download_Response_State Download_Response::DOWNLOADING;
 constexpr Download_Response_State Download_Response::PAUSED;
 constexpr Download_Response_State Download_Response::REMOVED;
+constexpr Download_Response_State Download_Response::FAILED;
+constexpr Download_Response_State Download_Response::FINISHED;
 constexpr Download_Response_State Download_Response::State_MIN;
 constexpr Download_Response_State Download_Response::State_MAX;
 constexpr int Download_Response::State_ARRAYSIZE;
@@ -296,7 +300,11 @@ const char* Mess_WL::_InternalParse(const char* ptr, ::PROTOBUF_NAMESPACE_ID::in
       // required string url = 4;
       case 4:
         if (PROTOBUF_PREDICT_TRUE(static_cast<::PROTOBUF_NAMESPACE_ID::uint8>(tag) == 34)) {
-          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParserUTF8Verify(_internal_mutable_url(), ptr, ctx, "downloadmessage.Mess_WL.url");
+          auto str = _internal_mutable_url();
+          ptr = ::PROTOBUF_NAMESPACE_ID::internal::InlineGreedyStringParser(str, ptr, ctx);
+          #ifndef NDEBUG
+          ::PROTOBUF_NAMESPACE_ID::internal::VerifyUTF8(str, "downloadmessage.Mess_WL.url");
+          #endif  // !NDEBUG
           CHK_(ptr);
         } else goto handle_unusual;
         continue;
@@ -321,7 +329,7 @@ failure:
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* Mess_WL::InternalSerializeWithCachedSizesToArray(
+::PROTOBUF_NAMESPACE_ID::uint8* Mess_WL::_InternalSerialize(
     ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:downloadmessage.Mess_WL)
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
@@ -330,19 +338,19 @@ failure:
   cached_has_bits = _has_bits_[0];
   // required int32 len = 1;
   if (cached_has_bits & 0x00000002u) {
-    stream->EnsureSpace(&target);
+    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_len(), target);
   }
 
   // required int32 id = 2;
   if (cached_has_bits & 0x00000004u) {
-    stream->EnsureSpace(&target);
+    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(2, this->_internal_id(), target);
   }
 
   // required .downloadmessage.Mess_WL.DownloadCommand command = 3;
   if (cached_has_bits & 0x00000008u) {
-    stream->EnsureSpace(&target);
+    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
       3, this->_internal_command(), target);
   }
@@ -369,28 +377,28 @@ size_t Mess_WL::RequiredFieldsByteSizeFallback() const {
 // @@protoc_insertion_point(required_fields_byte_size_fallback_start:downloadmessage.Mess_WL)
   size_t total_size = 0;
 
-  if (has_url()) {
+  if (_internal_has_url()) {
     // required string url = 4;
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::StringSize(
         this->_internal_url());
   }
 
-  if (has_len()) {
+  if (_internal_has_len()) {
     // required int32 len = 1;
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
         this->_internal_len());
   }
 
-  if (has_id()) {
+  if (_internal_has_id()) {
     // required int32 id = 2;
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
         this->_internal_id());
   }
 
-  if (has_command()) {
+  if (_internal_has_command()) {
     // required .downloadmessage.Mess_WL.DownloadCommand command = 3;
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_command());
@@ -644,7 +652,7 @@ failure:
 #undef CHK_
 }
 
-::PROTOBUF_NAMESPACE_ID::uint8* Download_Response::InternalSerializeWithCachedSizesToArray(
+::PROTOBUF_NAMESPACE_ID::uint8* Download_Response::_InternalSerialize(
     ::PROTOBUF_NAMESPACE_ID::uint8* target, ::PROTOBUF_NAMESPACE_ID::io::EpsCopyOutputStream* stream) const {
   // @@protoc_insertion_point(serialize_to_array_start:downloadmessage.Download_Response)
   ::PROTOBUF_NAMESPACE_ID::uint32 cached_has_bits = 0;
@@ -653,19 +661,19 @@ failure:
   cached_has_bits = _has_bits_[0];
   // required int32 id = 1;
   if (cached_has_bits & 0x00000001u) {
-    stream->EnsureSpace(&target);
+    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteInt32ToArray(1, this->_internal_id(), target);
   }
 
   // required float percent = 2;
   if (cached_has_bits & 0x00000002u) {
-    stream->EnsureSpace(&target);
+    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteFloatToArray(2, this->_internal_percent(), target);
   }
 
   // required .downloadmessage.Download_Response.State state = 3;
   if (cached_has_bits & 0x00000004u) {
-    stream->EnsureSpace(&target);
+    target = stream->EnsureSpace(target);
     target = ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::WriteEnumToArray(
       3, this->_internal_state(), target);
   }
@@ -682,19 +690,19 @@ size_t Download_Response::RequiredFieldsByteSizeFallback() const {
 // @@protoc_insertion_point(required_fields_byte_size_fallback_start:downloadmessage.Download_Response)
   size_t total_size = 0;
 
-  if (has_id()) {
+  if (_internal_has_id()) {
     // required int32 id = 1;
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::Int32Size(
         this->_internal_id());
   }
 
-  if (has_percent()) {
+  if (_internal_has_percent()) {
     // required float percent = 2;
     total_size += 1 + 4;
   }
 
-  if (has_state()) {
+  if (_internal_has_state()) {
     // required .downloadmessage.Download_Response.State state = 3;
     total_size += 1 +
       ::PROTOBUF_NAMESPACE_ID::internal::WireFormatLite::EnumSize(this->_internal_state());

@@ -66,6 +66,26 @@ void sendDownload(const std::string& url)
 	}
 }
 
+int download(std::string& url, std::string& url2)
+{
+		std::shared_ptr<SimpleStateCallback> cb = std::make_shared<SimpleStateCallback>();
+		StateConnection con("150.0.168.192", 8000);
+		std::thread t{ &StateConnection::startStateLoop, &con };
+		con.setCallback(cb->shared_from_this());
+		using namespace chrono_literals;
+		con.download(1, url);
+		con.download(2, url);
+		std::this_thread::sleep_for(1s);
+		con.download(3, url2);
+		con.download(4, url2);
+		std::this_thread::sleep_for(10ms);
+		con.download(5, url2);
+		con.download(6, url2);
+		std::this_thread::sleep_for(1s);
+		t.join();
+		return 0;
+}
+
 
 int main(int argc, char** argv)
 {
@@ -80,19 +100,21 @@ int main(int argc, char** argv)
 	std::string url3 = "http://192.168.0.2/home/pi/downloads/1.mp4";
 	std::string url = "https://d1.music.126.net/dmusic/cloudmusicsetup2.7.1.198242.exe";
 
-	int times = 5;
-	while(times > 0){
-		std::shared_ptr<SimpleStateCallback> cb = std::make_shared<SimpleStateCallback>();
-		StateConnection con("150.0.168.192", 8000);
-		con.setCallback(cb->shared_from_this());
-		std::thread t{ &StateConnection::startStateLoop, &con };
-		using namespace chrono_literals;
-		con.download(1, url);
-		con.download(2, url);
-		std::this_thread::sleep_for(1s);
-		con.download(3, url2);
-		t.join();
-		times = 0;
+
+	while (1)
+	{
+		std::thread t1{ &download, std::ref(url), std::ref(url2) };
+		std::thread t2{ &download, std::ref(url), std::ref(url2) };
+		std::thread t3{ &download, std::ref(url), std::ref(url2) };
+		std::thread t4{ &download, std::ref(url), std::ref(url2) };
+		std::thread t5{ &download, std::ref(url), std::ref(url2) };
+		std::thread t6{ &download, std::ref(url), std::ref(url2) };
+		t1.join();
+		t2.join();
+		t3.join();
+		t4.join();
+		t5.join();
+		t6.join();
 	}
 
 	//sendDownload(url);

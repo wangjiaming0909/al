@@ -68,6 +68,10 @@ void StateConnection::startStateLoop()
 		{
 			decode(&res);
 			dispatchMessage(res);
+			if (res.state() == downloadmessage::Download_Response_State_FINISHED)
+			{
+				return;
+			}
 			res.Clear();
 		}
 	}
@@ -91,17 +95,19 @@ void StateConnection::dispatchMessage(const downloadmessage::Download_Response& 
 	switch (res.state())
 	{
 	case Download_Response_State_DOWNLOADING:
-		if (1 - res.percent() > 0.001)
-		{
 			callback_->update(res.id(), res);
-		}else
-			callback_->finished(res.id());
 		break;
 	case Download_Response_State_PAUSED:
 		callback_->paused(res.id());
 		break;
 	case Download_Response_State_REMOVED:
 		callback_->removed(res.id());
+		break;
+	case Download_Response_State_FAILED:
+		callback_->failed(res.id());
+		break;
+	case Download_Response_State_FINISHED:
+		callback_->finished(res.id());
 		break;
 	default:
 		std::cout << "default" << std::endl;
@@ -129,4 +135,9 @@ void SimpleStateCallback::removed(int id)
 void SimpleStateCallback::finished(int id)
 {
 	std::cout << "id: " << id << " findished..." << std::endl;
+}
+
+void SimpleStateCallback::failed(int id)
+{
+	std::cout << "id: " << id << " failed...." << std::endl;
 }
