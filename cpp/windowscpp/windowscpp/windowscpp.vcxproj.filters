@@ -16,6 +16,9 @@
     <Filter Include="utils">
       <UniqueIdentifier>{e2472b90-97be-4ba3-bae1-2c0410f9821b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="FileSync">
+      <UniqueIdentifier>{99a850cf-2f9f-4230-b490-34e6c26e03f0}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="proto\mess_wl.pb.cpp">
@@ -42,6 +45,9 @@
     <ClCompile Include="Buffer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
+    <ClCompile Include="DirMonitor.cpp">
+      <Filter>FileSync</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="proto\mess_wl.pb.h">
@@ -64,6 +70,9 @@
     </ClInclude>
     <ClInclude Include="Buffer.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="DirMonitor.h">
+      <Filter>FileSync</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
