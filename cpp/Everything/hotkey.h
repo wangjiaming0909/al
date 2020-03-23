@@ -12,7 +12,7 @@
 #if defined(Q_OS_WIN)
     #include <windows.h>
 #elif defined(Q_OS_LINUX)
-    #include <QX11Info>
+    #include <QtX11Extras/QX11Info>
     #include <xcb/xcb.h>
     #include <X11/keysym.h>
     #include <X11/Xlib.h>
@@ -22,12 +22,13 @@
     #undef Expose
     #undef KeyPress
     #undef KeyRelease
-    #undef FocusIn
     #undef FocusOut
     #undef FontChange
     #undef None
     #undef Status
     #undef Unsorted
+    #undef FocusIn
+    #undef FocusOut
 #else
     #error "Only Linux and Windows are supported!"
 #endif

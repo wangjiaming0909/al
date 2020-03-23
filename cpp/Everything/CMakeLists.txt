@@ -20,11 +20,11 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 #    if (ANDROID_ABI STREQUAL "armeabi-v7a")
 #        set(ANDROID_EXTRA_LIBS
 #            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libcrypto.so
-#            ${CMAKE_CURRENT_SOURCE_DIR}/path/to/libssl.so)
+#            ${CMAKE_CURRENT_SOURCE_DIR}/pxcb_grab_key_checkedath/to/libssl.so)
 #    endif()
 #endif()
 
-find_package(Qt5 COMPONENTS Widgets REQUIRED)
+find_package(Qt5 COMPONENTS Widgets REQUIRED X11Extras)
 
 if(ANDROID)
   add_library(Everything SHARED
@@ -48,4 +48,4 @@ else()
   )
 endif()
 
-target_link_libraries(Everything PRIVATE Qt5::Widgets)
+target_link_libraries(Everything PRIVATE X11 xcb Qt5::Widgets Qt5::X11Extras)
