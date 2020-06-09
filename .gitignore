@@ -129,3 +129,5 @@ cpp/recipes/recipes.files
 **/.vs/**/*
 **/Debug/**/*
 **/google/**/*
+**/bin/**/*
+**/obj/**/*
