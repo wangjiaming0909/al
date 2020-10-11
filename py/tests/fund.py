@@ -71,7 +71,12 @@ def get_fund(name):
         return
     o = urllib.parse.urlparse(fund_info_url_prefix + code[0] + fund_info_url_postfix)
     conn = http.client.HTTPConnection(o.hostname, o.port)
-    conn.request('GET', o.path)
+    try:
+        conn.request('GET', o.path)
+    except Exception as err:
+        print('got error when get fund {0}'.format(name))
+        print(err)
+        return None
     response = conn.getresponse()
     if response.code != 200:
         print('get_fund {0} get error: {1}'.format(name, response.code))
