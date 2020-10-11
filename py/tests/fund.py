@@ -63,6 +63,12 @@ def get_fund(name):
     code = cur.fetchone()
     if code is None:
         return None
+
+    print('updating fund {0} {1}'.format(name, code[0]))
+    cur.execute("SELECT count(*) FROM fund_value WHERE code = ?", (code[0],))
+    value = cur.fetchone()
+    if value[0] > 0:
+        return
     o = urllib.parse.urlparse(fund_info_url_prefix + code[0] + fund_info_url_postfix)
     conn = http.client.HTTPConnection(o.hostname, o.port)
     conn.request('GET', o.path)
@@ -79,7 +85,6 @@ def get_fund(name):
     x = 'x'
     y = 'y'
     values_arr = ast.literal_eval(values)
-    print('updating fund {0}'.format(name))
     with sql:
         for value in values_arr:
             cur.execute("SELECT value FROM fund_value WHERE time = datetime(?, 'unixepoch') and code = ?", (value[x]/1000, code[0],))
