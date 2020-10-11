@@ -17,7 +17,7 @@ fund_realtime_data_url_postfix = '.js?rt=1463558676006'
 database_name = '../d1'
 sql = sqlite3.connect(database_name)
 
-thread_pool = ThreadPoolExecutor(8)
+thread_pool = ThreadPoolExecutor(10)
 futures = []
 
 def init_database():
@@ -54,7 +54,7 @@ def get_all_funds():
                     print('found modified fund {0} {1}'.format(fund[0], fund[2]))
                     cur.execute('INSERT INTO fund VALUES(?,?,?,?,?,?,?,?)', (fund[0], fund[1], fund[2], fund[3], fund[4],0,0,0,))
                 #get_fund(fund[2])
-                futures.append(thread_pool.submit(get_fund, fund[2]))
+                futures.append(thread_pool.submit(get_fund, fund[2], fund[0]))
     except Exception as err:
         print('got error when get all funds')
         print(err)
@@ -62,21 +62,16 @@ def get_all_funds():
     print('init funds finished..')
     pass
 
-def get_fund(name):
+def get_fund(name, code):
     s = sqlite3.connect(database_name)
     cur = s.cursor()
-    cur.execute('SELECT code from fund WHERE name = ?', (name,))
-    code = cur.fetchone()
-    if code is None:
-        print('skip getting fund {0}'.format(name))
-        return None
-
-    print('updating fund {0} {1}'.format(name, code[0]))
-    cur.execute("SELECT count(*) FROM fund_value WHERE code = ?", (code[0],))
+    cur.execute("SELECT count(*) FROM fund_value WHERE code = ?", (code,))
     value = cur.fetchone()
     if value[0] > 0:
+        print('skiping fund: {0}, {1}'.format(name, code))
         return
-    o = urllib.parse.urlparse(fund_info_url_prefix + code[0] + fund_info_url_postfix)
+    print('updating fund {0} {1}'.format(name, code))
+    o = urllib.parse.urlparse(fund_info_url_prefix + code + fund_info_url_postfix)
     conn = http.client.HTTPConnection(o.hostname, o.port)
     try:
         conn.request('GET', o.path)
@@ -99,10 +94,10 @@ def get_fund(name):
     values_arr = ast.literal_eval(values)
     with s:
         for value in values_arr:
-            cur.execute("SELECT value FROM fund_value WHERE time = datetime(?, 'unixepoch') and code = ?", (value[x]/1000, code[0],))
+            cur.execute("SELECT value FROM fund_value WHERE time = datetime(?, 'unixepoch') and code = ?", (value[x]/1000, code,))
             value_exist = cur.fetchone()
             if value_exist is None:
-                cur.execute("INSERT INTO fund_value VALUES(datetime(?, 'unixepoch'),?,?)", (value[x]/1000, code[0], value[y],))
+                cur.execute("INSERT INTO fund_value VALUES(datetime(?, 'unixepoch'),?,?)", (value[x]/1000, code, value[y],))
     s.close()
     pass
 
