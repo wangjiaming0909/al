@@ -3,6 +3,7 @@ import http.client
 import sqlite3
 import urllib.parse
 import ast
+import datetime
 
 all_fund_url = 'http://fund.eastmoney.com/js/fundcode_search.js'
 all_fund_company_url = 'http://fund.eastmoney.com/js/jjjz_gs.js?dt=1463791574015'
@@ -18,7 +19,8 @@ sql = sqlite3.connect(database_name)
 def init_database():
     cur = sql.cursor()
     cur.execute('CREATE TABLE IF NOT EXISTS fund_company (code VARCHAR(64) PRIMARY KEY, name VARCHAR(255))')
-    cur.execute('CREATE TABLE IF NOT EXISTS fund (code VARCHAR(64) PRIMARY KEY, name_cap VARCHAR(64), name VARCHAR(255), type VARCHAR(64), name_full VARCHAR(255))')
+    cur.execute('CREATE TABLE IF NOT EXISTS fund (code VARCHAR(64) PRIMARY KEY, name_cap VARCHAR(64), name VARCHAR(255), type VARCHAR(64), name_full VARCHAR(255), original_rate FLOAT, rate FLOAT, minimal_purchase FLOAT)')
+    cur.execute('CREATE TABLE IF NOT EXISTS fund_value (time DATETIME, code VARCHAR(64), value FLOAT, PRIMARY KEY(time, code))')
     pass
 
 def get_all_funds():
@@ -43,10 +45,11 @@ def get_all_funds():
                 name = cur.fetchone()
                 if name is None:
                     print('found new fund {0} {1}'.format(fund[0], fund[2]))
-                    cur.execute('INSERT INTO fund VALUES(?,?,?,?,?)', (fund[0], fund[1], fund[2], fund[3], fund[4],))
+                    cur.execute('INSERT INTO fund VALUES(?,?,?,?,?,?,?,?)', (fund[0], fund[1], fund[2], fund[3], fund[4],0,0,0,))
                 elif name[0] != fund[2]:
                     print('found modified fund {0} {1}'.format(fund[0], fund[2]))
-                    cur.execute('INSERT INTO fund VALUES(?,?,?,?,?)', (fund[0], fund[1], fund[2], fund[3], fund[4],))
+                    cur.execute('INSERT INTO fund VALUES(?,?,?,?,?,?,?,?)', (fund[0], fund[1], fund[2], fund[3], fund[4],0,0,0,))
+                get_fund(fund[2])
     except Exception as err:
         print('got error when get all funds')
         print(err)
@@ -55,6 +58,34 @@ def get_all_funds():
     pass
 
 def get_fund(name):
+    cur = sql.cursor()
+    cur.execute('SELECT code from fund WHERE name = ?', (name,))
+    code = cur.fetchone()
+    if code is None:
+        return None
+    o = urllib.parse.urlparse(fund_info_url_prefix + code[0] + fund_info_url_postfix)
+    conn = http.client.HTTPConnection(o.hostname, o.port)
+    conn.request('GET', o.path)
+    response = conn.getresponse()
+    if response.code != 200:
+        print('get_fund {0} get error: {1}'.format(name, response.code))
+        return
+    r = response.read()
+    r = r.decode('utf-8')
+    r = r.split(';')
+    r = r[1:-1]
+    values = r[14]
+    values = values.split('=')[-1].strip()
+    x = 'x'
+    y = 'y'
+    values_arr = ast.literal_eval(values)
+    print('updating fund {0}'.format(name))
+    with sql:
+        for value in values_arr:
+            cur.execute("SELECT value FROM fund_value WHERE time = datetime(?, 'unixepoch') and code = ?", (value[x]/1000, code[0],))
+            value_exist = cur.fetchone()
+            if value_exist is None:
+                cur.execute("INSERT INTO fund_value VALUES(datetime(?, 'unixepoch'),?,?)", (value[x]/1000, code[0], value[y],))
     pass
 
 def get_fund_companies():
