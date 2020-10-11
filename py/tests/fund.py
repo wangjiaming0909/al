@@ -4,6 +4,7 @@ import sqlite3
 import urllib.parse
 import ast
 import datetime
+from concurrent.futures import ThreadPoolExecutor
 
 all_fund_url = 'http://fund.eastmoney.com/js/fundcode_search.js'
 all_fund_company_url = 'http://fund.eastmoney.com/js/jjjz_gs.js?dt=1463791574015'
@@ -15,6 +16,9 @@ fund_realtime_data_url_postfix = '.js?rt=1463558676006'
 
 database_name = '../d1'
 sql = sqlite3.connect(database_name)
+
+thread_pool = ThreadPoolExecutor(8)
+futures = []
 
 def init_database():
     cur = sql.cursor()
@@ -49,7 +53,8 @@ def get_all_funds():
                 elif name[0] != fund[2]:
                     print('found modified fund {0} {1}'.format(fund[0], fund[2]))
                     cur.execute('INSERT INTO fund VALUES(?,?,?,?,?,?,?,?)', (fund[0], fund[1], fund[2], fund[3], fund[4],0,0,0,))
-                get_fund(fund[2])
+                #get_fund(fund[2])
+                futures.append(thread_pool.submit(get_fund, fund[2]))
     except Exception as err:
         print('got error when get all funds')
         print(err)
@@ -58,10 +63,12 @@ def get_all_funds():
     pass
 
 def get_fund(name):
-    cur = sql.cursor()
+    s = sqlite3.connect(database_name)
+    cur = s.cursor()
     cur.execute('SELECT code from fund WHERE name = ?', (name,))
     code = cur.fetchone()
     if code is None:
+        print('skip getting fund {0}'.format(name))
         return None
 
     print('updating fund {0} {1}'.format(name, code[0]))
@@ -90,12 +97,13 @@ def get_fund(name):
     x = 'x'
     y = 'y'
     values_arr = ast.literal_eval(values)
-    with sql:
+    with s:
         for value in values_arr:
             cur.execute("SELECT value FROM fund_value WHERE time = datetime(?, 'unixepoch') and code = ?", (value[x]/1000, code[0],))
             value_exist = cur.fetchone()
             if value_exist is None:
                 cur.execute("INSERT INTO fund_value VALUES(datetime(?, 'unixepoch'),?,?)", (value[x]/1000, code[0], value[y],))
+    s.close()
     pass
 
 def get_fund_companies():
@@ -141,3 +149,7 @@ def init():
 
 print("hello")
 init()
+for future in futures:
+    future.result()
+thread_pool.shutdown(True)
+sql.close()
