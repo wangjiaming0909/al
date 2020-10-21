@@ -84,6 +84,7 @@ def get_fund(name, code):
         print('get_fund {0} get error: {1}'.format(name, response.code))
         return
     r = response.read()
+    conn.close()
     r = r.decode('utf-8')
     r = r.split(';')
     r = r[1:-1]
