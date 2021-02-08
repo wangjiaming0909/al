@@ -58,7 +58,7 @@ target_link_libraries(recipes /boost_1_72_0/stage/lib/libboost_chrono.a)
 #target_link_libraries(recipes /usr/lib/x86_64-linux-gnu/libsnappy.a)
 #target_link_libraries(recipes /usr/lib/x86_64-linux-gnu/libjemalloc.a)
 #target_link_libraries(recipes dl)
-target_link_libraries(recipes pthread)
+target_link_libraries(recipes pthread libmysqlclient.so)
 #target_link_libraries(recipes unwind)
 #target_link_libraries(recipes /usr/lib/x86_64-linux-gnu/libc.a)
 

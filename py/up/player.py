@@ -2,34 +2,28 @@
 import fetch
 import playsound
 import multiprocessing
-
+from concurrent.futures import ThreadPoolExecutor
+import pyaudio
 
 class Player:
     def __init__(self):
-        self.pro = None
         self.current_song = ''
+        self.future = None
+        self.pool = ThreadPoolExecutor(1)
 
     def do_play(self, songs: [str]):
         for song in songs:
             self.current_song = song
             print('playing {0}'.format(song))
-            playsound.playsound(song)
 
     def play(self, names: [str]):
-        if self.pro is not None and self.pro.is_alive():
-            self.pro.terminate()
-        self.pro = multiprocessing.Process(target=self.do_play, args=(names,))
-        self.pro.start()
+        self.future = self.pool.submit(self.do_play, names)
 
     def stop(self):
-        if self.pro is not None and self.pro.is_alive():
-            self.pro.terminate()
-            print('song: {0} terminated...'.format(self.current_song))
-            self.pro.join()
-            self.pro = None
+        if self.future is not None:
+            self.future.cancel()
 
     def join(self):
-        if self.pro is not None and self.pro.is_alive():
-            self.pro.join()
+        self.pool.shutdown(True)
 if __name__ == '__main__':
     pass

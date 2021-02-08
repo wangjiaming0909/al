@@ -57,6 +57,9 @@ def interative(index):
             p.play(songs[index:])
         elif line == 'd\n':
             break
+        elif line == 'l\n':
+            db.like(p.current_song)
+            break
         elif line == 'q\n':
             p.stop()
             exit(0)

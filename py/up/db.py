@@ -8,6 +8,7 @@ cur = database_conn.cursor()
 def init_database():
     cur.execute('CREATE TABLE IF NOT EXISTS musics(id INTEGER PRIMARY KEY AUTOINCREMENT, name VARCHAR, singer VARCHAR, source VARCHAR)')
     cur.execute('CREATE TABLE IF NOT EXISTS musics_local(name varchar, singer varchar, path VARCHAR)')
+    cur.execute('CREATE TABLE IF NOT EXISTS musics_like(name varchar, singer varchar, path varchar)')
 
 def clean_database():
     database_conn.close()
@@ -55,6 +56,18 @@ def get_all_songs():
 def get_all_local_songs():
     cur.execute('select path from musics_local')
     return cur.fetchall()
+
+def like(name):
+    cur.execute('select singer, path from musics_local where name = ?', (name,))
+    results = cur.fetchall()
+    if len(results) <= 0:
+        print("can't like a non existed song")
+        return
+    try:
+        cur.execute('INSERT INTO musics_like (name, singer, path) VALUES(?, ?, ?)', name, results[0][0], results[0][1])
+    except Exception as err:
+        print('like song: {0} got error: {1}'.format(name, str(err)))
+
 
 if __name__ == '__main__':
     pass

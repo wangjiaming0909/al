@@ -19,10 +19,32 @@
 // #include "gperf/test.h"
 
 #include "al/merge.h"
+#include <mysql/mysql.h>
+#include <boost/format.hpp>
+#include <cstdint>
+#include <exception>
 
 using namespace std;
 
 // INITIALIZE_EASYLOGGINGPP
+//
+
+int test_mysql()
+{
+  static MYSQL* mysql = NULL;
+  mysql = mysql_init(mysql);
+
+  mysql_real_connect(mysql, "127.0.0.1", "root", "", "test", 3307, NULL, 0);
+
+  mysql_close(mysql);
+}
+
+
+int test_boost_format()
+{
+  std::cout << UINT64_MAX << std::endl;
+  std::cout << (boost::format("%lu %s %s") % UINT64_MAX % "asd").str() << std::endl;
+}
 
 int main()
 {
@@ -73,9 +95,15 @@ int main()
     // intrusive_using_base_hook_test();
 // test_nestedClass();
 
- al::test_mergeMultiSortedArray();
+ //al::test_mergeMultiSortedArray();
     //test_HHWheelTimer();
 
+//test_boost_format();
 cout << "Hello World!" << endl;
+try {
+  std::string s = 0;
+} catch (std::exception& e) {
+  cout << "got exception " << e.what() << endl;
+}
 return 0;
 }
