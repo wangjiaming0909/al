@@ -28,11 +28,9 @@ def aria2c_download(url, retry_times = 1):
             id = ''
             res = request.urlopen(rpcUrl, jsonreq)
             if res.status == 200:
-                print(res.status)
                 data = res.read()
                 data = json.loads(data)
                 id = str(data['result'])
-                print(id)
                 break
             else:
                 raise Exception('aria2c rpc error')
