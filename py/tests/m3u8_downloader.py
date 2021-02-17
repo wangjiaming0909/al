@@ -31,6 +31,9 @@ def download(url, retry_times = 100):
 if __name__ == '__main__':
     #url = 'https://cdn-yong.bejingyongjiu.com/20210212/32719_e8b2942b/1000k/hls/index.m3u8'
     url = sys.argv[1]
+    thread_num = 128
+    if len(sys.argv) > 2:
+        thread_num = int(sys.argv[2])
     playlist = None
     while True:
         try:
@@ -45,6 +48,6 @@ if __name__ == '__main__':
         all_urls.append(playlist.base_uri + file)
 
     threads = []
-    pool = multiprocessing.Pool(128)
+    pool = multiprocessing.Pool(thread_num)
     pool.map(download, all_urls)
 
