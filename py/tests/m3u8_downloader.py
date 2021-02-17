@@ -3,9 +3,8 @@ import m3u8
 import aria2c_rpc
 import time
 import multiprocessing
-import sys
 
-def download(url, retry_times = 100):
+def download(url, retry_times = 9999):
     remain_retry_times = retry_times
     file_name = url.split('/')[-1]
     while remain_retry_times > 0:
@@ -32,14 +31,15 @@ def m3u8_download(url, thread_num = 128):
     while True:
         try:
             playlist = m3u8.load(url)
-        except:
-            print('failed retrying')
+        except Exception as e:
+            print('failed retrying' + str(e.args))
             continue
         break
 
     all_urls = []
-    if len(playlist.files) == 0:
-        print('playlist files are empty')
+    while len(playlist.files) == 0:
+        url = playlist.playlists[0].absolute_uri
+        return m3u8_download(url)
     for file in playlist.files:
         all_urls.append(playlist.base_uri + file)
 

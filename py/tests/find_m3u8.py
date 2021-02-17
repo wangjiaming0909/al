@@ -3,6 +3,7 @@
 from urllib import request
 import sys
 import re
+import urllib
 
 def find_m3u8_in_html(contents):
     results = []
@@ -17,10 +18,12 @@ def find_m3u8_in_html(contents):
 
 
 def get_contents(url):
-    req = request.urlopen(url)
-    if req.status != 200:
+    headers = {'User-Agent':'Mozilla/5.0 (Windows; U; Windows NT 6.1; en-US; rv:1.9.1.6) Gecko/20091201 Firefox/3.5.6'}
+    req = request.Request(url=url, headers=headers)
+    res = request.urlopen(req)
+    if res.status != 200:
         raise Exception('url open failed')
-    return str(req.read())
+    return str(res.read())
 
 def get_m3u8s(url, http_or_https = 'http'):
     http_or_https += ':'
