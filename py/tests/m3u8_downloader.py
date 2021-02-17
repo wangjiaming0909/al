@@ -27,13 +27,7 @@ def download(url, retry_times = 100):
                 time.sleep(1)
                 continue
 
-
-if __name__ == '__main__':
-    #url = 'https://cdn-yong.bejingyongjiu.com/20210212/32719_e8b2942b/1000k/hls/index.m3u8'
-    url = sys.argv[1]
-    thread_num = 128
-    if len(sys.argv) > 2:
-        thread_num = int(sys.argv[2])
+def m3u8_download(url, thread_num = 128):
     playlist = None
     while True:
         try:
@@ -44,6 +38,8 @@ if __name__ == '__main__':
         break
 
     all_urls = []
+    if len(playlist.files) == 0:
+        print('playlist files are empty')
     for file in playlist.files:
         all_urls.append(playlist.base_uri + file)
 
