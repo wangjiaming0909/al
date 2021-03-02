@@ -48,10 +48,22 @@ def aria2c_status(id):
     data = json.loads(data)
     return data['result']
 
+def aria2c_get_global_option():
+    jsonReq = getReq('jiaming', 'aria2.getGlobalOption', params={})
+    res = request.urlopen(rpcUrl, jsonReq)
+    if res.status != 200:
+        raise Exception('status failed')
+    data = res.read()
+    data = json.loads(data)
+    return data['result']
+
+
+
 if __name__ == '__main__':
-    status = aria2c_status('ba12cf475f731509')
-    print(status['status'])
-    exit(0)
+    result = aria2c_get_global_option()
+    #status = aria2c_status('ba12cf475f731509')
+    #print(status['status'])
+    #exit(0)
 
     aria2c_download('https://cdn-yong.bejingyongjiu.com/20210212/32719_e8b2942b/1000k/hls/index.m3u8')
 

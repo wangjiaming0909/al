@@ -21,6 +21,7 @@ def refresh_win(w, eles: list):
 stdw = curses.initscr()
 curses.cbreak()
 curses.raw()
+curses.noecho()
 e1 = Ele(1, 0, "100100100100\t100100100100\n")
 e2 = Ele(2, 0, "200200200200\t200200200\n")
 eles = [e1,e2]
