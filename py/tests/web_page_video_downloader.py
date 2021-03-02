@@ -13,11 +13,16 @@ parser.add_argument('--https', action='store_true', help='using https to fetch m
 parser.add_argument('-m', '--m3u8', action='store', help='m3u8 url')
 parser.add_argument('-o', "--out", action='store', help='save file name')
 parser.add_argument('--timeout', action='store', help='load m3u8 timeout in seconds')
+parser.add_argument('-t', '--thread', action='store', help='download thread num')
 args = parser.parse_args()
 
 out_file = '1.mp4'
+thread_num = 128
 if args.out is not None:
     out_file = args.out
+
+if args.thread is not None:
+    thread_num = args.thread
 
 def cat_to_out_file(prefix):
     os.system('cat %s* > %s' % (prefix, out_file))
@@ -38,10 +43,10 @@ if __name__ == '__main__':
     for m3u8 in m3u8s:
         print('download m3u8: ' + m3u8)
         if args.timeout is not None:
-            download_file_prefix = m3u8_downloader.m3u8_download(m3u8, timeout=args.timeout)
+            download_file_prefix = m3u8_downloader.m3u8_download(m3u8, thread_num, timeout=args.timeout)
         else:
-            download_file_prefix = m3u8_downloader.m3u8_download(m3u8)
-    
+            download_file_prefix = m3u8_downloader.m3u8_download(m3u8, thread_num)
+
     cat_to_out_file(download_file_prefix)
 
 

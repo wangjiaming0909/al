@@ -4,6 +4,7 @@ import aria2c_rpc
 import time
 import multiprocessing
 from pathlib import Path
+import concurrent.futures
 
 def download(url, retry_times = 9999):
     remain_retry_times = retry_times
@@ -60,10 +61,17 @@ def m3u8_download(url, thread_num = 128, timeout=5):
         prefix = find_max_prefix(file, prefix)
         all_urls.append(playlist.base_uri + file)
 
-    pool = multiprocessing.Pool(thread_num)
-    pool.map(download, all_urls)
+    #pool = multiprocessing.Pool(thread_num)
+    #pool.map(download, all_urls)
+    futures = []
+    with concurrent.futures.ThreadPoolExecutor(thread_num) as executor:
+        futures = {executor.submit(download, url): url for url in all_urls}
+
     return (path / prefix).as_posix()
 
+
+def print_1(url):
+    print(url)
 
 if __name__ == '__main__':
     s1 = 'asdasd101'
