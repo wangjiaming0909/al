@@ -1,3 +1,4 @@
+#include <boost/smart_ptr/shared_ptr.hpp>
 #include <iostream>
 // #include "buffer/test.h"
 // #include "bytebuf/test.h"
@@ -23,6 +24,8 @@
 #include <boost/format.hpp>
 #include <cstdint>
 #include <exception>
+#include <sstream>
+#include "mysql_gtid//mysql_gtid.h"
 
 using namespace std;
 
@@ -99,11 +102,89 @@ int main()
     //test_HHWheelTimer();
 
 //test_boost_format();
-cout << "Hello World!" << endl;
-try {
-  std::string s = 0;
-} catch (std::exception& e) {
-  cout << "got exception " << e.what() << endl;
-}
-return 0;
+  using namespace gtid;
+  boost::shared_ptr<SidMap> m(new SidMap());
+  boost::shared_ptr<SidMap> m2(new SidMap());
+
+  Uuid uuid;
+  const char* u1 = "aaaaaaaa-f26c-11ea-954d-e454e8b0c44f:100-111, \nbbbbbbbb-f26c-11ea-954d-e454e8b0c44a:100-200";
+  const char* u2 = "aaaaaaaa-f26c-11ea-954d-e454e8b0c44f:1-22,  bbbbbbbb-f26c-11ea-954d-e454e8b0c44a:202-300";
+  const char* u3 = "aaaaaaaa-f26c-11ea-954d-e454e8b0c44f:23-90, bbbbbbbb-f26c-11ea-954d-e454e8b0c44a:1-99:201:301-400";
+  const char* u4 = "aaaaaaaa-f26c-11ea-954d-e454e8b0c44f:90-120";
+  const char* u5 = "aaaaaaaa-f26c-11ea-954d-e454e8b0c44f:100-111";
+  const char* u6 = "cccccccc-f26c-11ea-954d-e454e8b0c44f:100-111";
+  //uuid.parse(u, strlen(u));
+  //m->add_sid(uuid);
+
+  GtidSet gtid_set(m);
+  GtidSet gtid_set2(m2);
+  gtid_set2.add_gtid_text(u5);
+
+
+  gtid_set.add_gtid_text(u1);
+  cout << gtid_set.to_string() << endl;
+  gtid_set.add_gtid_text(u2);
+  cout << gtid_set.to_string() << endl;
+  gtid_set.add_gtid_text(u3);
+  cout << gtid_set.to_string() << endl;
+  gtid_set.add_gtid_text(u4);
+  cout << gtid_set.to_string() << endl;
+  gtid_set.add_gtid_text(u5);
+  cout << gtid_set.to_string() << endl;
+
+  Sid sid;
+  sid.parse(u6, Sid::TEXT_LENGTH);
+  Sid sid2;
+  sid2.parse(u4, Sid::TEXT_LENGTH);
+  Sid sid3;
+  sid3.parse("bbbbbbbb-f26c-11ea-954d-e454e8b0c44a", Sid::TEXT_LENGTH);
+
+  cout << "gtid_set2: " << gtid_set2.to_string() << endl;
+  gtid_set.remove_gtid_set(gtid_set2);
+  cout << gtid_set.to_string() << endl;
+  //gtid_set.add_gtid_text(u6);
+  cout << gtid_set.to_string() << endl;
+  cout << "gno count for sid: " << sid.to_string() << ": " << gtid_set.get_gno_count(sid) << endl;;
+  cout << "gno count for sid: " << sid2.to_string() << ": " << gtid_set.get_gno_count(sid2) << endl;;
+  cout << "gno count for sid: " << sid3.to_string() << ": " << gtid_set.get_gno_count(sid3) << endl;;
+  GtidSet t(boost::shared_ptr<SidMap>(new SidMap));
+  t.add_gtid_text(u6);
+  gtid_set.remove_gtid_set(t);
+  cout << gtid_set.to_string() << endl;
+  boost::shared_ptr<SidMap> m3(new SidMap);
+  GtidSet gtid_set3(m3);
+  gtid_set.clear();
+  gtid_set2.clear();
+  gtid_set3.clear();
+  return 0;
+  while (1) {
+    string cmd;
+    string s;
+    cout << "-----------------------------\n";
+    s.clear();
+    cin >> cmd;
+    string tmp;
+    cin.peek();
+    while (cin.rdbuf()->in_avail() > 0) {
+      cin >> tmp;
+      s.append(tmp);
+    }
+    if (s == "q") {
+      break;;
+    } else if (GtidSet::is_valid(s.c_str())) {
+      cout  << "before: " << gtid_set3.to_string() << endl;
+      const char* c = s.c_str();
+      if (cmd == "a") {
+        gtid_set3.add_gtid_text(c);
+      } else if (cmd == "d"){
+        GtidSet tmp_set(boost::shared_ptr<SidMap>(new SidMap));
+        tmp_set.add_gtid_text(c);
+        gtid_set3.remove_gtid_set(tmp_set);
+      }
+      cout  << "after: " << gtid_set3.to_string() << endl;
+    } else {
+      cout << "invalid gtid";
+    }
+  }
+  return 0;
 }
