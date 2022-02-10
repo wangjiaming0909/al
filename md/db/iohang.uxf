@@ -1,0 +1,103 @@
+<diagram program="umletino" version="14.4.0-SNAPSHOT"><zoom_level>10</zoom_level><help_text>&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;UMLGeneric&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;260&lt;/x&gt;&lt;y&gt;80&lt;/y&gt;&lt;w&gt;20&lt;/w&gt;&lt;h&gt;100&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;
+bg=yellow&lt;/panel_attributes&gt;&lt;additional_attributes&gt;&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;Relation&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;573&lt;/x&gt;&lt;y&gt;15&lt;/y&gt;&lt;w&gt;170&lt;/w&gt;&lt;h&gt;130&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;fg=yellow
+fontsize=16
+lt=&amp;lt;-
+delete nodes on zk
+
+
+
+
+&lt;/panel_attributes&gt;&lt;additional_attributes&gt;10;20;150;20&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;Relation&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;943&lt;/x&gt;&lt;y&gt;5&lt;/y&gt;&lt;w&gt;310&lt;/w&gt;&lt;h&gt;130&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;fg=yellow
+fontsize=16
+lt=&amp;lt;-
+Try Login 
+
+
+
+
+&lt;/panel_attributes&gt;&lt;additional_attributes&gt;10;20;290;20&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;Relation&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;943&lt;/x&gt;&lt;y&gt;5&lt;/y&gt;&lt;w&gt;310&lt;/w&gt;&lt;h&gt;130&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;fg=yellow
+fontsize=16
+lt=&amp;lt;-
+Try Login 
+
+
+
+
+&lt;/panel_attributes&gt;&lt;additional_attributes&gt;10;20;290;20&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;Relation&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;943&lt;/x&gt;&lt;y&gt;5&lt;/y&gt;&lt;w&gt;310&lt;/w&gt;&lt;h&gt;130&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;fg=yellow
+fontsize=16
+lt=&amp;lt;-
+Try Login 
+
+
+
+
+&lt;/panel_attributes&gt;&lt;additional_attributes&gt;10;20;290;20&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;Relation&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;1063&lt;/x&gt;&lt;y&gt;395&lt;/y&gt;&lt;w&gt;170&lt;/w&gt;&lt;h&gt;60&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;lt=&amp;lt;&amp;lt;&amp;lt;-
+fontsize=16
+login timeout&lt;/panel_attributes&gt;&lt;additional_attributes&gt;10;40;60;40;60;10;10;10&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;Relation&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;800&lt;/x&gt;&lt;y&gt;270&lt;/y&gt;&lt;w&gt;190&lt;/w&gt;&lt;h&gt;30&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;lt=&amp;lt;&amp;lt;&amp;lt;-&lt;/panel_attributes&gt;&lt;additional_attributes&gt;10;10;170;10&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;UMLNote&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;830&lt;/x&gt;&lt;y&gt;370&lt;/y&gt;&lt;w&gt;140&lt;/w&gt;&lt;h&gt;70&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;Note..
+bg=blue&lt;/panel_attributes&gt;&lt;additional_attributes&gt;&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;Relation&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;800&lt;/x&gt;&lt;y&gt;270&lt;/y&gt;&lt;w&gt;190&lt;/w&gt;&lt;h&gt;30&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;lt=&amp;lt;&amp;lt;&amp;lt;-&lt;/panel_attributes&gt;&lt;additional_attributes&gt;10;10;170;10&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;Relation&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;240&lt;/x&gt;&lt;y&gt;110&lt;/y&gt;&lt;w&gt;190&lt;/w&gt;&lt;h&gt;30&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;lt=&amp;lt;&amp;lt;-&lt;/panel_attributes&gt;&lt;additional_attributes&gt;10;10;170;10&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;Relation&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;240&lt;/x&gt;&lt;y&gt;110&lt;/y&gt;&lt;w&gt;190&lt;/w&gt;&lt;h&gt;30&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;lt=&amp;lt;&amp;lt;-&lt;/panel_attributes&gt;&lt;additional_attributes&gt;10;10;170;10&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;UMLNote&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;270&lt;/x&gt;&lt;y&gt;370&lt;/y&gt;&lt;w&gt;140&lt;/w&gt;&lt;h&gt;70&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;Note..
+bg=blue&lt;/panel_attributes&gt;&lt;additional_attributes&gt;&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;Relation&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;240&lt;/x&gt;&lt;y&gt;120&lt;/y&gt;&lt;w&gt;190&lt;/w&gt;&lt;h&gt;30&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;lt=&amp;lt;&amp;lt;-&lt;/panel_attributes&gt;&lt;additional_attributes&gt;10;10;170;10&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;UMLClass&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;20&lt;/x&gt;&lt;y&gt;10&lt;/y&gt;&lt;w&gt;100&lt;/w&gt;&lt;h&gt;30&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;SimpleClass&lt;/panel_attributes&gt;&lt;additional_attributes&gt;&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;Relation&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;70&lt;/x&gt;&lt;y&gt;490&lt;/y&gt;&lt;w&gt;30&lt;/w&gt;&lt;h&gt;80&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;lt=&amp;lt;&amp;lt;.&lt;/panel_attributes&gt;&lt;additional_attributes&gt;10;10;10;60&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;UMLUseCase&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;20&lt;/x&gt;&lt;y&gt;360&lt;/y&gt;&lt;w&gt;120&lt;/w&gt;&lt;h&gt;40&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;Use case 1&lt;/panel_attributes&gt;&lt;additional_attributes&gt;&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;Space for diagram notes&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;Relation&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;540&lt;/x&gt;&lt;y&gt;310&lt;/y&gt;&lt;w&gt;90&lt;/w&gt;&lt;h&gt;130&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;lt=.&amp;gt;
+&amp;lt;&amp;lt;IO HANG&amp;gt;&amp;gt;
+group=1&lt;/panel_attributes&gt;&lt;additional_attributes&gt;10;10;10;110&lt;/additional_attributes&gt;&lt;/element&gt;&lt;element&gt;&lt;id&gt;UMLClass&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;500&lt;/x&gt;&lt;y&gt;290&lt;/y&gt;&lt;w&gt;100&lt;/w&gt;&lt;h&gt;30&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;Master MySQL
+
+group=1&lt;/panel_attributes&gt;&lt;additional_attributes&gt;&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;Relation&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;240&lt;/x&gt;&lt;y&gt;110&lt;/y&gt;&lt;w&gt;190&lt;/w&gt;&lt;h&gt;30&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;lt=&amp;lt;&amp;lt;-&lt;/panel_attributes&gt;&lt;additional_attributes&gt;10;10;170;10&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;&lt;diagram program="umletino" version="14.4.0-SNAPSHOT"&gt;&lt;zoom_level&gt;10&lt;/zoom_level&gt;&lt;element&gt;&lt;id&gt;Relation&lt;/id&gt;&lt;coordinates&gt;&lt;x&gt;800&lt;/x&gt;&lt;y&gt;270&lt;/y&gt;&lt;w&gt;190&lt;/w&gt;&lt;h&gt;30&lt;/h&gt;&lt;/coordinates&gt;&lt;panel_attributes&gt;lt=&amp;lt;&amp;lt;&amp;lt;-&lt;/panel_attributes&gt;&lt;additional_attributes&gt;10;10;170;10&lt;/additional_attributes&gt;&lt;/element&gt;&lt;/diagram&gt;</help_text><element><id>Relation</id><coordinates><x>218</x><y>106</y><w>30</w><h>460</h></coordinates><panel_attributes>lt=.&gt;</panel_attributes><additional_attributes>10;10;10;440</additional_attributes></element><element><id>UMLClass</id><coordinates><x>178</x><y>86</y><w>100</w><h>30</h></coordinates><panel_attributes>Master MySQL
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>358</x><y>106</y><w>30</w><h>460</h></coordinates><panel_attributes>lt=.&gt;</panel_attributes><additional_attributes>10;10;10;440</additional_attributes></element><element><id>UMLClass</id><coordinates><x>318</x><y>86</y><w>100</w><h>30</h></coordinates><panel_attributes>DBScale
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>498</x><y>106</y><w>30</w><h>460</h></coordinates><panel_attributes>lt=.&gt;</panel_attributes><additional_attributes>10;10;10;440</additional_attributes></element><element><id>UMLClass</id><coordinates><x>458</x><y>86</y><w>100</w><h>30</h></coordinates><panel_attributes>Zookeeper
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>638</x><y>106</y><w>30</w><h>460</h></coordinates><panel_attributes>lt=.&gt;</panel_attributes><additional_attributes>10;10;10;440</additional_attributes></element><element><id>UMLClass</id><coordinates><x>598</x><y>86</y><w>100</w><h>30</h></coordinates><panel_attributes>Daemon
+</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>358</x><y>136</y><w>310</w><h>130</h></coordinates><panel_attributes>fg=yellow
+fontsize=16
+lt=&lt;-
+Try Login 
+
+
+
+
+</panel_attributes><additional_attributes>10;20;290;20</additional_attributes></element><element><id>Relation</id><coordinates><x>358</x><y>166</y><w>310</w><h>40</h></coordinates><panel_attributes>fg=Green
+fontsize=16
+lt=&lt;&lt;-
+login succeed</panel_attributes><additional_attributes>290;20;10;20</additional_attributes></element><element><id>UMLNote</id><coordinates><x>108</x><y>136</y><w>720</w><h>160</h></coordinates><panel_attributes>login succeed when IO hang
+bg=black</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>358</x><y>196</y><w>310</w><h>40</h></coordinates><panel_attributes>lt=&lt;&lt;-
+fg=yellow
+fontsize=16
+DBSCALE CHECK DISK IO</panel_attributes><additional_attributes>10;20;290;20</additional_attributes></element><element><id>Relation</id><coordinates><x>638</x><y>206</y><w>130</w><h>70</h></coordinates><panel_attributes>lt=&lt;&lt;-
+fontsize=16
+timeout</panel_attributes><additional_attributes>10;50;60;50;60;10;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>358</x><y>236</y><w>310</w><h>40</h></coordinates><panel_attributes>lt=&lt;&lt;&lt;-
+fg=red
+fontsize=16
+KILL -9</panel_attributes><additional_attributes>10;20;290;20</additional_attributes></element><element><id>UMLNote</id><coordinates><x>108</x><y>306</y><w>720</w><h>190</h></coordinates><panel_attributes>login timeout when IO hang
+bg=black</panel_attributes><additional_attributes></additional_attributes></element><element><id>Relation</id><coordinates><x>638</x><y>316</y><w>170</w><h>60</h></coordinates><panel_attributes>lt=&lt;&lt;&lt;-
+fontsize=16
+login timeout</panel_attributes><additional_attributes>10;40;60;40;60;10;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>638</x><y>366</y><w>200</w><h>60</h></coordinates><panel_attributes>lt=&lt;&lt;&lt;-
+fontsize=16
+CHECK DISK IO</panel_attributes><additional_attributes>10;40;60;40;60;10;10;10</additional_attributes></element><element><id>Relation</id><coordinates><x>358</x><y>306</y><w>310</w><h>130</h></coordinates><panel_attributes>fg=yellow
+fontsize=16
+lt=&lt;-
+Try Login 
+
+
+
+
+</panel_attributes><additional_attributes>10;20;290;20</additional_attributes></element><element><id>Relation</id><coordinates><x>358</x><y>390</y><w>310</w><h>130</h></coordinates><panel_attributes>fg=red
+fontsize=16
+lt=&lt;-
+KILL -9 if failed
+
+
+
+
+</panel_attributes><additional_attributes>10;20;290;20</additional_attributes></element><element><id>Relation</id><coordinates><x>498</x><y>410</y><w>170</w><h>130</h></coordinates><panel_attributes>fg=red
+fontsize=16
+lt=&lt;-
+delete nodes on zk
+
+
+
+
+</panel_attributes><additional_attributes>10;20;150;20</additional_attributes></element><element><id>Relation</id><coordinates><x>498</x><y>260</y><w>170</w><h>130</h></coordinates><panel_attributes>fg=red
+fontsize=16
+lt=&lt;-
+delete nodes on zk
+
+
+
+
+</panel_attributes><additional_attributes>10;20;150;20</additional_attributes></element></diagram>
