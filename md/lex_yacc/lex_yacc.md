@@ -208,10 +208,19 @@ yacc 包括下面几部分
 #include <stdio.h>
 %}
 %token NOUM PRONOUM VERB
+%start stmt
+
+%left '+' '-'
+%left '*' '/'
+%nonassoc UMINUS
+
 %%
 ```
 一般情况下`TOKEN`最好都是大写，其他用小写
+`%start`是指定`start symbol`, 不指定的话就是所有规则中的第一个规则.
+`%nonassoc`, `%left`, `%right`用于设定`assiciativity`, 后面会提.
 
+*******
 ### Rules Section
 ```yacc
 sentence: subject VERB object {printf("Sentence is valid.\n");}
@@ -224,6 +233,7 @@ object:     NOUM
 %%
 ```
 
+*******
 ### User Subroutines Section
 ```yacc
 extern FILE *yyin;
@@ -240,3 +250,93 @@ char *s;
 }
 ```
 lexer在返回0时表示当前语句解析结束。
+*******
+### shift and reduction
+```yacc
+statement: number
+  | expression + number
+  | expression - number
+```
+`statement`就是左边部分.
+其他剩下的就是右边部分.
+parser在读取token时，若读完当前token不能满足某一个规则，则把当前token入栈  
+切换到新读取的token的状态, 这个切换过程就叫做shift。  
+当parser读取token之后，满足了某一个语法规则，那么parser将该规则的右边所有的符号都pop出栈，并把该规则的左边入栈, 该过程叫做reduction。  
+
+*******
+### What yacc can't parse?
+yacc 不能解析歧义语法, 也不能在解析的时候向前peek 2个token, 最多一个.
+如:
+```yacc
+phrase:   cart_animal AND CART
+        | work_animal AND PLOW
+
+cart_animal:  HORSE | GOAT
+work_animal:  HORSE | OX
+```
+上面的语法没有歧义,但是如果解析到`HORSE`, yacc不知道是`cart_animal`的还是`work_animal`的`HORSE`, 除非向前再解析两个token, 如果是`AND CART`那个就是`cart_animal`, 如果是`AND PLOW`那么就是`work_animal`.  
+但是yacc不支持.   
+
+********
+### Assiciativity and Precedence
+问题:
+```yacc
+expression: expression '+' expression {$$ = $1 + $2;}
+        |   expression '-' expression {$$ = $1 - $2;}
+        |   expression '*' expression {$$ = $1 * $2;}
+        |   expression '/' expression {$$ = $1 / $2;/*divide zero handling*/}
+        |   '-' expression {$$ = -$2;}
+        |   '(' expression ')' {$$ = $2;}
+        |   NUMBER {$$ = $1;}
+        ;
+```
+我们需要运算符的优先级, 以上不能提供匹配的优先级, 默认就是从左到右的匹配.  
+因此`1+2*3`返回的结果是9, 不是7.  
+于是就有了`Precedence`和`Assiciativity`  
+`Precedence`用于控制语法匹配的优先权.  
+`Assiciativity`用于控制在相同`precedence level`的语法解析时如何组合.  
+```yacc
+%{
+%left '+' '-'
+%left '*' '/'
+%nonassoc UMINUS
+%}
+%%
+
+expression: expression '+' expression {$$ = $1 + $2;}
+        |   expression '-' expression {$$ = $1 - $2;}
+        |   expression '*' expression {$$ = $1 * $2;}
+        |   expression '/' expression {$$ = $1 / $2;/*divide zero handling*/}
+        |   '-' expression %prec UMINUS {$$ = -$2;}
+        |   '(' expression ')' {$$ = $2;}
+        |   NUMBER {$$ = $1;}
+        ;
+%%
+```
+`%left`意思是`'+', '-', '*', '/'`都是左关联的运算符.  
+`%nonassoc`意思是不关联  
+`UMIUNS`就是unary minus, 一元运算符减号.  
+从上倒下`'+','-'`的`precedence level`最低, 然后是`'*', '/'`, 最高的是`'UMIUS'`  
+于是: `1+2*-3` 就会这样解析  
+NUMBER                                                接着看到'+', 没有任何相关的规则,直接reduce成  
+expression                                            接着把'+'也shift进去得到:  
+expression '+'                                        接着读到'2', 把NUMBER shift 进去,  
+expression '+' NUMBER                                 reduce成: 
+expression '+' expression                             发现匹配到了加号的规则, 但是下一个字符是'*', `precedence level`较高, 于是先不做`reduce`, 而是接着做shift  
+expression '+' expression '*'                         接着读到'-', 没有匹配到相关规则, 于是shift  
+expression '+' expression '*' '-'                     接着读到'3', shift  
+expression '+' expression '*' '-' NUMBER              接着读, 没发现后面有更高`precendence level`的字符了, 于是开始匹配, 匹配到了负号的规则, 开始做reduce  
+expression '+' expression '*' expression
+
+
+首先解析到`NUMBER 1`, shift 到`[NUMBER]`,  
+之后是`'+'`, `reduce [NUMBER]`成为`[expression]`(对应NUMBER的规则), 再`shift`到`[expression, '+']`  
+当看到`NUMBER 2`时, 首先把`NUMBER` `reduce`成`expression`, 成为`[expression, '+', expression]`,  
+之后原本会把`[expression, '+', 'expression']` reduce成[expression](对应加号的规则).   
+但是由于后面下一个`'*'`的`precedence level`更高, 于是不做reduce, 而是接着shift [expression, '+', expression, '*'],  
+接着看到`'-'`, 没有匹配到任何规则, 于是接着shift,得到 [expression, '+', expression, '*', '-'],  
+接着读到`NUMBER 3`, `[expression, '+', expression, '*', '-', NUMBER]`,  
+再往后peek一个,结束了,于是做匹配, 首先reduce NUMBER得到: `[expression, '+', expression, '*', '-', expression]`  
+接着reduce得到 `[expression, '+', expression, '*', expression]`走负号的规则.  
+接着reduce得到 `[expression, '+', expression]`  
+
