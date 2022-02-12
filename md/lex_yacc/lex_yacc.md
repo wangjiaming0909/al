@@ -292,9 +292,9 @@ expression: expression '+' expression {$$ = $1 + $2;}
 ```
 我们需要运算符的优先级, 以上不能提供匹配的优先级, 默认就是从左到右的匹配.  
 因此`1+2*3`返回的结果是9, 不是7.  
-于是就有了`Precedence`和`Assiciativity`  
+于是就有了`Precedence`和`Associativity`  
 `Precedence`用于控制语法匹配的优先权.  
-`Assiciativity`用于控制在相同`precedence level`的语法解析时如何组合.  
+`Associativity`用于控制在相同`precedence level`的语法解析时如何组合.  
 ```yacc
 %{
 %left '+' '-'
@@ -313,30 +313,75 @@ expression: expression '+' expression {$$ = $1 + $2;}
         ;
 %%
 ```
-`%left`意思是`'+', '-', '*', '/'`都是左关联的运算符.  
+`%left`意思是`'+', '-', '*', '/'`都是左关联的运算符, `left associative`.  
 `%nonassoc`意思是不关联  
 `UMIUNS`就是unary minus, 一元运算符减号.  
 从上倒下`'+','-'`的`precedence level`最低, 然后是`'*', '/'`, 最高的是`'UMIUS'`  
 于是: `1+2*-3` 就会这样解析  
-NUMBER                                                接着看到'+', 没有任何相关的规则,直接reduce成  
-expression                                            接着把'+'也shift进去得到:  
-expression '+'                                        接着读到'2', 把NUMBER shift 进去,  
-expression '+' NUMBER                                 reduce成: 
-expression '+' expression                             发现匹配到了加号的规则, 但是下一个字符是'*', `precedence level`较高, 于是先不做`reduce`, 而是接着做shift  
-expression '+' expression '*'                         接着读到'-', 没有匹配到相关规则, 于是shift  
-expression '+' expression '*' '-'                     接着读到'3', shift  
-expression '+' expression '*' '-' NUMBER              接着读, 没发现后面有更高`precendence level`的字符了, 于是开始匹配, 匹配到了负号的规则, 开始做reduce  
-expression '+' expression '*' expression
+|解析stack|操作|
+|:-----|:-----|
+|NUMBER |                                              接着看到'+', 没有任何相关的规则,直接reduce成|
+|expression |                                          接着把'+'也shift进去得到:|
+|expression '+' |                                      接着读到'2', 把NUMBER shift 进去,|
+|expression '+' NUMBER |                               reduce成:|
+|expression '+' expression |                           发现匹配到了加号的规则, 但是下一个字符是'*', `precedence level`较高, 于是先不做`reduce`, 而是接着做shift|
+|expression '+' expression '*'|                         接着读到'-', 没有匹配到相关规则, 于是shift|
+|expression '+' expression '*' '-'|                     接着读到'3', shift|
+|expression '+' expression '*' '-' NUMBER|              接着读, 没发现后面有更高`precendence level`的字符了, 于是开始匹配, 匹配到了负号的规则, 开始做reduce|
+|expression '+' expression '*' expression|              接着匹配，发现了乘法规则，于是reduce|
+|expression '+' expression|                            接着reduce|
+|expression|                                           结束
 
+`yacc`会将规则的最右边的`token`设置为该规则的`precedence level`.  
+如果该规则没有配置`precendece level`的token,那么该规则就没有`precedence level`.  
+当`yacc`遇到`shift/reduce`冲突时, 就是yacc不知道该`reduce`还是`shift`, yacc会去查询`precedences表`.  
 
-首先解析到`NUMBER 1`, shift 到`[NUMBER]`,  
-之后是`'+'`, `reduce [NUMBER]`成为`[expression]`(对应NUMBER的规则), 再`shift`到`[expression, '+']`  
-当看到`NUMBER 2`时, 首先把`NUMBER` `reduce`成`expression`, 成为`[expression, '+', expression]`,  
-之后原本会把`[expression, '+', 'expression']` reduce成[expression](对应加号的规则).   
-但是由于后面下一个`'*'`的`precedence level`更高, 于是不做reduce, 而是接着shift [expression, '+', expression, '*'],  
-接着看到`'-'`, 没有匹配到任何规则, 于是接着shift,得到 [expression, '+', expression, '*', '-'],  
-接着读到`NUMBER 3`, `[expression, '+', expression, '*', '-', NUMBER]`,  
-再往后peek一个,结束了,于是做匹配, 首先reduce NUMBER得到: `[expression, '+', expression, '*', '-', expression]`  
-接着reduce得到 `[expression, '+', expression, '*', expression]`走负号的规则.  
-接着reduce得到 `[expression, '+', expression]`  
+我们已经定义了`'-'`的`precedence level`, 为最低, `UMINUS`最高.  
+`%prec UMINUS`为了将这个负号规则使用`UMINUS`的`precendece level`, 而不是减号的.  
+******
+
+### yacc的计算器的例子(见cpp/lex_yacc/calculator.y 和calculator.l)
+```yacc
+%union {
+  double dval;
+  int vblno;
+}
+%token <vblno> NAME
+%token <dval> NUMBER
+%left '-' '+'
+%left '*' '/'
+%nonassoc UMINUS
+%type <dval> expression
+%%
+```
+里面定义个一个union, 这个union会在编译时生成一个C的union:
+```c
+/* Tokens.  */
+#define NAME 258
+#define NUMBER 259
+#define UMINUS 260
+/* Value type.  */
+#if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
+union YYSTYPE
+{
+#line 6 "2.y" /* yacc.c:1909  */
+  double dval;
+  int vblno;
+#line 69 "y.tab.h" /* yacc.c:1909  */
+};
+typedef union YYSTYPE YYSTYPE;
+# define YYSTYPE_IS_TRIVIAL 1
+# define YYSTYPE_IS_DECLARED 1
+#endif
+```
+这个`YYSTYPE`是一个总的类型定义  
+每个token, 每个规则的左边都可以定义类型, 如`NAME`类型是字符串数组中的下标,也就是int, `NUMBER`是double value, 如`%left '-'`也可以定义(不过这儿不需要),`expression`的类型定义成了`double value`.  
+给`NUMBER`或者`NAME`定义了类型之后, 如这个语法规则:
+```yacc
+expression: expression '+' expression {/*...*/}
+  | NAME {$$ = vbltable[$1];}
+```
+当匹配到NAME之后, 在`取NAME的$1`的时候yacc才知道将`$1`替换为`$1.vblno`;  
+并且`$$`会替换为`$$.dval`, 因为`expression`是一个`double`类型.  
+
 
