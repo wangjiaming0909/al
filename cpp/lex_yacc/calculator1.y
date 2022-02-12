@@ -17,7 +17,6 @@ extern int yyerror();
 
 %token <symbol> NAME
 %token <dval> NUMBER
-%right '='
 %left '-' '+'
 %left '*' '/'
 %nonassoc UMINUS

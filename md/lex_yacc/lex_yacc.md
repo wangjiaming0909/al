@@ -21,6 +21,8 @@ eol \n
 每一个`rule`包含一个`pattern`和一个`action`, 中间是空格  
 #### Pattern
 pattern其实就是unix-style正则表达式以及grep,sed,ed使用的正则扩展。  
+没有匹配的text会被默认输出到`yyout`, 也就是`ECHO`.  
+如果你想确保自己匹配了所有可能性，那么`flex`可以指定`-s`选项用于把这一默认行为改为abort.  
 ```lex
 %{
     /*
@@ -55,6 +57,56 @@ main() {
 ```
 其实我们可以不写main函数，因为lex输出会默认带一个main函数。  
 除非某个`pattern`的`action`有`return`操作，否则`yylex`会在处理完所有输入之后才会返回.
+
+*******
+### 关于Context Sensitivity
+是指在lexer解析的时候能够根据前后的多余信息进行更精确的匹配.
+#### left context
+有三种方式来处理左上下文:  
+- 正则中的`^`, 正则中`^`只能用于`pattern`的开头  
+- start states, like `BEGIN STATE1`, `BEGIN INITIAL`
+- 用代码
+
+#### right context
+- 正则的 `$`
+- 正则的 `/`
+- `yless()`
+
+正则 `/` 有个需要注意的点:  
+如: 
+```lex
+%%
+abc/de {printf("%s, %d\n", yytext, yyleng); }
+%%
+```
+只有在遇到`abcde`的时候, 才会匹配到这个规则，但是打印的内容是`abc，3`, 而不是`abcde, 5`  
+
+`yyless`在匹配到一个pattern之后，可以用来放回去一些字符.  
+参数是指保留多少个字符， 因此yyless(3)的意思就是保留三个.  
+```lex
+abcde {yyless(3); printf("%s, %d\n", yytext, yyleng);}
+```
+所以上面的意思和`abc/de`是一样的，唯一的区别就是`yytext`是`abcde`， `yyleng`是5
+`yyless`的一个例子:  
+```lex
+\" [^"]*\"    {
+                if (yytext[yyleng - 2] == '\\')a {
+                  yyless(yyleng - 1);
+                  yymore();
+                } else {
+                  //...
+                }
+              }
+```
+这个是为了匹配多行字符串的场景,如:  
+```c
+"asdasdasd\
+asdasdasd"
+```
+如果第一行解析到了`\`, 那么将这个反斜杠放回去, 然后`yymore()`.  
+`yymore`是为了告诉lex把下一个token的内容和当前这个当成一个token.  
+当读完之后 返回整个字符串`asdasdasd\nasdasdasd`, 带换行符的.  
+*********
 ### lex单词计数的例子
 ```lex
 %{
@@ -91,6 +143,16 @@ char **argv;
 }
 ```
 `Rule Section`内的`{word}`会被替换成`Definition Section`部分word对应的正则。  
+```lex
+%{
+%}
+PAT abc
+%%
+{PAT}+ ;
+```
+这个在替换的可能会替换为`abc+`, 于是就成了最后一个字符重复多遍  
+如果是期望(abc)+, 那么就可能需要将PAT定义成: `PAT (abc)`.  
+
 `yyleng`是当前匹配word的长度。  
 首先匹配先出现的规则最后匹配`.`这个规则.  
 `yyin`就是`yylex`的输入，默认是从`stdin`  
@@ -118,7 +180,10 @@ char *progName;
 %}
 
 %s FNAME
+%x CMNT
 %%
+"/*"        BEGIN CMNT; /*begin comment*/
+<CMNT>"*/"  BEGIN INITIAL;/*return to initial state*/
 
 [ ]+ /* ignore blanks */ ;
 -h |
@@ -181,6 +246,21 @@ unput(int ch)
 
 `%s FNAME`定义了一个`start state`  
 用来标记一些具有上下文信息的规则, 如`<FNAME> [^ ]+ {printf("use file %s\n", yytext); BEGIN 0; fname = 2;}`  
+`%x`也是定义了一个`start state`, x和s的区别是:  
+如果已经`BEGIN`了`CMNT`, 那么只会匹配当前状态下的规则.  
+```lex
+%{
+%}
+%s STATE1
+%x STATE2
+%%
+OK          {BEGIN INITIAL; printf("unknow state ok\n");}
+<STATE1>OK  {BEGIN INITIAL; printf("STATE1 OK\n");}
+<STATE2>OK  {BEGIN INITIAL; printf("STATE2 OK\n");}
+```
+在进入`STATE1`之后, 如果解析到OK会匹配第一个OK,打印`unknow state ok`.  
+如果进入`STATE2`之后, 如果解析到OK不会匹配第一个OK, 而是匹配第三个OK, 打印`STATE2 OK`  
+
 上面匹配到`-file {BEGIN FNAME; fname = 1;}`时就会开启该`start state`  
 标记之后lexer只会在当前状态处于`FNAME`时才会匹配到此规则.  
 于是文件的名字就可以单独被解析出来, 此规则的`action`部分会`BEGIN 0`, `0`或者`INITIAL`, 重置状态.  
@@ -384,4 +464,37 @@ expression: expression '+' expression {/*...*/}
 当匹配到NAME之后, 在`取NAME的$1`的时候yacc才知道将`$1`替换为`$1.vblno`;  
 并且`$$`会替换为`$$.dval`, 因为`expression`是一个`double`类型.  
 
+******
+### Embedded Actions in yacc
+```yacc
+%%
+thing: A {printf("seen an A");} B;
+%%
+```
+yacc会把它解析为:  
+```yacc
+%%
+thing: A fakename B;
+fakename: /*empty*/ {printf("seen an A");}
+%%
+```
+于是`$2`就是这个`fakename`的返回值, 虽然这儿没有返回值.  
 
+yacc的这种替换也会有问题:
+```yacc
+%%
+thing: abcd | abcz;
+
+abcd: 'A' 'B' {somefunc();} 'C' 'D';
+abcz: 'A' 'B' 'C' 'Z';
+```
+当yacc解析完B之后, 如果没有这个`{somefunc();}`, 那么yacc就可以不用现在决定自己的匹配的到底是`abcd`还是`abcz`,  
+但是有了这个之后, yacc必须现在决定, 但是由于读到后面的`C`还是不能确定,于是就处理不了了,  
+如果在C的后面, 那么yacc是可以处理的.  
+
+如果你要引用这个`embedded action`的返回值, 并且使用`%union`定义了类型,  
+那么你在引用的时候就需要指定类型:    
+- `$$` -> `$<type>$`
+- `$3` -> `$<type>3`
+
+************
