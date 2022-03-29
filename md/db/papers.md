@@ -93,6 +93,45 @@ $F=3$, $log_3 9 = 2$,一层branch 节点，加一层root，叶子节点这一层
 # Distributed Storage Related
 
 ## Google File System
+`key words`: 
+- Big, Fast
+- Global
+- Sharding 
+- Automatic recovery
+- Single data center
+- Big sequential access(not random)
+
+`Master Server`  
+Master Data  
+- file name -> array of chunk handles
+- handle -> list of chunk servers  
+version number for every chunk server  
+who is the primary chunk server and it's lease expiration time.  
+- write LOG, CHECKPOINTS to Disk
+
+`READ OPERATION`  
+1. name, offset ----> Master Server
+2. Master Server Sends chunk handle and list of chunk servers to client  
+client can cache the results  
+3. Client talk to the chunk servers
+4. chunk server returns the data
+
+`WRITE OPERATION`  
+If no Primary on Master Server:  
+- Find up to date replicas
+- Pick one as primary, others as Secondaryes
+- increments the version number of this chunk
+- tell the primary and secondarys the new version number, and a lease
+- Master writes version number to it's own disk
+- master tells the client the primary and the secondarys chunk servers  
+
+now client knows who to talk to  
+- client talk to the primary to append the data
+- primary picks the offset to append the data
+- all replicas told to write data at the offset  
+if all "succeed" then return to client OK  
+else return NO to client
+
 
 ***
 
