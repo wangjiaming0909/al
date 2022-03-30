@@ -157,13 +157,26 @@ The distributed storage system can be viewed in a few layers, including a **form
 ![Simple Ceph ecosystem](../pic/Simple_Ceph_ecosystem.png)
 
 `Ceph Client`  
+A file is assigned an `inode number` (INO) from the meta dataserver, which is the unique identifier for the file.  
+The file is carved into some number of objects(based on the size of the file) with different `object number`.  
+`Object ID` OID is assigned accoring to the INO and ONO.  
 
+Using a simple hash over the OID, each object is assigned to a `placement group`.  
+
+The `placement group (PGID)` is a conceptual container for objects.  
+
+The mapping of `placement group` to object storage devices is a pseudo-random mapping using an algorith called `Controlled Replication Under Scalable Hashing(CRUSH)`.  
 
 `Ceph Metadata Server`  
 
+Metadata server(cmds) is to manage the filesystem's `namespace`.  
+MetaData server is actually a intelligent `metadata cache`.  
+
+The metadata server transforms the file name into an inode, file size, and striping data(layout) that the Ceph client uses for file I/O.  
 
 `Ceph Monitors`  
+When object storage devices fail or new devices are added, monitors detect and maintain a valid cluster map. This function is performed in a distributed fashion where map updates are communicated with existing traffic. Ceph uses Paxos, which is a family of algorithms for distributed consensus.  
 
-`Ceph object storage`
-
+`Ceph object storage`  
+B-tree file system (BTRFS) can be used at the storage nodes
 ***
