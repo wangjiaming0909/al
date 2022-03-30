@@ -98,16 +98,52 @@ $F=3$, $log_3 9 = 2$,一层branch 节点，加一层root，叶子节点这一层
 - Global
 - Sharding 
 - Automatic recovery
-- Single data center
+- Deployed in Single data center
 - Big sequential access(not random)
+- Relaxed consistency model
 
-`Master Server`  
+Most files are mutated by appending rather than overwriting existing data.  
+Randon writes are practically non-existent.  
+Once written, the files are only read, and often sequentially.  
+
+
+### `CLIENTS`
+Neither the client nor the chunkservers caches file data.  
+clients do cache metadata.  
+
+### `Master Server`  
+GFS have one `single master`.  
+all meta data is kept in master's memory.  
 Master Data  
+- namespace
+- access control information
 - file name -> array of chunk handles
+- chunk locations  
+Master does not keep a persistent record of which chunkservers have a replica of a given chunk.  
+It simply polls chunkservers for that info at startup.  
+The master can keep itself up-to-date thereafter, 因为他控制了所有的chunk分配, 并且在monitor过程中通过HeartBeat Message更新这些信息.  
 - handle -> list of chunk servers  
 version number for every chunk server  
 who is the primary chunk server and it's lease expiration time.  
-- write LOG, CHECKPOINTS to Disk
+- write LOG, CHECKPOINTS to Disk  
+Logs are replicated on multiple remote machines.  
+Master Server will respond to a client operation only after flushing the corresponding log record to disk both locally and remotedly.  
+The Master batches several log records together before flushing.  
+The Master checkpoints its state whenever the log grows beyond a certain size.  
+The checkpoint is in a compact B-tree like form and can be directly mapped into memory.  
+创建检查点的时候不影响正常的file mutations, 创建新的检查点时,master会切换一个log file, 并且使用一个新线程来创建检查点, 因此新的检查点会包含在此之前的所有mutation.  
+创建检查点结束之后,会被写入本地磁盘以及远程磁盘.  
+恢复的时候只需要读取最近的检查点,并且应用之后的日志.  
+
+`Namespaces` and `file-to-chunk mapping` are also kept persistent by logging mutations to an `operation log` stored on the master's local disk and replicated on `remote machines`.  
+
+`chunk locations` is only in memory.  
+
+Master Functions  
+- chunk lease management
+- garbage collection of orphaned chunks
+- chunk migration between chunkservers
+- using heartbeat messages to monitor and instruct the chunkservers and collect states
 
 `READ OPERATION`  
 1. name, offset ----> Master Server
@@ -132,6 +168,19 @@ now client knows who to talk to
 if all "succeed" then return to client OK  
 else return NO to client
 
+### `SNAPSHOT AND RECORD APPEND`  
+
+### `CONSISTENCY MODEL`
+A relaxed consistency model.  
+
+Guarantees by GFS
+- File namespace mutations(e.g., file creation) are atomic.  
+They are handled exclusively by the master. (namespace locking)  
+执行顺序由master写入的日志顺序来确定.  
+- CONSISTENT
+- DEFINED
+- UNDEFINED
+- UNCONSITENT
 
 ***
 
