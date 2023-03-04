@@ -44,10 +44,12 @@ add_custom_command(
 
 # Include generated *.pb.h files
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
+include_directories("include")
 
 add_subdirectory(test)
 add_subdirectory(./deps/glog)
 add_subdirectory(./deps/googletest)
+add_subdirectory(./src/raft)
 
 # hw_grpc_proto
 add_library(hw_grpc_proto
