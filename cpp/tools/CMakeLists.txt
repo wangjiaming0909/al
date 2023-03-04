@@ -46,6 +46,10 @@ add_custom_command(
 include_directories("${CMAKE_CURRENT_BINARY_DIR}")
 include_directories("include")
 
+file(GLOB_RECURSE INCLUDE_HDRS "${CMAKE_CURRENT_SOURCE_DIR}/include/*.h")
+
+message( "${INCLUDE_HDRS}")
+
 add_subdirectory(test)
 add_subdirectory(./deps/glog)
 add_subdirectory(./deps/googletest)
@@ -56,7 +60,8 @@ add_library(hw_grpc_proto
   ${hw_grpc_srcs}
   ${hw_grpc_hdrs}
   ${hw_proto_srcs}
-  ${hw_proto_hdrs})
+  ${hw_proto_hdrs}
+  ${INCLUDE_HDRS})
 target_link_libraries(hw_grpc_proto
   ${_REFLECTION}
   ${_GRPC_GRPCPP}
