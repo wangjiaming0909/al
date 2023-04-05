@@ -7,14 +7,16 @@
 namespace raft {
 using std::make_unique;
 
-Instance::~Instance() {}
-Instance::Instance(const Uuid &uuid)
-    : uuid_(uuid), peers_(), role_(Role::Candidate), term_id_(0) {}
+RaftInstance::~RaftInstance() {}
+RaftInstance::RaftInstance(const Uuid &uuid, const std::string &listen_addr)
+    : uuid_(uuid), listen_addr_(listen_addr), peers_(), role_(Role::Candidate),
+      term_id_(0), master_uuid_(), master_term_id_(0),
+      rpc_server_(new RaftRpcServer(this, listen_addr_)) {}
 
 PeerInfo::PeerInfo(const Uuid &uuid, const std::string &addr)
     : addr_(addr), id_(uuid) {}
 
-bool Instance::add_peer(PeerPtr peer) {
+bool RaftInstance::add_peer(PeerPtr peer) {
   auto it = peer_map().find(peer->uuid());
   if (it != peer_map().end()) return false;
 
@@ -22,13 +24,58 @@ bool Instance::add_peer(PeerPtr peer) {
   return true;
 }
 
-bool Instance::add_peer(const Uuid &uuid, const std::string &addr) {
+bool RaftInstance::add_peer(const Uuid &uuid, const std::string &addr) {
   auto it = peer_map().find(uuid);
   if (it != peer_map().end()) return false;
   PeerInfo info{uuid, addr};
   PeerPtr peer_ptr = std::make_unique<Peer>(info);
   peers_[uuid] = std::move(peer_ptr);
   return true;
+}
+
+void RaftInstance::grant(const raft::VoteRequest &request, raft::VoteReply &reply) {
+  role_ = Role::Learner;
+  master_uuid_ = request.candidate_id();
+  master_term_id_ = request.candidate_term_id();
+
+  LOG(INFO) << uuid() << " granted " << master_uuid_
+            << " to be leader, master term id: " << master_term_id_;
+
+  // prepare the reply
+  reply.set_responder_uuid(uuid_);
+  reply.set_vote_granted(true);
+  reply.set_responder_term_id(term_id_);
+}
+
+void RaftInstance::deny(const raft::VoteRequest &request, raft::VoteReply &reply) {
+  LOG(INFO) << uuid() << " denied " << master_uuid_
+            << " to be leader my term id: " << term_id_
+            << " candidate term id: " << request.candidate_term_id();
+  // prepare the reply
+  reply.set_responder_uuid(uuid_);
+  reply.set_vote_granted(false);
+  reply.set_responder_term_id(term_id_);
+}
+
+grpc::Status RaftInstance::request_vote(const raft::VoteRequest &request,
+                                    raft::VoteReply &reply) {
+  assert(request.dest_id() == uuid_);
+  auto term_id = request.candidate_term_id();
+  // 1. if we have leader and uuid is not same as the candidate uuid, we deny
+  // this vote
+
+  // 2. if candidate is fall behind, we deny this vote
+  if (term_id <= term_id_)
+    deny(request, reply);
+
+  // 3. if we have no leader, but we already granted someone
+  //   a. if same as candidate, we grant again
+  //   b. if not, we deny it
+
+  // 4. check last oper id of candidate
+
+  grant(request, reply);
+  return ::grpc::Status::OK;
 }
 
 grpc::Status Peer::request_vote(const raft::VoteRequest &request,
@@ -46,14 +93,12 @@ Peer::~Peer() {}
 class RaftServiceImpl : public RaftRpc::Service {
   virtual ::grpc::Status request_vote(::grpc::ServerContext *context,
                                       const ::raft::VoteRequest *request,
-                                      ::raft::VoteReply *response) {
-    LOG(INFO) << "vote request from: " << request->ShortDebugString();
-    response->set_vote_granted(true);
-    LOG(INFO) << server_->uuid() << " vote request granted...";
-    return ::grpc::Status::OK;
+                                      ::raft::VoteReply *response){
+    return server_->raft_instance()->request_vote(*request, *response);
   }
 
   RaftRpcServer *server_;
+
 public:
   RaftServiceImpl(RaftRpcServer *server) : server_(server) {}
 };
@@ -63,8 +108,9 @@ RaftService::~RaftService() { delete impl_; }
 /*********Raft Service***********/
 
 /*********Raft Server***********/
-RaftRpcServer::RaftRpcServer(const Uuid &uid, const std::string &listen_addr)
-    : service_(this), server_{nullptr}, listen_addr_(listen_addr), uid_(uid) {}
+RaftRpcServer::RaftRpcServer(RaftInstance *instance, const std::string &listen_addr)
+    : service_(this), server_{nullptr}, listen_addr_(listen_addr),
+      uid_(instance->uuid()), raft_instance_(instance) {}
 
 void RaftRpcServer::start() {
   if (server_) {
@@ -124,7 +170,7 @@ RaftRpcClient::Stub::~Stub() {}
 LeaderElectionResult::LeaderElectionResult(size_t voter_num)
     : voter_num_(voter_num) {}
 
-LeaderElection::LeaderElection(std::shared_ptr<Instance> instance)
+LeaderElection::LeaderElection(std::shared_ptr<RaftInstance> instance)
     : instance_(instance) {}
 
 LeaderElectionResult LeaderElection::elect() {
@@ -135,6 +181,7 @@ LeaderElectionResult LeaderElection::elect() {
   }
 
   LeaderElectionResult res{ins->peer_map().size() + 1};
+  ins->inc_term_id();
 
   // grant self
   res.grant(ins->uuid());
@@ -145,19 +192,20 @@ LeaderElectionResult LeaderElection::elect() {
     VoteRequest req;
     VoteReply reply;
     req.set_candidate_id(ins->uuid());
-    req.set_term_id(ins->term_id());
+    req.set_candidate_term_id(ins->term_id());
+    req.set_dest_id(peer.first);
     ::grpc::Status status = peer.second->request_vote(req, reply);
 
-    handle_reply(peer.second->uuid(), status, reply, res);
+    handle_reply(status, reply, res);
   }
 
   return res;
 }
 
-void LeaderElection::handle_reply(const Uuid &uuid, ::grpc::Status rpc_status,
+void LeaderElection::handle_reply(::grpc::Status rpc_status,
                                   const VoteReply &reply,
                                   LeaderElectionResult &res) {
-  LOG(INFO) << "handle reply from: [" << uuid << "] rpc_status: ["
+  LOG(INFO) << "handle reply from: [" << reply.responder_uuid() << "] rpc_status: ["
             << rpc_status.error_message() << "] reply: [" << reply.DebugString()
             << "]";
   auto ins = instance_.lock();
@@ -167,18 +215,19 @@ void LeaderElection::handle_reply(const Uuid &uuid, ::grpc::Status rpc_status,
   }
   if (rpc_status.ok()) {
     if (reply.vote_granted()) {
-      res.grant(uuid);
-      LOG(INFO) << "leader granted for [" << ins->uuid() << "] from: [" << uuid
-                << "]";
+      res.grant(reply.responder_uuid());
+      LOG(INFO) << "leader granted for [" << ins->uuid() << "] from: ["
+                << reply.responder_uuid() << "]";
     } else {
-      res.deny(uuid);
-      LOG(INFO) << "leader denied for [" << ins->uuid() << "] from: [" << uuid
-                << "]";
+      res.deny(reply.responder_uuid());
+      LOG(INFO) << "leader denied for [" << ins->uuid() << "] from: ["
+                << reply.responder_uuid() << "]";
     }
   } else {
-    res.deny(uuid);
-    LOG(INFO) << "leader denied for [" << ins->uuid() << "] from: [" << uuid
-              << "] err: [" << rpc_status.error_message() << "]";
+    res.deny(reply.responder_uuid());
+    LOG(INFO) << "leader denied for [" << ins->uuid() << "] from: ["
+              << reply.responder_uuid() << "] err: ["
+              << rpc_status.error_message() << "]";
   }
 }
 

@@ -35,15 +35,19 @@ public:
   RaftServiceImpl *get_service() { return impl_; }
 };
 
+class RaftInstance;
 class RaftRpcServer {
+  RaftInstance* raft_instance_;
   RaftService service_;
   std::unique_ptr<::grpc::Server> server_;
   std::string listen_addr_;
   Uuid uid_;
+
 public:
-  RaftRpcServer(const Uuid& uuid, const std::string &listen_addr);
+  RaftRpcServer(RaftInstance *instance, const std::string &listen_addr);
   ~RaftRpcServer() {}
   inline const Uuid &uuid() const { return uid_; }
+  inline RaftInstance *raft_instance() { return raft_instance_; }
   void start();
   void wait();
   void shutdown();
@@ -91,14 +95,21 @@ public:
 using PeerPtr = std::unique_ptr<Peer>;
 using PeerMap = std::unordered_map<Uuid, PeerPtr>;
 
-class Instance {
+class RaftInstance : public IRaftProtocol{
   Uuid uuid_;
+  std::string listen_addr_;
   PeerMap peers_;
   Role role_;
   uint64_t term_id_;
+  Uuid master_uuid_;
+  uint64_t master_term_id_;
+  std::unique_ptr<RaftRpcServer> rpc_server_;
+
+  void grant(const raft::VoteRequest &request, raft::VoteReply &reply);
+  void deny(const raft::VoteRequest &request, raft::VoteReply &reply);
 
 public:
-  Instance(const Uuid &uuid);
+  RaftInstance(const Uuid &uuid, const std::string& listen_addr);
   // @brief add one peer into the raft instance
   // @param peer the peer to add
   // @ret false if already existed, true otherwise
@@ -108,11 +119,19 @@ public:
   // @addr the service addr of this peer
   // @ret false if already existed, true otherwise
   bool add_peer(const Uuid &uuid, const std::string &addr);
-  virtual ~Instance();
+  virtual ~RaftInstance();
   inline const PeerMap &peer_map() const { return peers_; }
   inline PeerMap &peer_map() { return peers_; }
   inline const Uuid &uuid() const { return uuid_; }
   inline uint64_t term_id() const { return term_id_; }
+  void inc_term_id() { term_id_++; }
+
+  virtual grpc::Status request_vote(const raft::VoteRequest &request,
+                                    raft::VoteReply &reply);
+
+  void start_server() { return rpc_server_->start(); }
+  void wait_server() { return rpc_server_->wait(); }
+  void shtudown_server() { return rpc_server_->shutdown(); }
 };
 
 class LeaderElection;
@@ -137,17 +156,20 @@ public:
 };
 
 class LeaderElection {
-  /// @brief parse the vote reply, add results into the result
-  void handle_reply(const Uuid &uuid, ::grpc::Status rpc_status,
+  /// @brief generate leader result accoring to the rpc status and reply
+  /// @param rpc_status the rpc call status of request vote
+  /// @param reply the reply of requestvote from remote server
+  /// @param res leader election res
+  void handle_reply(::grpc::Status rpc_status,
                     const VoteReply &reply, LeaderElectionResult &res);
 
 public:
-  LeaderElection(std::shared_ptr<Instance> instance);
+  LeaderElection(std::shared_ptr<RaftInstance> instance);
 
   LeaderElectionResult elect();
 
 private:
-  std::weak_ptr<Instance> instance_;
+  std::weak_ptr<RaftInstance> instance_;
 };
 
 } /* namespace raft */
