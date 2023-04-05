@@ -10,6 +10,7 @@ add_library(raft
 
 target_link_libraries(raft
   raft_grpc_proto
+  glog
   ${_REFLECTION}
   ${_GRPC_GRPCPP}
   ${_PROTOBUF_LIBPROTOBUF})

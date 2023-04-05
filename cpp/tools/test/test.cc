@@ -20,10 +20,10 @@ void setup_logger(const char* argv0) {
 }
 
 int main(int argc, char **argv) {
-  fLB::FLAGS_logtostdout = false;
-  fLB::FLAGS_logtostderr = false;
-  fLS::FLAGS_log_dir = "/tmp";
-  google::SetLogDestination(google::GLOG_INFO, "/tmp/INFO_");
+  fLB::FLAGS_logtostdout = true;
+  fLB::FLAGS_logtostderr = true;
+  //fLS::FLAGS_log_dir = "/tmp";
+  //google::SetLogDestination(google::GLOG_INFO, "/tmp/INFO_");
   setup_logger(argv[0]);
 
   ::testing::InitGoogleMock(&argc, argv);
