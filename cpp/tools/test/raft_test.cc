@@ -28,6 +28,14 @@ raft::PeerInfo peer1{get_uuid(), "localhost:9000"};
 raft::PeerInfo peer2{get_uuid(), "localhost:9001"};
 raft::PeerInfo peer3{get_uuid(), "localhost:9002"};
 
+TEST(raft, config) {
+  raft_pb::RaftConfig config;
+  auto* peer = config.add_peers();
+  peer->set_member_type(raft_pb::PeerMemberTypeConfig::VOTER);
+  peer->set_permanent_uuid(peer1.id_);
+  auto *host_port = peer->mutable_last_known_private_addr()->Add();
+}
+
 TEST(raft, instance) {
   std::shared_ptr<raft::RaftInstance> instance1 =
       std::make_shared<raft::RaftInstance>(peer1.id_, peer1.addr_);

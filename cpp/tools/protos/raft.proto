@@ -2,7 +2,36 @@ syntax = "proto3";
 
 option objc_class_prefix = "RAFT";
 
-package raft;
+package raft_pb;
+
+message HostPort {
+  string host = 1;
+  uint32 port = 2;
+};
+
+// config
+enum PeerMemberTypeConfig {
+  UNKNOWN_MEMBER_TYPE = 0;
+  VOTER = 1;
+  OBSERVER = 3;
+};
+
+message RaftPeerConfig {
+  optional string permanent_uuid = 1;
+  optional PeerMemberTypeConfig member_type = 2;
+  repeated HostPort last_known_private_addr = 3;
+};
+
+message RaftConfig {
+  optional int64 opid_index = 1;
+  repeated RaftPeerConfig peers = 2;
+};
+
+message RaftMetadata {
+  RaftConfig commited_config = 1;
+  int64 current_term = 2;
+  optional string voted_for = 3;
+};
 
 // Request Vote message
 message VoteRequest {

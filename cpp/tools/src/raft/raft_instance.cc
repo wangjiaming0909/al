@@ -1,8 +1,8 @@
 #include "raft_instance.h"
 #include "raft.grpc.pb.h"
-#include <grpcpp/server_builder.h>
-#include <grpcpp/grpcpp.h>
 #include <glog/logging.h>
+#include <grpcpp/grpcpp.h>
+#include <grpcpp/server_builder.h>
 
 namespace raft {
 using std::make_unique;
@@ -18,22 +18,29 @@ PeerInfo::PeerInfo(const Uuid &uuid, const std::string &addr)
 
 bool RaftInstance::add_peer(PeerPtr peer) {
   auto it = peer_map().find(peer->uuid());
-  if (it != peer_map().end()) return false;
+  if (it != peer_map().end())
+    return false;
 
   peers_[peer->uuid()] = std::move(peer);
   return true;
 }
 
+const Uuid& RaftInstance::uuid() const {
+  return local_peer_pb_->permanent_uuid();
+}
+
 bool RaftInstance::add_peer(const Uuid &uuid, const std::string &addr) {
   auto it = peer_map().find(uuid);
-  if (it != peer_map().end()) return false;
+  if (it != peer_map().end())
+    return false;
   PeerInfo info{uuid, addr};
   PeerPtr peer_ptr = std::make_unique<Peer>(info);
   peers_[uuid] = std::move(peer_ptr);
   return true;
 }
 
-void RaftInstance::grant(const raft::VoteRequest &request, raft::VoteReply &reply) {
+void RaftInstance::grant(const raft_pb::VoteRequest &request,
+                         raft_pb::VoteReply &reply) {
   role_ = Role::Learner;
   master_uuid_ = request.candidate_id();
   master_term_id_ = request.candidate_term_id();
@@ -47,7 +54,8 @@ void RaftInstance::grant(const raft::VoteRequest &request, raft::VoteReply &repl
   reply.set_responder_term_id(term_id_);
 }
 
-void RaftInstance::deny(const raft::VoteRequest &request, raft::VoteReply &reply) {
+void RaftInstance::deny(const raft_pb::VoteRequest &request,
+                        raft_pb::VoteReply &reply) {
   LOG(INFO) << uuid() << " denied " << master_uuid_
             << " to be leader my term id: " << term_id_
             << " candidate term id: " << request.candidate_term_id();
@@ -57,8 +65,8 @@ void RaftInstance::deny(const raft::VoteRequest &request, raft::VoteReply &reply
   reply.set_responder_term_id(term_id_);
 }
 
-grpc::Status RaftInstance::request_vote(const raft::VoteRequest &request,
-                                    raft::VoteReply &reply) {
+grpc::Status RaftInstance::request_vote(const raft_pb::VoteRequest &request,
+                                        raft_pb::VoteReply &reply) {
   assert(request.dest_id() == uuid_);
   auto term_id = request.candidate_term_id();
   // 1. if we have leader and uuid is not same as the candidate uuid, we deny
@@ -78,8 +86,8 @@ grpc::Status RaftInstance::request_vote(const raft::VoteRequest &request,
   return ::grpc::Status::OK;
 }
 
-grpc::Status Peer::request_vote(const raft::VoteRequest &request,
-                            raft::VoteReply &reply) {
+grpc::Status Peer::request_vote(const raft_pb::VoteRequest &request,
+                                raft_pb::VoteReply &reply) {
   return client_->request_vote(request, reply);
 }
 
@@ -90,10 +98,10 @@ Peer::~Peer() {}
 
 /*********Raft Service***********/
 
-class RaftServiceImpl : public RaftRpc::Service {
+class RaftServiceImpl : public raft_pb::RaftRpc::Service {
   virtual ::grpc::Status request_vote(::grpc::ServerContext *context,
-                                      const ::raft::VoteRequest *request,
-                                      ::raft::VoteReply *response){
+                                      const ::raft_pb::VoteRequest *request,
+                                      ::raft_pb::VoteReply *response) {
     return server_->raft_instance()->request_vote(*request, *response);
   }
 
@@ -103,12 +111,14 @@ public:
   RaftServiceImpl(RaftRpcServer *server) : server_(server) {}
 };
 
-RaftService::RaftService(RaftRpcServer* server) : impl_(new RaftServiceImpl{server}) {}
+RaftService::RaftService(RaftRpcServer *server)
+    : impl_(new RaftServiceImpl{server}) {}
 RaftService::~RaftService() { delete impl_; }
 /*********Raft Service***********/
 
 /*********Raft Server***********/
-RaftRpcServer::RaftRpcServer(RaftInstance *instance, const std::string &listen_addr)
+RaftRpcServer::RaftRpcServer(RaftInstance *instance,
+                             const std::string &listen_addr)
     : service_(this), server_{nullptr}, listen_addr_(listen_addr),
       uid_(instance->uuid()), raft_instance_(instance) {}
 
@@ -122,26 +132,22 @@ void RaftRpcServer::start() {
   server_ = std::move(builder.BuildAndStart());
 }
 
-void RaftRpcServer::wait() {
-  server_->Wait();
-}
+void RaftRpcServer::wait() { server_->Wait(); }
 
-void RaftRpcServer::shutdown() {
-  server_->Shutdown();
-}
+void RaftRpcServer::shutdown() { server_->Shutdown(); }
 /*********Raft Server***********/
 
 /**********Raft Client*********/
 class RaftStubImpl : public IRaftProtocol {
-  std::unique_ptr<RaftRpc::Stub> stub_;
+  std::unique_ptr<raft_pb::RaftRpc::Stub> stub_;
 
 public:
   RaftStubImpl(const std::string &addr)
-      : stub_(RaftRpc::NewStub(::grpc::CreateChannel(
+      : stub_(raft_pb::RaftRpc::NewStub(::grpc::CreateChannel(
             addr, ::grpc::InsecureChannelCredentials()))) {}
 
-  inline virtual ::grpc::Status request_vote(const raft::VoteRequest &request,
-                                             raft::VoteReply &reply) {
+  inline virtual ::grpc::Status
+  request_vote(const raft_pb::VoteRequest &request, raft_pb::VoteReply &reply) {
     ::grpc::ClientContext context;
     return stub_->request_vote(&context, request, &reply);
   }
@@ -149,12 +155,14 @@ public:
 
 RaftRpcClient::RaftRpcClient(const std::string &addr) : stub_(new Stub(addr)) {}
 
-::grpc::Status RaftRpcClient::Stub::request_vote(const raft::VoteRequest &request,
-    raft::VoteReply &reply) {
+::grpc::Status
+RaftRpcClient::Stub::request_vote(const raft_pb::VoteRequest &request,
+                                  raft_pb::VoteReply &reply) {
   return stub_->request_vote(request, reply);
 }
 
-grpc::Status RaftRpcClient::request_vote(const raft::VoteRequest& request, VoteReply& reply) {
+grpc::Status RaftRpcClient::request_vote(const raft_pb::VoteRequest &request,
+                                         raft_pb::VoteReply &reply) {
   return this->stub_->request_vote(request, reply);
 }
 
@@ -185,12 +193,13 @@ LeaderElectionResult LeaderElection::elect() {
 
   // grant self
   res.grant(ins->uuid());
-  if (res.decided()) return res;
+  if (res.decided())
+    return res;
 
   // start to request_vote sync
-  for (auto& peer : ins->peer_map()) {
-    VoteRequest req;
-    VoteReply reply;
+  for (auto &peer : ins->peer_map()) {
+    raft_pb::VoteRequest req;
+    raft_pb::VoteReply reply;
     req.set_candidate_id(ins->uuid());
     req.set_candidate_term_id(ins->term_id());
     req.set_dest_id(peer.first);
@@ -203,11 +212,11 @@ LeaderElectionResult LeaderElection::elect() {
 }
 
 void LeaderElection::handle_reply(::grpc::Status rpc_status,
-                                  const VoteReply &reply,
+                                  const raft_pb::VoteReply &reply,
                                   LeaderElectionResult &res) {
-  LOG(INFO) << "handle reply from: [" << reply.responder_uuid() << "] rpc_status: ["
-            << rpc_status.error_message() << "] reply: [" << reply.DebugString()
-            << "]";
+  LOG(INFO) << "handle reply from: [" << reply.responder_uuid()
+            << "] rpc_status: [" << rpc_status.error_message() << "] reply: ["
+            << reply.DebugString() << "]";
   auto ins = instance_.lock();
   if (!ins) {
     LOG(ERROR) << "instance has been deleted...";
@@ -231,9 +240,7 @@ void LeaderElection::handle_reply(::grpc::Status rpc_status,
   }
 }
 
-bool LeaderElectionResult::decided() const {
-  return granted() || denied();
-}
+bool LeaderElectionResult::decided() const { return granted() || denied(); }
 bool LeaderElectionResult::granted() const {
   return granted_peers_.size() >= majority_num();
 }
