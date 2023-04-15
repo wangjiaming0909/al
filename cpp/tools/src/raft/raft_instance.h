@@ -15,7 +15,13 @@ class VoteReply;
 class RaftMetadata;
 class RaftRpc;
 class RaftPeerConfig;
+class RaftConfig;
 } // namespace raft_pb
+namespace google {
+namespace protobuf {
+class Message;
+}
+} // namespace google
 
 namespace raft {
 
@@ -87,6 +93,7 @@ struct PeerInfo {
 class Peer : public IRaftProtocol {
   PeerInfo info_;
   std::unique_ptr<RaftRpcClient> client_;
+  std::unique_ptr<raft_pb::RaftPeerConfig> local_peer_conf_;
 
 public:
   Peer(const PeerInfo &info);
@@ -95,15 +102,49 @@ public:
                                     raft_pb::VoteReply &reply);
   const Uuid &uuid() const { return info_.id_; }
   const std::string &addr() const { return info_.addr_; }
+
+  grpc::Status signal_request();
 };
+
 using PeerPtr = std::unique_ptr<Peer>;
 using PeerMap = std::unordered_map<Uuid, PeerPtr>;
+
+class PeerManager {
+  Uuid local_uuid_;
+  PeerMap peers_;
+
+public:
+  PeerManager(const Uuid& local_uuid);
+  void signal_request();
+  /// @brief update peers, create new peers, add into peers_
+  void update_peers(const PeerMap &peers);
+};
+
+grpc::Status write_pb_to_file(const std::string &path,
+                              const google::protobuf::Message &msg);
+
+grpc::Status read_pb_from_file(const std::string &path,
+                               google::protobuf::Message *msg);
 
 class RaftMetadata {
   Uuid leader_uuid_;
   Role active_role_;
   std::unique_ptr<raft_pb::RaftMetadata> meta_pb_;
+
+public:
+  RaftMetadata(const Uuid &local_uuid);
+  static grpc::Status create(const Uuid &local_uuid,
+                             const raft_pb::RaftConfig &config,
+                             int64_t current_term,
+                             std::unique_ptr<RaftMetadata> meta_out);
+  static grpc::Status load(const Uuid &local_uuid,
+                           std::unique_ptr<RaftMetadata> meta_out);
+
+  void set_commited_config(const raft_pb::RaftConfig& config);
+  void set_current_term(int64_t term);
+  void flush();
 };
+
 
 class RaftInstance : public IRaftProtocol {
   Uuid uuid_;
