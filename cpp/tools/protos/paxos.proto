@@ -1,0 +1,5 @@
+syntax = "proto3";
+
+option objc_class_prefix = "PAXOS";
+
+package paxos_pb;

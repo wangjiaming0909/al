@@ -26,7 +26,7 @@ bool RaftInstance::add_peer(PeerPtr peer) {
 }
 
 const Uuid& RaftInstance::uuid() const {
-  return local_peer_pb_->permanent_uuid();
+  return uuid_;
 }
 
 bool RaftInstance::add_peer(const Uuid &uuid, const std::string &addr) {

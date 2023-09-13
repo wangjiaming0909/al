@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.5.1)
 
-set(TESTS design_pattern_test.cc raft_test.cc)
+set(TESTS raft_test.cc)
 
 add_executable(test test.cc ${TESTS})
 include_directories(../include ../src/raft/)

@@ -12,7 +12,7 @@ TEST(raft, example) {
 }
 
 ThreadPool& get_thread_pool() {
-  static ThreadPool pool{2};
+  static ThreadPool pool{3};
   return pool;
 }
 

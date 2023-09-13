@@ -12,3 +12,4 @@ add_subdirectory(test)
 
 add_subdirectory(src/helloworld)
 add_subdirectory(src/raft)
+add_subdirectory(src/paxos)

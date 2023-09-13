@@ -83,3 +83,4 @@ endmacro(build_proto_lib)
 
 build_proto_lib("./protos/helloworld.proto")
 build_proto_lib("./protos/raft.proto")
+build_proto_lib("./protos/paxos.proto")
