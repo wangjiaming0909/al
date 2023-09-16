@@ -1,10 +1,11 @@
 #!/bin/bash
 
 
+mkdir -p build
 
 cd build
 
-cmake -DGRPC_AS_SUBMODULE=1 \
+/usr/local/bin/cmake -DGRPC_AS_SUBMODULE=1 \
   -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
   -DCMAKE_BUILD_TYPE=DEBUG .. \
   && make -j12 \

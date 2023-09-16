@@ -1,5 +1,7 @@
 #include "raft_instance.h"
 #include "raft.grpc.pb.h"
+#include <event2/event.h>
+#include <event2/bufferevent.h>
 #include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/server_builder.h>
@@ -246,6 +248,94 @@ bool LeaderElectionResult::granted() const {
 }
 bool LeaderElectionResult::denied() const {
   return (denied_peers_.size() + err_peers_.size()) >= majority_num();
+}
+
+EventTimerImpl::EventTimerImpl(Reactor *reactor) : TimerImpl(reactor) {}
+
+int EventTimerImpl::start(Period period, TimerCallBack cb) {
+  /*
+  if (!base_)
+    return -1;
+  this->cb_ = cb;
+
+  struct TimerCbCtx {
+    std::weak_ptr<EventTimerImpl> impl;
+  };
+
+  auto *ctx = new TimerCbCtx{};
+  if (!ctx)
+    return -1;
+  ctx->impl = shared_from_this();
+
+  auto te_cb = [](int, short int, void *ctx) {
+    TimerCbCtx *c = (TimerCbCtx *)ctx;
+    auto timer = c->impl;
+    auto impl = timer.lock();
+    if (impl)
+      impl->cb_();
+    delete c;
+  };
+
+  e_ = evtimer_new(base_, te_cb, ctx);
+  if (!e_)
+    return -1;
+
+  struct timeval t;
+  t.tv_usec = period.count() * 1000;
+  evtimer_add(e_, &t);
+  */
+
+  return 0;
+}
+
+int EventTimerImpl::snooze(Period period) {
+
+}
+
+int EventTimerImpl::stop() {
+
+}
+
+EventReactorImpl::EventReactorImpl() : base_(event_base_new()) {}
+
+EventReactorImpl::~EventReactorImpl() {
+  if (base_)
+    event_base_free(base_);
+}
+
+int EventReactorImpl::register_event(int fd, IReactor::Event e, int opts, CallBack cb) {
+  switch (e) {
+  case IReactor::Event::READ: {
+    auto *be = bufferevent_socket_new(base_, fd, opts);
+    if (!be) return -1;
+    return bufferevent_enable(be, EV_READ);
+    break;
+  }
+  case IReactor::Event::WRITE: {
+    auto *be = bufferevent_socket_new(base_, fd, opts);
+    if (!be) return -1;
+    return bufferevent_enable(be, EV_WRITE);
+    break;
+  }
+  case IReactor::Event::TIMEOUT: {
+    struct Ctx {
+      CallBack cb;
+    };
+    Ctx* c = new Ctx();
+    c->cb = cb;
+    auto te_cb = [](int, short int, void *ctx) {
+      ((Ctx *)ctx)->cb();
+      delete (Ctx*)ctx;
+    };
+    auto *e = evtimer_new(base_, te_cb, c);
+    break;
+  }
+  default:
+    break;
+  }
+}
+int EventReactorImpl::unregister_event(int fd, IReactor::Event e) {
+
 }
 
 } // namespace raft

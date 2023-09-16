@@ -1,9 +1,12 @@
 #pragma once
+#include <chrono>
+#include <functional>
 #include <grpcpp/support/status.h>
 #include <memory>
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
+#include <boost/noncopyable.hpp>
 
 namespace grpc {
 class ChannelInterface;
@@ -22,6 +25,8 @@ namespace protobuf {
 class Message;
 }
 } // namespace google
+struct event_base;
+struct event;
 
 namespace raft {
 
@@ -187,8 +192,88 @@ public:
   void shtudown_server() { return rpc_server_->shutdown(); }
 };
 
-class Timer {
+using Period = std::chrono::milliseconds;
+using TimerCallBack = std::function<void(void)>;
+using CallBack = TimerCallBack;
 
+struct IReactor {
+  enum class Event {
+    READ, WRITE, TIMEOUT
+  };
+  IReactor() = default;
+  virtual ~IReactor() = default;
+  virtual int runSync() = 0;
+  virtual int runAsync() = 0;
+  virtual int stop() = 0;
+  virtual int register_event(int fd, Event e, int opts, CallBack) = 0;
+  virtual int unregister_event(int fd, Event) = 0;
+};
+
+using ReactorImpl = IReactor;
+
+struct EventReactorImpl : public ReactorImpl {
+  EventReactorImpl();
+  ~EventReactorImpl();
+  virtual int runSync() override;
+  virtual int runAsync() override;
+  virtual int stop() override;
+  virtual int register_event(int fd, Event, int opts, CallBack) override;
+  virtual int unregister_event(int fd, Event) override;
+
+private:
+  event_base* base_;
+};
+
+struct Reactor : public IReactor {
+  Reactor(ReactorImpl* impl) : impl_(impl) {}
+
+  ReactorImpl* impl_;
+};
+
+struct TimerImpl {
+  TimerImpl(Reactor* reactor) : reactor_(reactor) {}
+  virtual ~TimerImpl() = default;
+  virtual int start(Period period, TimerCallBack cb) = 0;
+  virtual int snooze(Period period) = 0;
+  virtual int stop() = 0;
+
+protected:
+  TimerCallBack cb_;
+  //TODO if needed, use unique_ptr
+  Reactor* reactor_;
+};
+
+struct EventTimerImpl : public TimerImpl, public std::enable_shared_from_this<EventTimerImpl> {
+  EventTimerImpl(Reactor* rector);
+  virtual int start(Period period, TimerCallBack cb) override;
+  virtual int snooze(Period period) override;
+  virtual int stop() override;
+
+  private:
+};
+
+class Timer : boost::noncopyable{
+public:
+  class Options {
+    Options() : impl(0) {}
+    ~Options() {}
+    TimerImpl* impl;
+  };
+
+  static std::shared_ptr<Timer> create(const Options &opts, TimerCallBack cb,
+                                       Period period);
+
+  Timer(Reactor* reactor, const Options &opts, TimerCallBack cb, Period period);
+  ~Timer();
+  void start(Period period);
+  void snooze(Period period);
+  void stop();
+
+private:
+  TimerCallBack cb_;
+  Period period_;
+  Options opts_;
+  std::unique_ptr<TimerImpl> impl_;
 };
 
 class LeaderElection;
