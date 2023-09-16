@@ -4,7 +4,7 @@
 #include <grpcpp/server_builder.h>
 #include <gtest/gtest.h>
 #include <memory>
-#include <raft_instance.h>
+#include "raft/raft_instance.h"
 #include <thread_pool.h>
 
 TEST(raft, example) {
@@ -77,4 +77,3 @@ TEST(raft, instance) {
   instance2->shtudown_server();
   instance3->shtudown_server();
 }
-
