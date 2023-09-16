@@ -8,7 +8,11 @@ add_library(raft
   ${HDRS}
   ${SOURCES})
 
+include_directories(${PROJECT_BINARY_DIR}/deps/libevent/include)
+include_directories(${PROJECT_SOURCE_DIR}/deps/libevent/include)
+
 target_link_libraries(raft
+  event
   raft_grpc_proto
   glog
   ${_REFLECTION}

@@ -1,4 +1,5 @@
 #pragma once
+#include <boost/noncopyable.hpp>
 #include <chrono>
 #include <functional>
 #include <grpcpp/support/status.h>
@@ -6,7 +7,6 @@
 #include <string>
 #include <unordered_map>
 #include <unordered_set>
-#include <boost/noncopyable.hpp>
 
 namespace grpc {
 class ChannelInterface;
