@@ -11,4 +11,4 @@ add_library(reactor
 include_directories(${PROJECT_BINARY_DIR}/deps/libevent/include)
 include_directories(${PROJECT_SOURCE_DIR}/deps/libevent/include)
 
-target_link_libraries(reactor event glog)
+target_link_libraries(reactor event glog event_pthreads)

@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <glog/logging.h>
 #include <netinet/in.h>
+#include <thread>
 
 TEST(reactor, normal) {
   using namespace reactor;
@@ -13,10 +14,10 @@ TEST(reactor, normal) {
   Reactor r{impl};
   ListenEventOptions leo;
 
-  auto cb = []() {
+  auto cb = [](int, void*) {
     LOG(INFO) << "normal cb";
   };
-  auto err_cb = []() {
+  auto err_cb = [](void*) {
     LOG(ERROR) << "err cb";
   };
 
@@ -30,4 +31,11 @@ TEST(reactor, normal) {
 
   int fd = r.register_event(0, &leo);
   r.unregister_event(fd, Event::LISTEN);
+  auto run = [&]() { r.runSync(); };
+  std::thread t{run};
+
+
+
+  r.stop();
+  t.join();
 }
