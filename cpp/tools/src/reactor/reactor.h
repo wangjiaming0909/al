@@ -13,28 +13,35 @@ struct sockaddr;
 namespace reactor {
 
 using Period = std::chrono::milliseconds;
-using TimerCallBack = std::function<void(void)>;
-using CallBack = std::function<void(void*)>;
-using AcceptCb = std::function<void(int fd, void*)>;
-using AcceptErrCb = CallBack;
-using ConnectEventCb = std::function<void(int what, void*)>;
-using ReadCb = std::function<void(const char*, size_t len, void*)>;
-using WriteCb = std::function<void(char*, size_t len, void*)>;
 
 struct EventCtx;
 struct ListenEventCtx;
 struct ConnectEventCtx;
+struct ReadEventCtx;
+struct WriteEventCtx;
+
+class EventHandler {
+public:
+  EventHandler() = default;
+  virtual ~EventHandler() = default;
+
+  virtual void handle_accept(int fd) = 0;
+  virtual void handle_event(int fd, int what) = 0;
+  virtual void handle_read(void *buffer, size_t len) = 0;
+  virtual void handle_write(void *buffer, size_t) = 0;
+  virtual void handle_timeout() = 0;
+};
 
 enum class Event { READ = 1, WRITE, TIMEOUT, LISTEN, CONNECT };
 struct EventOptions {
-  EventOptions(Event e) : e_type(e), user_data(0) {}
+  EventOptions(Event e) : e_type(e), handler() {}
   EventOptions& operator=(const EventOptions& eos) {
     e_type = eos.e_type;
-    user_data = eos.user_data;
+    handler = eos.handler;
     return *this;
   }
   Event e_type;
-  void *user_data;
+  std::weak_ptr<EventHandler> handler;
 };
 
 struct ListenEventOptions : public EventOptions{
@@ -46,13 +53,9 @@ struct ListenEventOptions : public EventOptions{
     backlog = leos.backlog;
     sa = leos.sa;
     socklen = leos.socklen;
-    read_cb = leos.read_cb;
-    event_cb = leos.event_cb;
     return *this;
   }
   unsigned int flags; // listen fd opts
-  AcceptCb read_cb;
-  AcceptErrCb event_cb;
   int backlog;
   sockaddr sa;
   int socklen;
@@ -65,19 +68,23 @@ struct ConnectEventOptions : public EventOptions {
     sa = ceos.sa;
     socklen = ceos.socklen;
     flags = ceos.flags;
-    event_cb = ceos.event_cb;
-    read_cb = ceos.read_cb;
-    write_cb = ceos.write_cb;
     return *this;
   }
 
-  ConnectEventCb event_cb;
-  ReadCb read_cb;
-  WriteCb write_cb;
   sockaddr sa;
   int socklen;
   int flags;
 };
+
+struct ReadEventOptions : public EventOptions {
+  ReadEventOptions() : EventOptions(Event::READ) {}
+  ReadEventOptions& operator=(const ReadEventOptions& reos) {
+    EventOptions::operator=(reos);
+    return *this;
+  }
+};
+
+using WriteEventOptions = EventOptions;
 
 struct IReactor {
   IReactor() = default;
@@ -92,6 +99,7 @@ protected:
 };
 
 struct ReactorImpl {
+  virtual ~ReactorImpl() = default;
   virtual int runSync() = 0;
   virtual int runAsync() = 0;
   virtual int stop() = 0;
@@ -106,23 +114,22 @@ struct ReactorImpl {
 
 struct EventReactorImpl : public ReactorImpl {
   EventReactorImpl();
-  ~EventReactorImpl();
+  virtual ~EventReactorImpl();
   virtual int runSync() override;
   virtual int runAsync() override;
   virtual int stop() override;
 
-  static void new_listen_event_opt(ListenEventOptions &leos, AcceptCb cb,
-                                   AcceptErrCb err_cb, int listen_flags,
-                                   int backlog, const sockaddr *sa, int socklen);
+  static void new_listen_event_opt(ListenEventOptions &leos,
+                                   std::shared_ptr<EventHandler> handler,
+                                   int listen_flags, int backlog,
+                                   const sockaddr *sa, int socklen);
+  virtual ListenEventCtx *
+  register_listen_event(int fd, const ListenEventOptions *eos) override;
+  virtual int unregister_listen_event(int, ListenEventCtx *ctx) override;
 
   static void new_connect_event_opt(ConnectEventOptions &ceos,
-                                    const sockaddr *sa, int socklen, int flags,
-                                    CallBack rd_cb, CallBack wr_cb,
-                                    CallBack e_cb);
-
-  virtual ListenEventCtx* register_listen_event(int fd, const ListenEventOptions* eos) override;
-  virtual int unregister_listen_event(int, ListenEventCtx* ctx) override;
-
+                                    std::shared_ptr<EventHandler> handler,
+                                    const sockaddr *sa, int socklen, int flags);
   virtual ConnectEventCtx *
   register_connect_event(int, const ConnectEventOptions *) override;
   virtual int unregister_connect_event(int, ConnectEventCtx *ctx) override;
@@ -134,6 +141,7 @@ private:
 class EventMap;
 struct Reactor : public IReactor {
   Reactor(ReactorImpl* impl);
+  ~Reactor();
   virtual int runSync() override;
   virtual int runAsync() override;
   virtual int stop() override;
@@ -141,26 +149,25 @@ struct Reactor : public IReactor {
   virtual int unregister_event(int fd, Event) override;
 
 private:
-  ReactorImpl* impl_;
   EventMap* em_;
+  ReactorImpl* impl_;
 };
 
 struct TimerImpl {
   TimerImpl(Reactor* reactor) : reactor_(reactor) {}
   virtual ~TimerImpl() = default;
-  virtual int start(Period period, TimerCallBack cb) = 0;
+  virtual int start(Period period) = 0;
   virtual int snooze(Period period) = 0;
   virtual int stop() = 0;
 
 protected:
-  TimerCallBack cb_;
   //TODO if needed, use unique_ptr
   Reactor* reactor_;
 };
 
 struct EventTimerImpl : public TimerImpl, public std::enable_shared_from_this<EventTimerImpl> {
   EventTimerImpl(Reactor* rector);
-  virtual int start(Period period, TimerCallBack cb) override;
+  virtual int start(Period period) override;
   virtual int snooze(Period period) override;
   virtual int stop() override;
 
@@ -175,17 +182,15 @@ public:
     TimerImpl* impl;
   };
 
-  static std::shared_ptr<Timer> create(const Options &opts, TimerCallBack cb,
-                                       Period period);
+  static std::shared_ptr<Timer> create(const Options &opts, Period period);
 
-  Timer(Reactor* reactor, const Options &opts, TimerCallBack cb, Period period);
+  Timer(Reactor* reactor, const Options &opts, Period period);
   ~Timer();
   void start(Period period);
   void snooze(Period period);
   void stop();
 
 private:
-  TimerCallBack cb_;
   Period period_;
   Options opts_;
   std::unique_ptr<TimerImpl> impl_;
