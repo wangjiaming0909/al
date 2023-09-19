@@ -1,11 +1,12 @@
-#include <arpa/inet.h>
-#include <gtest/gtest.h>
 #include "event2/bufferevent.h"
 #include "reactor/reactor.h"
+#include "reactor/event_reactor_impl.h"
+#include <arpa/inet.h>
+#include <glog/logging.h>
+#include <gtest/gtest.h>
+#include <netinet/in.h>
 #include <sys/socket.h>
 #include <sys/types.h>
-#include <glog/logging.h>
-#include <netinet/in.h>
 #include <thread>
 
 struct DefaultEventHandler : public reactor::EventHandler {
@@ -39,7 +40,7 @@ TEST(reactor, normal) {
 
   EventReactorImpl* impl = new EventReactorImpl{};
   Reactor r{impl};
-  ListenEventOptions leo;
+  EventOptions *leo;
 
   auto cb = [](int, void*) {
     LOG(INFO) << "normal cb";
@@ -55,19 +56,19 @@ TEST(reactor, normal) {
 
   std::shared_ptr<EventHandler> handler{new DefaultEventHandler{&r}};
 
-  EventReactorImpl::new_listen_event_opt(leo, handler, 0, 10, (sockaddr *)&sa,
-                                         sizeof(sockaddr_in));
+  leo = EventReactorImpl::new_listen_event_opt(handler, 0, 10, (sockaddr *)&sa,
+                                               sizeof(sockaddr_in));
 
-  int fd = r.register_event(0, &leo);
+  int fd = r.register_event(0, leo);
   r.unregister_event(fd, Event::LISTEN);
   auto run = [&]() { r.runSync(); };
   std::thread t{run};
 
-  ConnectEventOptions ceo;
-  EventReactorImpl::new_connect_event_opt(ceo, handler, (sockaddr *)&sa,
-                                          sizeof(sockaddr_in), BEV_OPT_CLOSE_ON_FREE);
+  EventOptions *ceo;
+  ceo = EventReactorImpl::new_connect_event_opt(
+      handler, (sockaddr *)&sa, sizeof(sockaddr_in), BEV_OPT_CLOSE_ON_FREE);
 
-  r.register_event(0, &ceo);
+  r.register_event(0, ceo);
 
   using namespace std::chrono_literals;
   std::this_thread::sleep_for(2s);
