@@ -173,20 +173,20 @@ EventReactorImpl::register_connect_event(int, const ConnectEventOptions *ceos) {
   c->fd = bufferevent_getfd(be);
   c->ec = be;
   auto read_cb = [](struct bufferevent *bev, void *ctx) {
-    ConnectEventCtx *c = (ConnectEventCtx *)ctx;
+    EventCtx *c = (EventCtx *)ctx;
     evbuffer *buf = bufferevent_get_input(bev);
     auto handler = c->eos->handler.lock();
     if (handler)
       handler->handle_read(buf, evbuffer_get_length(buf));
   };
   auto write_cb = [](struct bufferevent *bev, void *ctx) {
-    ConnectEventCtx *c = (ConnectEventCtx *)ctx;
+    EventCtx *c = (EventCtx *)ctx;
     auto handler = c->eos->handler.lock();
     if (handler)
       handler->handle_write(bufferevent_get_output(bev), 0);
   };
   auto e_cb = [](struct bufferevent *bev, short what, void *ctx) {
-    ConnectEventCtx *c = (ConnectEventCtx *)ctx;
+    EventCtx *c = (EventCtx *)ctx;
     auto handler = c->eos->handler.lock();
     if (handler)
       handler->handle_event(c->fd, what);
@@ -210,7 +210,17 @@ int EventReactorImpl::unregister_connect_event(int, ConnectEventCtx *ctx) {
 }
 
 ReadEventCtx *EventReactorImpl::register_read_event(int,
-                                                    const ReadEventOptions *) {}
+                                                    const ReadEventOptions *) {
+
+}
+
+int EventReactorImpl::unregister_read_event(int, ReadEventCtx*) {
+
+}
+
+bufferevent* EventReactorImpl::create_bufferevent() {
+
+}
 
 EventOptions *
 EventReactorImpl::new_listen_event_opt(std::shared_ptr<EventHandler> handler,
@@ -244,6 +254,26 @@ EventReactorImpl::new_connect_event_opt(std::shared_ptr<EventHandler> handler,
 }
 
 EventOptions *
-EventReactorImpl::new_read_event_opt(std::shared_ptr<EventHandler> handler) {}
+EventReactorImpl::new_read_event_opt(std::shared_ptr<EventHandler> handler) {
+  ReadEventOptions* reos = new ReadEventOptions();
+  if (reos) {
+    reos->e_type = Event::READ;
+    reos->handler = handler;
+  }
+  return reos;
+}
+
+EventOptions*EventReactorImpl::new_write_event_opt(std::shared_ptr<EventHandler> handler) {
+  WriteEventOptions* weos = new WriteEventOptions();
+  if (weos) {
+    weos->e_type = Event::WRITE;
+    weos->handler = handler;
+  }
+  return weos;
+}
+
+EventOptions* EventReactorImpl::new_timeout_event_opt(std::shared_ptr<EventHandler> handler) {
+  //TimeoutEventOptions* teos = new TimeoutEventOptions();
+}
 
 } // namespace reactor

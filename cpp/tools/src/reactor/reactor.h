@@ -3,7 +3,6 @@
 #include <chrono>
 #include <functional>
 #include <memory>
-#include <sys/socket.h>
 
 namespace reactor {
 
@@ -35,7 +34,13 @@ public:
   virtual void handle_timeout() = 0;
 };
 
-enum class Event { READ = 1, WRITE, TIMEOUT, LISTEN, CONNECT };
+enum class Event {
+  TIMEOUT = 0x01,
+  READ = 0x02,
+  WRITE = 0x04,
+  LISTEN = 0x08,
+  CONNECT = 0x10
+};
 
 struct IReactor {
   IReactor() = default;

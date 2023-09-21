@@ -1,6 +1,7 @@
 #pragma once
 #include "reactor.h"
 #include <unordered_map>
+#include <sys/socket.h>
 
 namespace reactor {
 

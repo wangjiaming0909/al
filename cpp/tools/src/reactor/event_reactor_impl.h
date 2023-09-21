@@ -1,6 +1,9 @@
 #pragma once
 #include "reactor.h"
-#include <event2/event.h>
+
+struct bufferevent;
+struct event_base;
+struct sockaddr;
 
 namespace reactor {
 struct EventOptions;
@@ -46,8 +49,12 @@ struct EventReactorImpl : public ReactorImpl {
   virtual WriteEventCtx* register_write_event(int, const WriteEventOptions*) override;
   virtual int unregister_write_event(int, WriteEventCtx*) override;
 
+  static EventOptions* new_timeout_event_opt(std::shared_ptr<EventHandler> handler);
   virtual TimeoutEventCtx* register_timeout_event(int, const TimeoutEventOptions*) override;
   virtual int unregister_timeout_event(int, TimeoutEventCtx*) override;
+
+private:
+  bufferevent* create_bufferevent(int fd, const EventOptions& eos);
 private:
   event_base* base_;
 };
