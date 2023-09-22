@@ -5,6 +5,29 @@
 
 namespace reactor {
 
+struct ReactorImpl {
+  friend class Reactor;
+  virtual ~ReactorImpl() = default;
+  virtual int runSync() = 0;
+  virtual int runAsync() = 0;
+  virtual int stop() = 0;
+protected:
+  virtual ListenEventCtx *register_listen_event(int, const ListenEventOptions &eos) = 0;
+  virtual int unregister_listen_event(int, ListenEventCtx *ctx) = 0;
+
+  virtual ConnectEventCtx *register_connect_event(int, const ConnectEventOptions &eos) = 0;
+  virtual int unregister_connect_event(int, ConnectEventCtx &ctx) = 0;
+
+  virtual ReadEventCtx* register_read_event(int, const ReadEventOptions&) = 0;
+  virtual int unregister_read_event(int, ReadEventCtx*) = 0;
+
+  virtual WriteEventCtx* register_write_event(int, const WriteEventOptions&) = 0;
+  virtual int unregister_write_event(int, WriteEventCtx*) = 0;
+
+  virtual TimeoutEventCtx* register_timeout_event(int, const TimeoutEventOptions&) = 0;
+  virtual int unregister_timeout_event(int, TimeoutEventCtx*) = 0;
+};
+
 struct EventOptions {
   EventOptions(Event e) : e_type(e), handler() {}
   EventOptions& operator=(const EventOptions& eos) {

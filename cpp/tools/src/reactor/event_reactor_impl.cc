@@ -113,15 +113,15 @@ cb) { switch (eo->e_type) { case Event::LISTEN: { break;
 }*/
 
 ListenEventCtx *
-EventReactorImpl::register_listen_event(int, const ListenEventOptions *leos) {
+EventReactorImpl::register_listen_event(int, const ListenEventOptions &leos) {
   // using lcb = void (*)(struct evconnlistener *, evutil_socket_t, struct
   // sockaddr *, int socklen, void *);
   auto *c = new ListenEventCtx();
   if (!c)
     return nullptr;
-  *c->eos = *leos;
-  auto *ecl = evconnlistener_new_bind(base_, 0, c, leos->flags, leos->backlog,
-                                      &leos->sa, leos->socklen);
+  *c->eos = leos;
+  auto *ecl = evconnlistener_new_bind(base_, 0, c, leos.flags, leos.backlog,
+                                      &leos.sa, leos.socklen);
   if (!ecl) {
     delete c;
     LOG(ERROR) << "ev listener new failed: " << strerror(errno);
@@ -159,19 +159,76 @@ int EventReactorImpl::unregister_listen_event(int fd, ListenEventCtx *ctx) {
 }
 
 ConnectEventCtx *
-EventReactorImpl::register_connect_event(int, const ConnectEventOptions *ceos) {
-  auto *c = new ConnectEventCtx();
+EventReactorImpl::register_connect_event(int, const ConnectEventOptions &ceos) {
+  auto c = std::make_unique<ConnectEventCtx>();
   if (!c)
     return nullptr;
-
-  *c->eos = *ceos;
-  bufferevent *be = bufferevent_socket_new(base_, -1, ceos->flags);
-  if (!be) {
-    delete c;
+  bufferevent *be = create_bufferevent(-1, ceos.flags, ceos, c.get());
+  if (!be)
+    return nullptr;
+  if (-1 == bufferevent_enable(be, EV_READ)) {
+    LOG(ERROR) << "enable buffer read failed: " << strerror(errno);
+    bufferevent_free(be);
     return nullptr;
   }
+  if (0 != bufferevent_socket_connect(be, &ceos.sa, ceos.socklen)) {
+    LOG(ERROR) << "sock connect failed: " << strerror(errno);
+    bufferevent_free(be);
+    return nullptr;
+  }
+
+  *c->eos = ceos;
   c->fd = bufferevent_getfd(be);
   c->ec = be;
+  return c.release();
+}
+
+int EventReactorImpl::unregister_connect_event(int, ConnectEventCtx &ctx) {
+  bufferevent_disable((bufferevent *)ctx.ec, EV_READ);
+  bufferevent_free((bufferevent *)ctx.ec);
+  delete &ctx;
+  return 0;
+}
+
+ReadEventCtx *
+EventReactorImpl::register_read_event(int fd, const ReadEventOptions &reos) {
+  auto ctx = std::make_unique<ReadEventCtx>();
+  if (!ctx)
+    return nullptr;
+
+  auto* be = create_bufferevent(fd, 0, reos, ctx.get());
+  if (!be) return nullptr;
+
+  if (-1 == bufferevent_enable(be, EV_READ)) {
+    LOG(ERROR) << " enable buffer read failed: " << strerror(errno);
+    bufferevent_free(be);
+    return nullptr;
+  }
+
+  *ctx->eos = reos;
+  ctx->fd = fd;
+  ctx->ec = be;
+  return ctx.release();
+}
+
+int EventReactorImpl::unregister_read_event(int, ReadEventCtx*) {
+
+}
+
+WriteEventCtx* EventReactorImpl::register_write_event(int, const WriteEventOptions&) {
+
+}
+int EventReactorImpl::unregister_write_event(int, WriteEventCtx*) {
+
+}
+
+bufferevent *EventReactorImpl::create_bufferevent(int fd, int fd_flag,
+                                                  const EventOptions &eos,
+                                                  EventCtx *ctx) {
+  bufferevent *be = bufferevent_socket_new(base_, -1, fd_flag);
+  if (!be) {
+    return nullptr;
+  }
   auto read_cb = [](struct bufferevent *bev, void *ctx) {
     EventCtx *c = (EventCtx *)ctx;
     evbuffer *buf = bufferevent_get_input(bev);
@@ -191,35 +248,8 @@ EventReactorImpl::register_connect_event(int, const ConnectEventOptions *ceos) {
     if (handler)
       handler->handle_event(c->fd, what);
   };
-  bufferevent_setcb(be, read_cb, write_cb, e_cb, c);
-  bufferevent_enable(be, EV_READ);
-  if (0 != bufferevent_socket_connect(be, &ceos->sa, ceos->socklen)) {
-    LOG(ERROR) << "sock connect failed: " << strerror(errno);
-    delete c;
-    bufferevent_free(be);
-    return nullptr;
-  }
-  return c;
-}
-
-int EventReactorImpl::unregister_connect_event(int, ConnectEventCtx *ctx) {
-  bufferevent_disable((bufferevent *)ctx->ec, EV_READ);
-  bufferevent_free((bufferevent *)ctx->ec);
-  delete ctx;
-  return 0;
-}
-
-ReadEventCtx *EventReactorImpl::register_read_event(int,
-                                                    const ReadEventOptions *) {
-
-}
-
-int EventReactorImpl::unregister_read_event(int, ReadEventCtx*) {
-
-}
-
-bufferevent* EventReactorImpl::create_bufferevent() {
-
+  bufferevent_setcb(be, read_cb, write_cb, e_cb, ctx);
+  return be;
 }
 
 EventOptions *

@@ -59,7 +59,7 @@ TEST(reactor, normal) {
   leo = EventReactorImpl::new_listen_event_opt(handler, 0, 10, (sockaddr *)&sa,
                                                sizeof(sockaddr_in));
 
-  int fd = r.register_event(0, leo);
+  int fd = r.register_event(0, *leo);
   r.unregister_event(fd, Event::LISTEN);
   auto run = [&]() { r.runSync(); };
   std::thread t{run};
@@ -68,7 +68,7 @@ TEST(reactor, normal) {
   ceo = EventReactorImpl::new_connect_event_opt(
       handler, (sockaddr *)&sa, sizeof(sockaddr_in), BEV_OPT_CLOSE_ON_FREE);
 
-  r.register_event(0, ceo);
+  r.register_event(0, *ceo);
 
   using namespace std::chrono_literals;
   std::this_thread::sleep_for(2s);
