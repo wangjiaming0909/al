@@ -1,12 +1,7 @@
 #pragma once
-#include <boost/noncopyable.hpp>
-#include <chrono>
-#include <functional>
-#include <memory>
 
+#include <cstddef>
 namespace reactor {
-
-using Period = std::chrono::milliseconds;
 
 struct EventOptions;
 struct ListenEventOptions;
@@ -69,40 +64,6 @@ struct Reactor : public IReactor {
 private:
   EventMap* em_;
   ReactorImpl* impl_;
-};
-
-struct TimerImpl {
-  TimerImpl(Reactor* reactor) : reactor_(reactor) {}
-  virtual ~TimerImpl() = default;
-  virtual int start(Period period) = 0;
-  virtual int snooze(Period period) = 0;
-  virtual int stop() = 0;
-
-protected:
-  //TODO if needed, use unique_ptr
-  Reactor* reactor_;
-};
-
-class Timer : boost::noncopyable{
-public:
-  class Options {
-    Options() : impl(0) {}
-    ~Options() {}
-    TimerImpl* impl;
-  };
-
-  static std::shared_ptr<Timer> create(const Options &opts, Period period);
-
-  Timer(Reactor* reactor, const Options &opts, Period period);
-  ~Timer();
-  void start(Period period);
-  void snooze(Period period);
-  void stop();
-
-private:
-  Period period_;
-  Options opts_;
-  std::unique_ptr<TimerImpl> impl_;
 };
 
 }

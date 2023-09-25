@@ -4,6 +4,7 @@
 #include "event2/listener.h"
 #include "event2/thread.h"
 #include "reactor_impl.h"
+#include "timer.h"
 #include <glog/logging.h>
 
 namespace reactor {
@@ -30,41 +31,7 @@ struct EventConnectEventCtx : public ConnectEventCtx {
 
 EventTimerImpl::EventTimerImpl(Reactor *reactor) : TimerImpl(reactor) {}
 
-int EventTimerImpl::start(Period period) {
-  /*
-  if (!base_)
-    return -1;
-  this->cb_ = cb;
-
-  struct TimerCbCtx {
-    std::weak_ptr<EventTimerImpl> impl;
-  };
-
-  auto *ctx = new TimerCbCtx{};
-  if (!ctx)
-    return -1;
-  ctx->impl = shared_from_this();
-
-  auto te_cb = [](int, short int, void *ctx) {
-    TimerCbCtx *c = (TimerCbCtx *)ctx;
-    auto timer = c->impl;
-    auto impl = timer.lock();
-    if (impl)
-      impl->cb_();
-    delete c;
-  };
-
-  e_ = evtimer_new(base_, te_cb, ctx);
-  if (!e_)
-    return -1;
-
-  struct timeval t;
-  t.tv_usec = period.count() * 1000;
-  evtimer_add(e_, &t);
-  */
-
-  return 0;
-}
+int EventTimerImpl::start(Period period) { return 0; }
 
 int EventTimerImpl::snooze(Period period) {}
 
@@ -82,24 +49,23 @@ EventReactorImpl::~EventReactorImpl() {
     event_base_free(base_);
 }
 
-int EventReactorImpl::runSync() { return stopped ? -1 : event_base_dispatch(base_); }
+int EventReactorImpl::runSync() {
+  return stopped ? -1 : event_base_dispatch(base_);
+}
 
 int EventReactorImpl::runAsync() {}
 
 int EventReactorImpl::stop() {
   int ret = event_base_loopexit(base_, 0);
-  if (ret == 0) stopped = true;
+  if (ret == 0)
+    stopped = true;
   return ret;
 }
 
-int EventReactorImpl::brk() {
-  return event_base_loopbreak(base_);
-}
+int EventReactorImpl::brk() { return event_base_loopbreak(base_); }
 
 ListenEventCtx *
 EventReactorImpl::register_listen_event(int, const ListenEventOptions &leos) {
-  // using lcb = void (*)(struct evconnlistener *, evutil_socket_t, struct
-  // sockaddr *, int socklen, void *);
   auto *c = new ListenEventCtx();
   if (!c)
     return nullptr;
@@ -115,7 +81,7 @@ EventReactorImpl::register_listen_event(int, const ListenEventOptions &leos) {
   c->fd = evconnlistener_get_fd(ecl);
   c->ec_deleter = [](void *ec) {
     if (ec) {
-      auto *evcl = (evconnlistener*)ec;
+      auto *evcl = (evconnlistener *)ec;
       evconnlistener_disable(evcl);
       evconnlistener_free(evcl);
     }
@@ -166,9 +132,9 @@ EventReactorImpl::register_connect_event(int, const ConnectEventOptions &ceos) {
   *c->eos = ceos;
   c->fd = bufferevent_getfd(be);
   c->ec = be;
-  c->ec_deleter = [](void* ec) {
+  c->ec_deleter = [](void *ec) {
     if (ec) {
-      auto* bev = (bufferevent*)ec;
+      auto *bev = (bufferevent *)ec;
       bufferevent_disable(bev, EV_READ);
       bufferevent_free(bev);
     }
@@ -186,8 +152,9 @@ EventReactorImpl::register_read_event(int fd, const ReadEventOptions &reos) {
   if (!ctx)
     return nullptr;
 
-  auto* be = create_bufferevent(fd, 0, reos, ctx.get());
-  if (!be) return nullptr;
+  auto *be = create_bufferevent(fd, 0, reos, ctx.get());
+  if (!be)
+    return nullptr;
 
   if (-1 == bufferevent_enable(be, EV_READ)) {
     LOG(ERROR) << " enable buffer read failed: " << strerror(errno);
@@ -212,12 +179,15 @@ int EventReactorImpl::unregister_read_event(int, ReadEventCtx *ctx) {
   return 0;
 }
 
-WriteEventCtx* EventReactorImpl::register_write_event(int fd, const WriteEventOptions& weos) {
+WriteEventCtx *
+EventReactorImpl::register_write_event(int fd, const WriteEventOptions &weos) {
   auto ctx = std::make_unique<WriteEventCtx>();
-  if (!ctx) return nullptr;
+  if (!ctx)
+    return nullptr;
 
   auto *be = create_bufferevent(fd, 0, weos, ctx.get());
-  if (!be) return nullptr;
+  if (!be)
+    return nullptr;
 
   if (-1 == bufferevent_enable(be, EV_WRITE)) {
     LOG(ERROR) << "enable buffer write failed: " << strerror(errno);
@@ -228,9 +198,9 @@ WriteEventCtx* EventReactorImpl::register_write_event(int fd, const WriteEventOp
   *ctx->eos = weos;
   ctx->fd = fd;
   ctx->ec = be;
-  ctx->ec_deleter = [](void* ec) {
+  ctx->ec_deleter = [](void *ec) {
     if (ec) {
-      auto* bev = (bufferevent*)ec;
+      auto *bev = (bufferevent *)ec;
       bufferevent_disable(bev, EV_WRITE);
       bufferevent_free(bev);
     }
@@ -238,15 +208,49 @@ WriteEventCtx* EventReactorImpl::register_write_event(int fd, const WriteEventOp
   return ctx.release();
 }
 
-int EventReactorImpl::unregister_write_event(int, WriteEventCtx* ctx) {
+int EventReactorImpl::unregister_write_event(int, WriteEventCtx *ctx) {
   return 0;
 }
 
-TimeoutEventCtx* EventReactorImpl::register_timeout_event(int, const TimeoutEventOptions&) {
+TimeoutEventCtx *
+EventReactorImpl::register_timeout_event(int, const TimeoutEventOptions &teos) {
+  auto ctx = std::make_unique<TimeoutEventCtx>();
+  if (!ctx)
+    return nullptr;
 
+  auto te_cb = [](int, short int, void *ctx) {
+    auto *c = (TimeoutEventCtx *)ctx;
+    auto handler = c->eos->handler.lock();
+    if (handler) {
+      handler->handle_timeout();
+    }
+  };
+
+  auto *et = evtimer_new(base_, te_cb, ctx.get());
+  if (!et)
+    return nullptr;
+  struct timeval t;
+  t.tv_usec = get_usecs(teos.timeout);
+  if (0 != evtimer_add(et, &t)) {
+    LOG(ERROR) << "add timer event failed: " << strerror(errno);
+    return nullptr;
+  }
+
+  ctx->ec = et;
+  *ctx->eos = teos;
+  ctx->fd = event_get_fd(et);
+  ctx->ec_deleter = [](void *ec) {
+    if (ec) {
+      auto *et = (event *)ec;
+      evtimer_del(et);
+      event_free(et);
+    }
+  };
+
+  return ctx.release();
 }
 
-int EventReactorImpl::unregister_timeout_event(int, TimeoutEventCtx*) {
+int EventReactorImpl::unregister_timeout_event(int, TimeoutEventCtx *ctx) {
   return 0;
 }
 
@@ -263,7 +267,7 @@ bufferevent *EventReactorImpl::create_bufferevent(int fd, int fd_flag,
     auto len = evbuffer_get_length(buf);
     auto handler = c->eos->handler.lock();
     if (handler && len > 0) {
-      auto* p = evbuffer_pullup(buf, len);
+      auto *p = evbuffer_pullup(buf, len);
       handler->handle_read(p, len);
       evbuffer_drain(buf, len);
     }
@@ -272,7 +276,7 @@ bufferevent *EventReactorImpl::create_bufferevent(int fd, int fd_flag,
     EventCtx *c = (EventCtx *)ctx;
     auto handler = c->eos->handler.lock();
     if (handler) {
-      evbuffer* buf = bufferevent_get_output(bev);
+      evbuffer *buf = bufferevent_get_output(bev);
       const char *data = nullptr;
       size_t len = 0;
       handler->handle_write(data, &len);
@@ -324,7 +328,7 @@ EventReactorImpl::new_connect_event_opt(std::shared_ptr<EventHandler> handler,
 
 EventOptions *
 EventReactorImpl::new_read_event_opt(std::shared_ptr<EventHandler> handler) {
-  ReadEventOptions* reos = new ReadEventOptions();
+  ReadEventOptions *reos = new ReadEventOptions();
   if (reos) {
     reos->e_type = Event::READ;
     reos->handler = handler;
@@ -332,8 +336,9 @@ EventReactorImpl::new_read_event_opt(std::shared_ptr<EventHandler> handler) {
   return reos;
 }
 
-EventOptions*EventReactorImpl::new_write_event_opt(std::shared_ptr<EventHandler> handler) {
-  WriteEventOptions* weos = new WriteEventOptions();
+EventOptions *
+EventReactorImpl::new_write_event_opt(std::shared_ptr<EventHandler> handler) {
+  WriteEventOptions *weos = new WriteEventOptions();
   if (weos) {
     weos->e_type = Event::WRITE;
     weos->handler = handler;
@@ -341,8 +346,9 @@ EventOptions*EventReactorImpl::new_write_event_opt(std::shared_ptr<EventHandler>
   return weos;
 }
 
-EventOptions* EventReactorImpl::new_timeout_event_opt(std::shared_ptr<EventHandler> handler) {
-  //TimeoutEventOptions* teos = new TimeoutEventOptions();
+EventOptions *
+EventReactorImpl::new_timeout_event_opt(std::shared_ptr<EventHandler> handler) {
+  // TimeoutEventOptions* teos = new TimeoutEventOptions();
 }
 
 } // namespace reactor

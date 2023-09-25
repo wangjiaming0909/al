@@ -1,7 +1,10 @@
 #pragma once
 #include "reactor.h"
-#include <unordered_map>
+#include "timer.h"
+#include <functional>
+#include <memory>
 #include <sys/socket.h>
+#include <unordered_map>
 
 namespace reactor {
 
@@ -84,6 +87,17 @@ struct WriteEventOptions : public EventOptions {
   WriteEventOptions() : EventOptions(Event::WRITE) {}
 };
 
+struct TimeoutEventOptions : public EventOptions {
+  TimeoutEventOptions() : EventOptions(Event::TIMEOUT) {}
+  TimeoutEventOptions& operator=(const TimeoutEventOptions& teos) {
+    EventOptions::operator=(teos);
+    timeout = teos.timeout;
+    return *this;
+  }
+
+  Period timeout;
+};
+
 struct EventCtx {
   EventCtx() : eos(nullptr) {}
   virtual ~EventCtx() {
@@ -134,6 +148,23 @@ struct WriteEventCtx : public EventCtx {
   WriteEventCtx() : EventCtx() {
     eos = new WriteEventOptions();
   }
+};
+
+struct TimeoutEventCtx : public EventCtx {
+  TimeoutEventCtx() : EventCtx() {
+    eos = new TimeoutEventOptions();
+  }
+};
+
+struct TimerImpl {
+  TimerImpl(Reactor* reactor) : reactor_(reactor) {}
+  virtual ~TimerImpl() = default;
+  virtual int start(Period period) = 0;
+  virtual int snooze(Period period) = 0;
+  virtual int stop() = 0;
+
+protected:
+  Reactor* reactor_;
 };
 
 }
