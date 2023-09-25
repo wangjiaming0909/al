@@ -11,6 +11,7 @@ struct ReactorImpl {
   virtual int runSync() = 0;
   virtual int runAsync() = 0;
   virtual int stop() = 0;
+  virtual int brk() = 0;
 protected:
   virtual ListenEventCtx *register_listen_event(int, const ListenEventOptions &eos) = 0;
   virtual int unregister_listen_event(int, ListenEventCtx *ctx) = 0;
@@ -87,7 +88,7 @@ struct EventCtx {
   EventCtx() : eos(nullptr) {}
   virtual ~EventCtx() {
     delete eos;
-    ec_deleter(ec);
+    if (ec_deleter) ec_deleter(ec);
     ec = nullptr;
   }
   EventOptions* eos;

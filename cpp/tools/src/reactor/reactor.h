@@ -32,7 +32,7 @@ public:
   virtual void handle_accept(int fd) = 0;
   virtual void handle_event(int fd, int what) = 0;
   virtual void handle_read(void *buffer, size_t len) = 0;
-  virtual void handle_write(void *buffer, size_t) = 0;
+  virtual void handle_write(const char *&bp, size_t*) = 0;
   virtual void handle_timeout() = 0;
 };
 
@@ -50,6 +50,7 @@ struct IReactor {
   virtual int runSync() = 0;
   virtual int runAsync() = 0;
   virtual int stop() = 0;
+  virtual int brk() = 0;
   virtual int register_event(int, const EventOptions &) = 0;
   virtual int unregister_event(int fd, Event) = 0;
 };
@@ -61,6 +62,7 @@ struct Reactor : public IReactor {
   virtual int runSync() override;
   virtual int runAsync() override;
   virtual int stop() override;
+  virtual int brk() override;
   virtual int register_event(int fd, const EventOptions& eos) override;
   virtual int unregister_event(int fd, Event) override;
 

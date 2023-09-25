@@ -27,6 +27,7 @@ struct EventReactorImpl : public ReactorImpl {
   virtual int runSync() override;
   virtual int runAsync() override;
   virtual int stop() override;
+  virtual int brk() override;
 
   static EventOptions *
   new_listen_event_opt(std::shared_ptr<EventHandler> handler, int listen_flags,
@@ -57,7 +58,8 @@ struct EventReactorImpl : public ReactorImpl {
 private:
   bufferevent* create_bufferevent(int fd, int fd_flag, const EventOptions& eos, EventCtx* ctx);
 private:
-  event_base* base_;
+  event_base *base_;
+  bool stopped = false;
 };
 
 struct EventTimerImpl : public TimerImpl, public std::enable_shared_from_this<EventTimerImpl> {

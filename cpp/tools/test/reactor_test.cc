@@ -1,3 +1,4 @@
+#include "event2/buffer.h"
 #include "event2/bufferevent.h"
 #include "reactor/reactor.h"
 #include "reactor/event_reactor_impl.h"
@@ -9,11 +10,16 @@
 #include <sys/types.h>
 #include <thread>
 
-struct DefaultEventHandler : public reactor::EventHandler {
-  DefaultEventHandler(reactor::Reactor* reactor) : reactor(reactor) {}
+struct DefaultEventHandler
+    : public reactor::EventHandler,
+      public std::enable_shared_from_this<DefaultEventHandler> {
+  DefaultEventHandler(reactor::Reactor *reactor) : reactor(reactor) {}
   virtual void handle_accept(int fd) override {
     LOG(INFO) << "accepted new fd: " << fd;
     fds.push_back(fd);
+    auto* weos = reactor::EventReactorImpl::new_write_event_opt(shared_from_this());
+    auto weos_ptr = std::shared_ptr<reactor::EventOptions>(weos);
+    ASSERT_EQ(fd, reactor->register_event(fd, *weos));
   }
   virtual void handle_event(int fd, int what) override {
     if (what & BEV_EVENT_CONNECTED) {
@@ -23,16 +29,20 @@ struct DefaultEventHandler : public reactor::EventHandler {
     }
   }
   virtual void handle_read(void *buffer, size_t len) override {
-    LOG(INFO) << "handle read: ";
+    LOG(INFO) << "handle read: " << (char*)buffer;
   }
-  virtual void handle_write(void *buffer, size_t) override {
-    LOG(INFO) << "handle write: ";
+  virtual void handle_write(const char *&buffer, size_t* len) override {
+    if (bytes_written < bytes_to_write) {
+      buffer = "123456789";
+      *len = 10;
+      bytes_written += 10;
+    }
   }
-  virtual void handle_timeout() override {
-    LOG(INFO) << "handle timeout: ";
-  }
+  virtual void handle_timeout() override { LOG(INFO) << "handle timeout: "; }
   std::vector<int> fds;
-  reactor::Reactor* reactor;
+  reactor::Reactor *reactor;
+  int bytes_written = 0;
+  static const int bytes_to_write = 100;
 };
 
 TEST(reactor, normal) {
@@ -52,7 +62,7 @@ TEST(reactor, normal) {
   sockaddr_in sa{};
   sa.sin_family = AF_INET;
   sa.sin_addr.s_addr = inet_addr("127.0.0.1");
-  sa.sin_port = 9999;
+  sa.sin_port = 10001;
 
   std::shared_ptr<EventHandler> handler{new DefaultEventHandler{&r}};
 
@@ -62,8 +72,10 @@ TEST(reactor, normal) {
 
   int fd = r.register_event(0, *leo);
   ASSERT_TRUE(fd != -1);
-  //r.unregister_event(fd, Event::LISTEN);
-  auto run = [&]() { r.runSync(); };
+  auto run = [&]() {
+    while (0 == r.runSync()) {
+    }
+  };
   std::thread t{run};
 
   EventOptions *ceo;
@@ -76,6 +88,7 @@ TEST(reactor, normal) {
 
   using namespace std::chrono_literals;
   std::this_thread::sleep_for(2s);
+  r.stop();
 
   r.stop();
   t.join();

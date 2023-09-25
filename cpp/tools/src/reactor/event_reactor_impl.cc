@@ -82,9 +82,19 @@ EventReactorImpl::~EventReactorImpl() {
     event_base_free(base_);
 }
 
-int EventReactorImpl::runSync() { return event_base_dispatch(base_); }
+int EventReactorImpl::runSync() { return stopped ? -1 : event_base_dispatch(base_); }
+
 int EventReactorImpl::runAsync() {}
-int EventReactorImpl::stop() { return event_base_loopexit(base_, 0); }
+
+int EventReactorImpl::stop() {
+  int ret = event_base_loopexit(base_, 0);
+  if (ret == 0) stopped = true;
+  return ret;
+}
+
+int EventReactorImpl::brk() {
+  return event_base_loopbreak(base_);
+}
 
 ListenEventCtx *
 EventReactorImpl::register_listen_event(int, const ListenEventOptions &leos) {
@@ -243,22 +253,33 @@ int EventReactorImpl::unregister_timeout_event(int, TimeoutEventCtx*) {
 bufferevent *EventReactorImpl::create_bufferevent(int fd, int fd_flag,
                                                   const EventOptions &eos,
                                                   EventCtx *ctx) {
-  bufferevent *be = bufferevent_socket_new(base_, -1, fd_flag);
+  bufferevent *be = bufferevent_socket_new(base_, fd, fd_flag);
   if (!be) {
     return nullptr;
   }
   auto read_cb = [](struct bufferevent *bev, void *ctx) {
     EventCtx *c = (EventCtx *)ctx;
     evbuffer *buf = bufferevent_get_input(bev);
+    auto len = evbuffer_get_length(buf);
     auto handler = c->eos->handler.lock();
-    if (handler)
-      handler->handle_read(buf, evbuffer_get_length(buf));
+    if (handler && len > 0) {
+      auto* p = evbuffer_pullup(buf, len);
+      handler->handle_read(p, len);
+      evbuffer_drain(buf, len);
+    }
   };
   auto write_cb = [](struct bufferevent *bev, void *ctx) {
     EventCtx *c = (EventCtx *)ctx;
     auto handler = c->eos->handler.lock();
-    if (handler)
-      handler->handle_write(bufferevent_get_output(bev), 0);
+    if (handler) {
+      evbuffer* buf = bufferevent_get_output(bev);
+      const char *data = nullptr;
+      size_t len = 0;
+      handler->handle_write(data, &len);
+      if (data && len > 0) {
+        evbuffer_add(buf, data, len);
+      }
+    }
   };
   auto e_cb = [](struct bufferevent *bev, short what, void *ctx) {
     EventCtx *c = (EventCtx *)ctx;
