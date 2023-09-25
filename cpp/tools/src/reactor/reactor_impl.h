@@ -16,7 +16,7 @@ protected:
   virtual int unregister_listen_event(int, ListenEventCtx *ctx) = 0;
 
   virtual ConnectEventCtx *register_connect_event(int, const ConnectEventOptions &eos) = 0;
-  virtual int unregister_connect_event(int, ConnectEventCtx &ctx) = 0;
+  virtual int unregister_connect_event(int, ConnectEventCtx *ctx) = 0;
 
   virtual ReadEventCtx* register_read_event(int, const ReadEventOptions&) = 0;
   virtual int unregister_read_event(int, ReadEventCtx*) = 0;
@@ -85,10 +85,15 @@ struct WriteEventOptions : public EventOptions {
 
 struct EventCtx {
   EventCtx() : eos(nullptr) {}
-  virtual ~EventCtx() { delete eos; }
+  virtual ~EventCtx() {
+    delete eos;
+    ec_deleter(ec);
+    ec = nullptr;
+  }
   EventOptions* eos;
   int fd;
   void* ec;
+  std::function<void(void*ec)> ec_deleter;
 };
 
 class EventMap {

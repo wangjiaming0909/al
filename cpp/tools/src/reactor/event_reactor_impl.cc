@@ -86,32 +86,6 @@ int EventReactorImpl::runSync() { return event_base_dispatch(base_); }
 int EventReactorImpl::runAsync() {}
 int EventReactorImpl::stop() { return event_base_loopexit(base_, 0); }
 
-/*
-int EventReactorImpl::register_event(int fd, const EventOptions* eo, CallBack
-cb) { switch (eo->e_type) { case Event::LISTEN: { break;
-  }
-  case Event::READ:
-  case Event::WRITE: {
-    break;
-  }
-  case Event::TIMEOUT: {
-    struct Ctx {
-      CallBack cb;
-    };
-    Ctx* c = new Ctx();
-    c->cb = cb;
-    auto te_cb = [](int, short int, void *ctx) {
-      ((Ctx *)ctx)->cb();
-      delete (Ctx*)ctx;
-    };
-    auto *e = evtimer_new(base_, te_cb, c);
-    break;
-  }
-  default:
-    break;
-  }
-}*/
-
 ListenEventCtx *
 EventReactorImpl::register_listen_event(int, const ListenEventOptions &leos) {
   // using lcb = void (*)(struct evconnlistener *, evutil_socket_t, struct
@@ -129,6 +103,13 @@ EventReactorImpl::register_listen_event(int, const ListenEventOptions &leos) {
   }
   c->ec = ecl;
   c->fd = evconnlistener_get_fd(ecl);
+  c->ec_deleter = [](void *ec) {
+    if (ec) {
+      auto *evcl = (evconnlistener*)ec;
+      evconnlistener_disable(evcl);
+      evconnlistener_free(evcl);
+    }
+  };
 
   auto event_cb = [](struct evconnlistener *, evutil_socket_t fd,
                      struct sockaddr *, int socklen, void *ctx) {
@@ -150,11 +131,6 @@ EventReactorImpl::register_listen_event(int, const ListenEventOptions &leos) {
 }
 
 int EventReactorImpl::unregister_listen_event(int fd, ListenEventCtx *ctx) {
-  auto *ecl = (evconnlistener *)ctx->ec;
-  evconnlistener_disable(ecl);
-  evconnlistener_free(ecl);
-  ctx->ec = nullptr;
-  delete ctx;
   return 0;
 }
 
@@ -180,13 +156,17 @@ EventReactorImpl::register_connect_event(int, const ConnectEventOptions &ceos) {
   *c->eos = ceos;
   c->fd = bufferevent_getfd(be);
   c->ec = be;
+  c->ec_deleter = [](void* ec) {
+    if (ec) {
+      auto* bev = (bufferevent*)ec;
+      bufferevent_disable(bev, EV_READ);
+      bufferevent_free(bev);
+    }
+  };
   return c.release();
 }
 
-int EventReactorImpl::unregister_connect_event(int, ConnectEventCtx &ctx) {
-  bufferevent_disable((bufferevent *)ctx.ec, EV_READ);
-  bufferevent_free((bufferevent *)ctx.ec);
-  delete &ctx;
+int EventReactorImpl::unregister_connect_event(int, ConnectEventCtx *ctx) {
   return 0;
 }
 
@@ -208,18 +188,56 @@ EventReactorImpl::register_read_event(int fd, const ReadEventOptions &reos) {
   *ctx->eos = reos;
   ctx->fd = fd;
   ctx->ec = be;
+  ctx->ec_deleter = [](void *ec) {
+    if (ec) {
+      auto *bev = (bufferevent *)ec;
+      bufferevent_disable(bev, EV_READ);
+      bufferevent_free(bev);
+    }
+  };
   return ctx.release();
 }
 
-int EventReactorImpl::unregister_read_event(int, ReadEventCtx*) {
+int EventReactorImpl::unregister_read_event(int, ReadEventCtx *ctx) {
+  return 0;
+}
+
+WriteEventCtx* EventReactorImpl::register_write_event(int fd, const WriteEventOptions& weos) {
+  auto ctx = std::make_unique<WriteEventCtx>();
+  if (!ctx) return nullptr;
+
+  auto *be = create_bufferevent(fd, 0, weos, ctx.get());
+  if (!be) return nullptr;
+
+  if (-1 == bufferevent_enable(be, EV_WRITE)) {
+    LOG(ERROR) << "enable buffer write failed: " << strerror(errno);
+    bufferevent_free(be);
+    return nullptr;
+  }
+
+  *ctx->eos = weos;
+  ctx->fd = fd;
+  ctx->ec = be;
+  ctx->ec_deleter = [](void* ec) {
+    if (ec) {
+      auto* bev = (bufferevent*)ec;
+      bufferevent_disable(bev, EV_WRITE);
+      bufferevent_free(bev);
+    }
+  };
+  return ctx.release();
+}
+
+int EventReactorImpl::unregister_write_event(int, WriteEventCtx* ctx) {
+  return 0;
+}
+
+TimeoutEventCtx* EventReactorImpl::register_timeout_event(int, const TimeoutEventOptions&) {
 
 }
 
-WriteEventCtx* EventReactorImpl::register_write_event(int, const WriteEventOptions&) {
-
-}
-int EventReactorImpl::unregister_write_event(int, WriteEventCtx*) {
-
+int EventReactorImpl::unregister_timeout_event(int, TimeoutEventCtx*) {
+  return 0;
 }
 
 bufferevent *EventReactorImpl::create_bufferevent(int fd, int fd_flag,

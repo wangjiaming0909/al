@@ -40,7 +40,7 @@ struct EventReactorImpl : public ReactorImpl {
                         const sockaddr *sa, int socklen, int flags);
   virtual ConnectEventCtx *
   register_connect_event(int, const ConnectEventOptions &) override;
-  virtual int unregister_connect_event(int, ConnectEventCtx &ctx) override;
+  virtual int unregister_connect_event(int, ConnectEventCtx *ctx) override;
 
   static EventOptions* new_read_event_opt(std::shared_ptr<EventHandler> handler);
   virtual ReadEventCtx* register_read_event(int, const ReadEventOptions&) override;

@@ -58,15 +58,19 @@ TEST(reactor, normal) {
 
   leo = EventReactorImpl::new_listen_event_opt(handler, 0, 10, (sockaddr *)&sa,
                                                sizeof(sockaddr_in));
+  auto leo_ptr_guard = std::shared_ptr<EventOptions>(leo);
 
   int fd = r.register_event(0, *leo);
-  r.unregister_event(fd, Event::LISTEN);
+  ASSERT_TRUE(fd != -1);
+  //r.unregister_event(fd, Event::LISTEN);
   auto run = [&]() { r.runSync(); };
   std::thread t{run};
 
   EventOptions *ceo;
   ceo = EventReactorImpl::new_connect_event_opt(
       handler, (sockaddr *)&sa, sizeof(sockaddr_in), BEV_OPT_CLOSE_ON_FREE);
+
+  auto ceo_ptr_guard = std::shared_ptr<EventOptions>(ceo);
 
   r.register_event(0, *ceo);
 

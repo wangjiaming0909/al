@@ -47,18 +47,9 @@ int Reactor::register_event(int fd, const EventOptions &eos) {
 }
 
 int Reactor::unregister_event(int fd, Event e) {
-  int ret;
-  EventCtx *ctx = em_->get_ctx(fd, e);
-  if (!ctx)
-    return -1;
-  switch (e) {
-  case Event::LISTEN:
-    ret = impl_->unregister_listen_event(fd, (ListenEventCtx *)ctx);
-    break;
-  default:
-    break;
-  }
-  return ret;
+  EventCtx *ctx = em_->remove_event(fd, e);
+  if (ctx) delete ctx;
+  return 0;
 }
 
 } // namespace reactor
