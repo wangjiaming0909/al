@@ -5,30 +5,47 @@
 
 namespace reactor {
 
-Reactor::Reactor(ReactorImpl *impl) : impl_(impl), em_(new EventMap{}) {}
+Reactor::Reactor(ReactorImpl *impl)
+    : impl_(impl), em_(new EventMap{}), state_(State::UNKNOWN) {}
 
 Reactor::~Reactor() {
   delete em_;
   delete impl_;
+  if (thd_) {
+    if (thd_->joinable())
+      thd_->join();
+    thd_.reset();
+  }
 }
 
-int Reactor::runSync() { return impl_->runSync(); }
+int Reactor::runSync() {
+  auto ret = impl_->runSync();
+  if (0 == ret) {
+    state_ = State::STARTED;
+  }
+  return ret;
+}
 
 int Reactor::runAsync() {
+  if (state_ == State::STARTED)
+    return 0;
   auto run = [&]() {
     LOG(INFO) << "reactor started";
-    while (0 == runSync()) {
-    }
+    //while (0 == runSync()) { }
     LOG(INFO) << "reactor stopped";
   };
-  if (thd_) {
+  if (thd_ && thd_->joinable()) {
     thd_->join();
   }
   thd_.reset(new std::thread{run});
   return 0;
 }
 
-int Reactor::stop() { return impl_->stop(); }
+int Reactor::stop() {
+  if (state_ == State::STARTED)
+    return impl_->stop();
+  return 0;
+}
 
 int Reactor::brk() { return impl_->brk(); }
 

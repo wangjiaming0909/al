@@ -60,16 +60,13 @@ EventReactorImpl::~EventReactorImpl() {
 }
 
 int EventReactorImpl::runSync() {
-  return stopped ? -1 : event_base_loop(base_, EVLOOP_NO_EXIT_ON_EMPTY);
+  return event_base_loop(base_, EVLOOP_NO_EXIT_ON_EMPTY);
 }
 
 int EventReactorImpl::runAsync() {}
 
 int EventReactorImpl::stop() {
-  int ret = event_base_loopexit(base_, 0);
-  if (ret == 0)
-    stopped = true;
-  return ret;
+  return event_base_loopexit(base_, 0);
 }
 
 int EventReactorImpl::brk() { return event_base_loopbreak(base_); }

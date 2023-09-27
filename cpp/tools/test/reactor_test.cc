@@ -47,13 +47,7 @@ using namespace reactor;
 std::shared_ptr<Reactor> create_reactor_and_run() {
   EventReactorImpl* impl = new EventReactorImpl{};
   Reactor*r = new Reactor{impl};
-
-  auto run = [&]() {
-    LOG(INFO) << "reactor started";
-    while (0 == r->runSync()) {
-    }
-    LOG(INFO) << "reactor stopped";
-  };
+  r->runAsync();
   return std::shared_ptr<Reactor>{r};
 }
 

@@ -58,8 +58,17 @@ class EventMap;
 struct Reactor : public IReactor {
   Reactor(ReactorImpl* impl);
   ~Reactor();
+  //TODO add param, LOOP_ONCE, EXIT_ON_EMPTY...
+  /// @brief starting up reactor, until error or stop called
+  /// @note runSync won't return even if no fds polling
   virtual int runSync() override;
+  /// @brief start reactor async
+  /// @retval 0 if start succeeded or already started
+  /// @retval -1 error occurred
   virtual int runAsync() override;
+  /// @brief stop the event loop
+  /// @retval 0 if stop succeeded or already stopped
+  /// @retval -1 if error occurred
   virtual int stop() override;
   virtual int brk() override;
   virtual int register_event(int fd, const EventOptions& eos) override;
@@ -69,6 +78,8 @@ private:
   EventMap* em_;
   ReactorImpl* impl_;
   std::unique_ptr<std::thread> thd_;
+  enum class State {UNKNOWN = 0, STARTED = 1, STOPPED = 2, ERROR = 3};
+  State state_;
 };
 
 }

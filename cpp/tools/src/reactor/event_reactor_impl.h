@@ -59,7 +59,7 @@ private:
   bufferevent* create_bufferevent(int fd, int fd_flag, const EventOptions& eos, EventCtx* ctx);
 private:
   event_base *base_;
-  bool stopped = false;
+  bool stopped_ = false;
 };
 
 struct EventTimerImpl : public TimerImpl, public std::enable_shared_from_this<EventTimerImpl> {

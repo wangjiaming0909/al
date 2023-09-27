@@ -11,6 +11,10 @@ namespace reactor {
 struct ReactorImpl {
   friend class Reactor;
   virtual ~ReactorImpl() = default;
+  /// @brief blocking start reactor
+  /// @retval 0 if successful
+  /// @retval -1 if error occurred
+  /// @note if no pending events or fds, runSync won't return, use stop
   virtual int runSync() = 0;
   virtual int runAsync() = 0;
   virtual int stop() = 0;
