@@ -18,6 +18,7 @@ void Timer::stop() { impl_->stop(); }
 
 Timer::Timer(const Options &opts, TimerImpl *impl) : opts_(opts) {
   impl_.reset(impl);
+  impl_->set_base(this);
 }
 
 uint64_t get_usecs(Period period) {

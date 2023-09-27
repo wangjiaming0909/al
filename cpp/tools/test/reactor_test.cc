@@ -43,6 +43,19 @@ struct DefaultEventHandler
   int bytes_written = 0;
   static const int bytes_to_write = 100;
 };
+using namespace reactor;
+std::shared_ptr<Reactor> create_reactor_and_run() {
+  EventReactorImpl* impl = new EventReactorImpl{};
+  Reactor*r = new Reactor{impl};
+
+  auto run = [&]() {
+    LOG(INFO) << "reactor started";
+    while (0 == r->runSync()) {
+    }
+    LOG(INFO) << "reactor stopped";
+  };
+  return std::shared_ptr<Reactor>{r};
+}
 
 TEST(reactor, normal) {
   using namespace reactor;
@@ -91,4 +104,18 @@ TEST(reactor, normal) {
 
   r.stop();
   t.join();
+}
+
+TEST(reactor, timer) {
+  using namespace reactor;
+  using namespace std::chrono_literals;
+  Period timeout = 1s;
+  auto r = create_reactor_and_run();
+
+  auto handler = std::shared_ptr<EventHandler>(new DefaultEventHandler{r.get()});
+  Timer::Options opts{handler, timeout};
+  auto timer = Timer::create(opts, new EventTimerImpl{r.get()});
+  timer->start(timeout);
+  std::this_thread::sleep_for(2s);
+  r->stop();
 }

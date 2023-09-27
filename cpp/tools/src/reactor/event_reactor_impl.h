@@ -51,7 +51,7 @@ struct EventReactorImpl : public ReactorImpl {
   virtual WriteEventCtx* register_write_event(int, const WriteEventOptions&) override;
   virtual int unregister_write_event(int, WriteEventCtx*) override;
 
-  static EventOptions* new_timeout_event_opt(std::shared_ptr<EventHandler> handler);
+  static EventOptions* new_timeout_event_opt(std::shared_ptr<EventHandler> handler, Period timeout);
   virtual TimeoutEventCtx* register_timeout_event(int, const TimeoutEventOptions&) override;
   virtual int unregister_timeout_event(int, TimeoutEventCtx*) override;
 
@@ -67,8 +67,6 @@ struct EventTimerImpl : public TimerImpl, public std::enable_shared_from_this<Ev
   virtual int start(Period period) override;
   virtual int snooze(Period period) override;
   virtual int stop() override;
-
-  private:
 };
 
 }

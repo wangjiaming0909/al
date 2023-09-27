@@ -31,11 +31,21 @@ struct EventConnectEventCtx : public ConnectEventCtx {
 
 EventTimerImpl::EventTimerImpl(Reactor *reactor) : TimerImpl(reactor) {}
 
-int EventTimerImpl::start(Period period) { return 0; }
+int EventTimerImpl::start(Period period) {
+  auto *teos =
+      EventReactorImpl::new_timeout_event_opt(get_opts().handler, period);
+  std::shared_ptr<EventOptions> ptr_guard{teos};
+  get_opts().period = period;
+  return reactor_->register_event(-1, *ptr_guard.get());
+}
 
-int EventTimerImpl::snooze(Period period) {}
+int EventTimerImpl::snooze(Period period) {
+  return -1;
+}
 
-int EventTimerImpl::stop() {}
+int EventTimerImpl::stop() {
+  return -1;
+}
 
 EventReactorImpl::EventReactorImpl() : base_(nullptr) {
   if (-1 == evthread_use_pthreads()) {
@@ -50,7 +60,7 @@ EventReactorImpl::~EventReactorImpl() {
 }
 
 int EventReactorImpl::runSync() {
-  return stopped ? -1 : event_base_dispatch(base_);
+  return stopped ? -1 : event_base_loop(base_, EVLOOP_NO_EXIT_ON_EMPTY);
 }
 
 int EventReactorImpl::runAsync() {}
@@ -229,7 +239,7 @@ EventReactorImpl::register_timeout_event(int, const TimeoutEventOptions &teos) {
   auto *et = evtimer_new(base_, te_cb, ctx.get());
   if (!et)
     return nullptr;
-  struct timeval t;
+  struct timeval t = {.tv_sec = 0, .tv_usec = 0};
   t.tv_usec = get_usecs(teos.timeout);
   if (0 != evtimer_add(et, &t)) {
     LOG(ERROR) << "add timer event failed: " << strerror(errno);
@@ -347,8 +357,14 @@ EventReactorImpl::new_write_event_opt(std::shared_ptr<EventHandler> handler) {
 }
 
 EventOptions *
-EventReactorImpl::new_timeout_event_opt(std::shared_ptr<EventHandler> handler) {
-  // TimeoutEventOptions* teos = new TimeoutEventOptions();
+EventReactorImpl::new_timeout_event_opt(std::shared_ptr<EventHandler> handler, Period timeout) {
+  TimeoutEventOptions *teos = new TimeoutEventOptions();
+  if (teos) {
+    teos->e_type = Event::TIMEOUT;
+    teos->handler = handler;
+    teos->timeout = timeout;
+  }
+  return teos;
 }
 
 } // namespace reactor

@@ -1,6 +1,7 @@
 #include "reactor.h"
 #include "reactor_impl.h"
 #include <glog/logging.h>
+#include <thread>
 
 namespace reactor {
 
@@ -13,7 +14,19 @@ Reactor::~Reactor() {
 
 int Reactor::runSync() { return impl_->runSync(); }
 
-int Reactor::runAsync() {}
+int Reactor::runAsync() {
+  auto run = [&]() {
+    LOG(INFO) << "reactor started";
+    while (0 == runSync()) {
+    }
+    LOG(INFO) << "reactor stopped";
+  };
+  if (thd_) {
+    thd_->join();
+  }
+  thd_.reset(new std::thread{run});
+  return 0;
+}
 
 int Reactor::stop() { return impl_->stop(); }
 
@@ -42,15 +55,16 @@ int Reactor::register_event(int fd, const EventOptions &eos) {
     break;
   }
   case Event::TIMEOUT:
-    LOG(INFO) << "register timeout event: " << fd;
-    // ret = impl_->register_timeout_event(fd, (const TimeoutEventOptions
-    // *)eos);
+    ret = impl_->register_timeout_event(fd, (const TimeoutEventOptions &)eos);
+    if (ret) LOG(INFO) << "register timeout event: " << ret->fd;
     break;
   }
   if (ret) {
     fd = ret->fd;
     em_->add_event(fd, eos.e_type, ret);
     return fd;
+  } else {
+    LOG(ERROR) << "register event failed: " << strerror(errno);
   }
   return -1;
 }

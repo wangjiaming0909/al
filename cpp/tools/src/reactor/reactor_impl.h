@@ -157,14 +157,17 @@ struct TimeoutEventCtx : public EventCtx {
 };
 
 struct TimerImpl {
-  TimerImpl(Reactor* reactor) : reactor_(reactor) {}
+  TimerImpl(Reactor *reactor) : reactor_(reactor), base_(nullptr) {}
   virtual ~TimerImpl() = default;
   virtual int start(Period period) = 0;
   virtual int snooze(Period period) = 0;
   virtual int stop() = 0;
+  void set_base(Timer *base) { base_ = base; }
+  Timer::Options &get_opts() { return base_->get_opts(); }
 
 protected:
   Reactor* reactor_;
+  Timer* base_;
 };
 
 }

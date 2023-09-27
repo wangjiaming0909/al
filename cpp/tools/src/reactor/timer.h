@@ -14,12 +14,13 @@ uint64_t get_usecs(Period period);
 
 class Timer : boost::noncopyable{
 public:
+  friend class TimerImpl;
   struct Options {
-    Options(Reactor &rector, Period period)
-        : reactor(reactor), period(period) {}
+    Options(std::shared_ptr<EventHandler> handler, Period period)
+        : handler(handler), period(period) {}
     ~Options() {}
-    Reactor &reactor;
     Period period;
+    std::shared_ptr<EventHandler> handler;
   };
 
   static std::shared_ptr<Timer> create(const Options &opts, TimerImpl* impl);
@@ -28,8 +29,10 @@ public:
   void start(Period period);
   void snooze(Period period);
   void stop();
+  const Options &get_opts() const { return opts_; }
 
 protected:
+  Options& get_opts() {return opts_;}
   Timer(const Options &opts, TimerImpl *impl);
 
 private:

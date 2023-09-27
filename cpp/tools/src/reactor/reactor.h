@@ -1,6 +1,10 @@
 #pragma once
 
 #include <cstddef>
+#include <memory>
+namespace std {
+class thread;
+}
 namespace reactor {
 
 struct EventOptions;
@@ -64,6 +68,7 @@ struct Reactor : public IReactor {
 private:
   EventMap* em_;
   ReactorImpl* impl_;
+  std::unique_ptr<std::thread> thd_;
 };
 
 }
