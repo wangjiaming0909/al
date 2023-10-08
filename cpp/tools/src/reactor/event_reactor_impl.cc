@@ -31,7 +31,7 @@ struct EventConnectEventCtx : public ConnectEventCtx {
 
 EventTimerImpl::EventTimerImpl(Reactor *reactor) : TimerImpl(reactor) {}
 
-int EventTimerImpl::start(Period period) {
+EventCtx *EventTimerImpl::start(Period period) {
   auto *teos =
       EventReactorImpl::new_timeout_event_opt(get_opts().handler, period);
   std::shared_ptr<EventOptions> ptr_guard{teos};
@@ -39,8 +39,8 @@ int EventTimerImpl::start(Period period) {
   return reactor_->register_event(-1, *ptr_guard.get());
 }
 
-int EventTimerImpl::snooze(Period period) {
-  return -1;
+EventCtx* EventTimerImpl::snooze(Period period) {
+  return 0;
 }
 
 int EventTimerImpl::stop() {

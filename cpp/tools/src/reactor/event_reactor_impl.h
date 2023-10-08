@@ -64,8 +64,8 @@ private:
 
 struct EventTimerImpl : public TimerImpl, public std::enable_shared_from_this<EventTimerImpl> {
   EventTimerImpl(Reactor* rector);
-  virtual int start(Period period) override;
-  virtual int snooze(Period period) override;
+  virtual EventCtx* start(Period period) override;
+  virtual EventCtx* snooze(Period period) override;
   virtual int stop() override;
 };
 

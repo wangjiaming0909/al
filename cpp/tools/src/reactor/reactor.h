@@ -43,36 +43,35 @@ enum class Event {
   CONNECT = 0x10
 };
 
-struct IReactor {
-  IReactor() = default;
-  virtual ~IReactor() = default;
-  virtual int runSync() = 0;
-  virtual int runAsync() = 0;
-  virtual int stop() = 0;
-  virtual int brk() = 0;
-  virtual int register_event(int, const EventOptions &) = 0;
-  virtual int unregister_event(int fd, Event) = 0;
-};
-
 class EventMap;
-struct Reactor : public IReactor {
+struct Reactor {
   Reactor(ReactorImpl* impl);
   ~Reactor();
   //TODO add param, LOOP_ONCE, EXIT_ON_EMPTY...
   /// @brief starting up reactor, until error or stop called
   /// @note runSync won't return even if no fds polling
-  virtual int runSync() override;
+  int runSync();
   /// @brief start reactor async
   /// @retval 0 if start succeeded or already started
   /// @retval -1 error occurred
-  virtual int runAsync() override;
+  int runAsync();
   /// @brief stop the event loop
   /// @retval 0 if stop succeeded or already stopped
   /// @retval -1 if error occurred
-  virtual int stop() override;
-  virtual int brk() override;
-  virtual int register_event(int fd, const EventOptions& eos) override;
-  virtual int unregister_event(int fd, Event) override;
+  int stop();
+  int brk();
+
+  /// @brief register an event into reactor
+  /// @param fd, for read/write events, fd should be the connected fd,
+  ///            otherwise, fd is not used
+  /// @param eos, the opts for this event
+  /// @retval the ctx for this registerd event
+  /// @retval NULL if register failed, check errno
+  EventCtx* register_event(int fd, const EventOptions& eos);
+  /// @brief unregister a event from reactor, if succeeded, ctx is deleted
+  /// @param ctx, the ret pointer when register_event
+  /// @retval 0 if success, -1 for ctx not found
+  int unregister_event(EventCtx* ctx);
 
 private:
   EventMap* em_;

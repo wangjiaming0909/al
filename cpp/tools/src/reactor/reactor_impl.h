@@ -5,6 +5,7 @@
 #include <memory>
 #include <sys/socket.h>
 #include <unordered_map>
+#include <unordered_set>
 
 namespace reactor {
 
@@ -37,14 +38,15 @@ protected:
 };
 
 struct EventOptions {
-  EventOptions(Event e) : e_type(e), handler() {}
-  EventOptions& operator=(const EventOptions& eos) {
+  Event e_type;
+  std::weak_ptr<EventHandler> handler;
+  EventOptions &operator=(const EventOptions &eos) {
     e_type = eos.e_type;
     handler = eos.handler;
     return *this;
   }
-  Event e_type;
-  std::weak_ptr<EventHandler> handler;
+protected:
+  EventOptions(Event e) : e_type(e), handler() {}
 };
 
 struct ListenEventOptions : public EventOptions{
@@ -103,16 +105,20 @@ struct TimeoutEventOptions : public EventOptions {
 };
 
 struct EventCtx {
-  EventCtx() : eos(nullptr) {}
+  friend class Reactor;
+  friend class EventMap;
+  EventCtx() : eos(0), fd(-1), ec(0) {}
+  EventOptions* eos;
+  int fd;
+  void* ec;
+  std::function<void(void*ec)> ec_deleter;
+
+protected:
   virtual ~EventCtx() {
     delete eos;
     if (ec_deleter) ec_deleter(ec);
     ec = nullptr;
   }
-  EventOptions* eos;
-  int fd;
-  void* ec;
-  std::function<void(void*ec)> ec_deleter;
 };
 
 class EventMap {
@@ -120,14 +126,10 @@ public:
   EventMap() = default;
   ~EventMap();
 
-  int add_event(int fd, Event e, EventCtx* data);
-  EventCtx* remove_event(int fd, Event e);
-  EventCtx* get_ctx(int fd, Event e);
-
+  int add_event(EventCtx* data);
+  EventCtx* remove_event(EventCtx* ctx);
 private:
-  auto find_ctx(int fd, Event e);
-private:
-  std::unordered_map<int, std::unordered_map<Event, EventCtx *>> m_;
+  std::unordered_set<EventCtx*> s_;
 };
 
 struct ListenEventCtx : public EventCtx{
@@ -163,8 +165,12 @@ struct TimeoutEventCtx : public EventCtx {
 struct TimerImpl {
   TimerImpl(Reactor *reactor) : reactor_(reactor), base_(nullptr) {}
   virtual ~TimerImpl() = default;
-  virtual int start(Period period) = 0;
-  virtual int snooze(Period period) = 0;
+  /// @brief schedule a new timer
+  /// @param period, timer timeout
+  /// @retval nullptr if start failed
+  /// @retval event ctx if succeed
+  virtual EventCtx* start(Period period) = 0;
+  virtual EventCtx* snooze(Period period) = 0;
   virtual int stop() = 0;
   void set_base(Timer *base) { base_ = base; }
   Timer::Options &get_opts() { return base_->get_opts(); }

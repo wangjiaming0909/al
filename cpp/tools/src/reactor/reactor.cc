@@ -49,7 +49,7 @@ int Reactor::stop() {
 
 int Reactor::brk() { return impl_->brk(); }
 
-int Reactor::register_event(int fd, const EventOptions &eos) {
+EventCtx* Reactor::register_event(int fd, const EventOptions &eos) {
   EventCtx *ret = nullptr;
   switch (eos.e_type) {
   case Event::LISTEN:
@@ -78,19 +78,21 @@ int Reactor::register_event(int fd, const EventOptions &eos) {
   }
   if (ret) {
     fd = ret->fd;
-    em_->add_event(fd, eos.e_type, ret);
-    return fd;
+    em_->add_event(ret);
   } else {
     LOG(ERROR) << "register event failed: " << strerror(errno);
   }
-  return -1;
+  return ret;
 }
 
-int Reactor::unregister_event(int fd, Event e) {
-  LOG(INFO) << "unregister e: " << int(e) << " for fd: " << fd;
-  EventCtx *ctx = em_->remove_event(fd, e);
-  if (ctx) delete ctx;
-  return 0;
+int Reactor::unregister_event(EventCtx* ctx) {
+  LOG(INFO) << "unregister e: " << int(ctx->eos->e_type) << " for fd: " << ctx->fd;
+  EventCtx *ret = em_->remove_event(ctx);
+  if (ret) {
+    delete ret;
+    return 0;
+  }
+  return -1;
 }
 
 } // namespace reactor

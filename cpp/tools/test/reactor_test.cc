@@ -18,7 +18,7 @@ struct DefaultEventHandler
     fds.push_back(fd);
     auto* weos = reactor::EventReactorImpl::new_write_event_opt(shared_from_this());
     auto weos_ptr = std::shared_ptr<reactor::EventOptions>(weos);
-    ASSERT_EQ(fd, reactor->register_event(fd, *weos));
+    ASSERT_EQ(fd, reactor->register_event(fd, *weos)->fd);
   }
   virtual void handle_event(int fd, int what) override {
     if (what & BEV_EVENT_CONNECTED) {
@@ -76,8 +76,8 @@ TEST(reactor, normal) {
                                                sizeof(sockaddr_in));
   auto leo_ptr_guard = std::shared_ptr<EventOptions>(leo);
 
-  int fd = r.register_event(0, *leo);
-  ASSERT_TRUE(fd != -1);
+  auto ctx = r.register_event(0, *leo);
+  ASSERT_TRUE(ctx->fd != -1);
   auto run = [&]() {
     while (0 == r.runSync()) {
     }
