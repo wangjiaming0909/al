@@ -13,9 +13,8 @@ struct ReactorImpl {
   friend class Reactor;
   virtual ~ReactorImpl() = default;
   /// @brief blocking start reactor
-  /// @retval 0 if successful
-  /// @retval -1 if error occurred
-  /// @note won't return if no events pending
+  /// @retval non zero if uv_stop called with active handles
+  /// @retval zero otherwise
   virtual int runSync() = 0;
   virtual int runAsync() = 0;
   /// @breif stop the reactor

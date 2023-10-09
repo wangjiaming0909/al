@@ -9,6 +9,7 @@ include(./cmake/proto.cmake)
 add_subdirectory(deps/glog)
 add_subdirectory(deps/googletest)
 add_subdirectory(deps/libevent)
+add_subdirectory(deps/libuv)
 add_subdirectory(test)
 
 add_subdirectory(src/helloworld)

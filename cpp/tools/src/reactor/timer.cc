@@ -24,4 +24,7 @@ Timer::Timer(const Options &opts, TimerImpl *impl) : opts_(opts) {
 uint64_t get_usecs(Period period) {
   return std::chrono::microseconds(period).count();
 }
+uint64_t get_millisecs(Period period) {
+  return std::chrono::milliseconds(period).count();
+}
 }

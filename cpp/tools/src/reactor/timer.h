@@ -11,6 +11,7 @@ class TimerImpl;
 using Period = std::chrono::milliseconds;
 
 uint64_t get_usecs(Period period);
+uint64_t get_millisecs(Period period);
 
 class Timer : boost::noncopyable{
 public:

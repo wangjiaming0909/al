@@ -3,6 +3,7 @@
 #include "event2/thread.h"
 #include "reactor/reactor.h"
 #include "reactor/event_reactor_impl.h"
+#include "uv.h"
 #include <arpa/inet.h>
 #include <glog/logging.h>
 #include <gtest/gtest.h>
@@ -132,5 +133,41 @@ TEST(reactor, libevent) {
   event_base_loopexit(base, 0);
   std::this_thread::sleep_for(1000ms);
   ASSERT_EQ(a, -1);
+  t.join();
+}
+
+static void uv_timer_cb_1(uv_timer_t* timer) {
+  return;
+}
+
+static void uv_async_stop_cb(uv_async_t* async) {
+  uv_stop(async->loop);
+}
+
+TEST(reactor, uv) {
+  uv_loop_t* loop = uv_loop_new();
+  uv_loop_init(loop);
+
+  uv_timer_t* timer = new uv_timer_t();
+  uv_timer_init(loop, timer);
+  uv_timer_start(timer, uv_timer_cb_1, 1000, 1);
+
+  auto func = [&]() {
+    LOG(INFO) << "uv started";
+    uv_run(loop, UV_RUN_DEFAULT);
+    LOG(INFO) << "uv stopped";
+  };
+
+  std::thread t{func};
+
+  std::this_thread::sleep_for(100ms);
+  uv_stop(loop);// uv_stop from other threads is useless
+  LOG(INFO) << "uv stop called";
+
+  uv_async_t* async = new uv_async_t();
+  uv_async_init(loop, async, uv_async_stop_cb);
+  std::this_thread::sleep_for(100ms);
+  uv_async_send(async); // this will stop the event loop
+  LOG(INFO) << "uv async stop sent";
   t.join();
 }
