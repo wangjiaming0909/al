@@ -70,8 +70,10 @@ int EventReactorImpl::runAsync() { return -1; }
 
 int EventReactorImpl::stop() {
   int ret = 0;
-  while (!stopped_ && ret == 0)
-    ret = event_base_loopexit(base_, 0);
+  while (!stopped_ && ret == 0) {
+    //ret = event_base_loopexit(base_, 0);
+    event_base_loopbreak(base_);
+  }
   return ret;
 }
 
