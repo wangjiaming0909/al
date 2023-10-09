@@ -1,7 +1,10 @@
 #pragma once
 
+#include <condition_variable>
 #include <cstddef>
 #include <memory>
+#include <mutex>
+#include <atomic>
 namespace std {
 class thread;
 }
@@ -35,7 +38,7 @@ public:
   virtual void handle_timeout() = 0;
 };
 
-enum class Event {
+enum class Event : int {
   TIMEOUT = 0x01,
   READ = 0x02,
   WRITE = 0x04,
@@ -49,17 +52,16 @@ struct Reactor {
   ~Reactor();
   //TODO add param, LOOP_ONCE, EXIT_ON_EMPTY...
   /// @brief starting up reactor, until error or stop called
-  /// @note runSync won't return even if no fds polling
+  /// @retval 0 if succeeded, -1 if error
+  /// @note wont return if no pending events, use stop
   int runSync();
   /// @brief start reactor async
-  /// @retval 0 if start succeeded or already started
-  /// @retval -1 error occurred
+  /// @retval 0
   int runAsync();
   /// @brief stop the event loop
   /// @retval 0 if stop succeeded or already stopped
   /// @retval -1 if error occurred
   int stop();
-  int brk();
 
   /// @brief register an event into reactor
   /// @param fd, for read/write events, fd should be the connected fd,
@@ -77,8 +79,10 @@ private:
   EventMap* em_;
   ReactorImpl* impl_;
   std::unique_ptr<std::thread> thd_;
-  enum class State {UNKNOWN = 0, STARTED = 1, STOPPED = 2, ERROR = 3};
-  State state_;
+  enum class State {UNKNOWN = 0, STARTED = 1, STOPPED = 2, ERROR = 3, BREAK = 4};
+  std::atomic<State> state_;
+  std::mutex empty_events_lock_;
+  std::condition_variable empty_events_cond_;
 };
 
 }

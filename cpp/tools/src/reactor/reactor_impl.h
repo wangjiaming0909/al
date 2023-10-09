@@ -15,9 +15,11 @@ struct ReactorImpl {
   /// @brief blocking start reactor
   /// @retval 0 if successful
   /// @retval -1 if error occurred
-  /// @note if no pending events or fds, runSync won't return, use stop
+  /// @note won't return if no events pending
   virtual int runSync() = 0;
   virtual int runAsync() = 0;
+  /// @breif stop the reactor
+  /// @retval 0 for success, -1 for error
   virtual int stop() = 0;
   virtual int brk() = 0;
 protected:
@@ -162,6 +164,7 @@ struct TimeoutEventCtx : public EventCtx {
   }
 };
 
+// TODO remove TimerImpl
 struct TimerImpl {
   TimerImpl(Reactor *reactor) : reactor_(reactor), base_(nullptr) {}
   virtual ~TimerImpl() = default;

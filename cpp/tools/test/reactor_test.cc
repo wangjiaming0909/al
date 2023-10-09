@@ -1,4 +1,6 @@
 #include "event2/bufferevent.h"
+#include "event2/event.h"
+#include "event2/thread.h"
 #include "reactor/reactor.h"
 #include "reactor/event_reactor_impl.h"
 #include <arpa/inet.h>
@@ -8,6 +10,7 @@
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <thread>
+using namespace std::chrono_literals;
 
 struct DefaultEventHandler
     : public reactor::EventHandler,
@@ -77,6 +80,7 @@ TEST(reactor, normal) {
   auto leo_ptr_guard = std::shared_ptr<EventOptions>(leo);
 
   auto ctx = r.register_event(0, *leo);
+  ASSERT_TRUE(ctx != nullptr);
   ASSERT_TRUE(ctx->fd != -1);
   auto run = [&]() {
     while (0 == r.runSync()) {
@@ -94,7 +98,6 @@ TEST(reactor, normal) {
 
   using namespace std::chrono_literals;
   std::this_thread::sleep_for(2s);
-  r.stop();
 
   r.stop();
   t.join();
@@ -102,7 +105,6 @@ TEST(reactor, normal) {
 
 TEST(reactor, timer) {
   using namespace reactor;
-  using namespace std::chrono_literals;
   Period timeout = 1s;
   auto r = create_reactor_and_run();
 
@@ -111,5 +113,24 @@ TEST(reactor, timer) {
   auto timer = Timer::create(opts, new EventTimerImpl{r.get()});
   timer->start(timeout);
   std::this_thread::sleep_for(2s);
-  r->stop();
+  ASSERT_EQ(0, r->stop());
+}
+
+TEST(reactor, libevent) {
+  evthread_use_pthreads();
+  auto* base = event_base_new();
+  int a = 0;
+  auto func = [&] () {
+    event_base_loop(base, EVLOOP_NO_EXIT_ON_EMPTY);
+    a = -1;
+  };
+
+  std::thread t{func};
+
+  std::this_thread::sleep_for(100ms);
+
+  event_base_loopexit(base, 0);
+  std::this_thread::sleep_for(1000ms);
+  ASSERT_EQ(a, -1);
+  t.join();
 }

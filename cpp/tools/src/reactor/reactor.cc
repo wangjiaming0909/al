@@ -6,7 +6,8 @@
 namespace reactor {
 
 Reactor::Reactor(ReactorImpl *impl)
-    : impl_(impl), em_(new EventMap{}), state_(State::UNKNOWN) {}
+    : impl_(impl), em_(new EventMap{}), state_(State::STOPPED),
+      empty_events_lock_(), empty_events_cond_() {}
 
 Reactor::~Reactor() {
   delete em_;
@@ -19,19 +20,25 @@ Reactor::~Reactor() {
 }
 
 int Reactor::runSync() {
-  auto ret = impl_->runSync();
-  if (0 == ret) {
-    state_ = State::STARTED;
+  auto expected_state = State::STOPPED;
+  if (!state_.compare_exchange_strong(expected_state, State::STARTED,
+                                      std::memory_order_relaxed,
+                                      std::memory_order_relaxed)) {
+    return 0;
   }
+  auto ret = impl_->runSync();
+  expected_state = State::STARTED;
+  // don't care about whether succeeded
+  state_.compare_exchange_strong(expected_state, State::STOPPED,
+                                 std::memory_order_relaxed,
+                                 std::memory_order_relaxed);
   return ret;
 }
 
 int Reactor::runAsync() {
-  if (state_ == State::STARTED)
-    return 0;
   auto run = [&]() {
     LOG(INFO) << "reactor started";
-    //while (0 == runSync()) { }
+    runSync();
     LOG(INFO) << "reactor stopped";
   };
   if (thd_ && thd_->joinable()) {
@@ -42,12 +49,8 @@ int Reactor::runAsync() {
 }
 
 int Reactor::stop() {
-  if (state_ == State::STARTED)
-    return impl_->stop();
-  return 0;
+  return impl_->stop();
 }
-
-int Reactor::brk() { return impl_->brk(); }
 
 EventCtx* Reactor::register_event(int fd, const EventOptions &eos) {
   EventCtx *ret = nullptr;

@@ -47,7 +47,7 @@ int EventTimerImpl::stop() {
   return -1;
 }
 
-EventReactorImpl::EventReactorImpl() : base_(nullptr) {
+EventReactorImpl::EventReactorImpl() : base_(nullptr), stopped_(false) {
   if (-1 == evthread_use_pthreads()) {
     LOG(ERROR) << "set libevent with pthreads failed";
   }
@@ -60,13 +60,19 @@ EventReactorImpl::~EventReactorImpl() {
 }
 
 int EventReactorImpl::runSync() {
-  return event_base_loop(base_, EVLOOP_NO_EXIT_ON_EMPTY);
+  stopped_ = false;
+  auto ret = event_base_loop(base_, EVLOOP_NO_EXIT_ON_EMPTY);
+  stopped_ = true;
+  return ret;
 }
 
-int EventReactorImpl::runAsync() {}
+int EventReactorImpl::runAsync() { return -1; }
 
 int EventReactorImpl::stop() {
-  return event_base_loopexit(base_, 0);
+  int ret = 0;
+  while (!stopped_ && ret == 0)
+    ret = event_base_loopexit(base_, 0);
+  return ret;
 }
 
 int EventReactorImpl::brk() { return event_base_loopbreak(base_); }
