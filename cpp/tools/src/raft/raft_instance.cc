@@ -1,5 +1,6 @@
 #include "raft_instance.h"
 #include "raft.grpc.pb.h"
+#include "reactor/event_reactor_impl.h"
 #include "reactor/timer.h"
 #include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
@@ -9,13 +10,15 @@ namespace raft {
 RaftInstance::~RaftInstance() {}
 
 RaftInstance::RaftInstance(const Uuid &uuid, const std::string &listen_addr,
-                           std::shared_ptr<reactor::Reactor> reactor)
+                           std::shared_ptr<reactor::Reactor> reactor,
+                           const RaftOptions &ros)
     : uuid_(uuid), listen_addr_(listen_addr), peers_(), role_(Role::Candidate),
       term_id_(0), master_uuid_(), master_term_id_(0),
       rpc_server_(new RaftRpcServer(this, listen_addr_)), reactor_(reactor),
-      timer_(nullptr) {
+      timer_(nullptr), opts_(ros) {
   using namespace std::chrono_literals;
-  reactor::Timer::Options opts{1s};
+  reactor::Timer::Options opts{ros.failure_detection_interval};
+  timer_ = reactor::Timer::create(opts, new reactor::EventTimerImpl{reactor.get()});
 }
 
 PeerInfo::PeerInfo(const Uuid &uuid, const std::string &addr)
@@ -99,6 +102,9 @@ int RaftInstance::start() {
   }
 
   // start timer for failure detection
+  using namespace std::placeholders;
+  reactor::Timer::TimerCallBackT<typeof(*this)> cb = failure_detection_callcb;
+  timer_->start(opts_.failure_detection_interval, shared_from_this(), cb);
 }
 
 void RaftInstance::wait() {
@@ -269,11 +275,17 @@ void LeaderElection::handle_reply(::grpc::Status rpc_status,
 }
 
 bool LeaderElectionResult::decided() const { return granted() || denied(); }
+
 bool LeaderElectionResult::granted() const {
   return granted_peers_.size() >= majority_num();
 }
+
 bool LeaderElectionResult::denied() const {
   return (denied_peers_.size() + err_peers_.size()) >= majority_num();
+}
+
+void failure_detection_callcb(std::shared_ptr<RaftInstance> self) {
+
 }
 
 } // namespace raft

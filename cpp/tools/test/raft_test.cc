@@ -7,6 +7,8 @@
 #include <memory>
 #include <thread_pool.h>
 
+using namespace std::chrono_literals;
+
 TEST(raft, example) {
   ASSERT_EQ(1, 1);
 }
@@ -38,15 +40,20 @@ TEST(raft, config) {
 
 TEST(raft, instance) {
   auto reactor = create_reactor_and_run();
+  raft::RaftOptions opts;
+  opts.failure_detection_interval = 10s;
   std::shared_ptr<raft::RaftInstance> instance1 =
-      std::make_shared<raft::RaftInstance>(peer1.id_, peer1.addr_, reactor);
+      std::make_shared<raft::RaftInstance>(peer1.id_, peer1.addr_, reactor,
+                                           opts);
   instance1->add_peer(peer2.id_, peer2.addr_);
   instance1->add_peer(peer3.id_, peer3.addr_);
 
-  auto instance2 = std::make_shared<raft::RaftInstance>(peer2.id_, peer2.addr_, reactor);
+  auto instance2 = std::make_shared<raft::RaftInstance>(peer2.id_, peer2.addr_,
+                                                        reactor, opts);
   instance2->add_peer(peer1.id_, peer1.addr_);
   instance2->add_peer(peer3.id_, peer3.addr_);
-  auto instance3 = std::make_shared<raft::RaftInstance>(peer3.id_, peer3.addr_, reactor);
+  auto instance3 = std::make_shared<raft::RaftInstance>(peer3.id_, peer3.addr_,
+                                                        reactor, opts);
   instance3->add_peer(peer1.id_, peer1.addr_);
   instance3->add_peer(peer2.id_, peer2.addr_);
 

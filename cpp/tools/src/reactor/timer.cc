@@ -3,9 +3,9 @@
 
 namespace reactor {
 
-std::shared_ptr<Timer> Timer::create(const Options &opts, TimerImpl* impl) {
+std::unique_ptr<Timer> Timer::create(const Options &opts, TimerImpl* impl) {
   auto *timer = new Timer(opts, impl);
-  return std::shared_ptr<Timer>(timer);
+  return std::unique_ptr<Timer>(timer);
 }
 
 Timer::~Timer() {}
@@ -13,6 +13,13 @@ Timer::~Timer() {}
 EventCtx *Timer::start(Period period, std::shared_ptr<EventHandler> handler) {
   return impl_->start(period, handler);
 }
+
+/*
+template <typename T>
+EventCtx *Timer::start(Period period, std::shared_ptr<T> data,
+                       TimerCallBackT<T> timer_cb) {
+  return impl_->start(period, data, timer_cb);
+} */
 
 EventCtx* Timer::snooze(EventCtx* ctx, Period period) { return impl_->snooze(ctx, period); }
 

@@ -164,25 +164,4 @@ struct TimeoutEventCtx : public EventCtx {
   std::shared_ptr<EventHandler> internal_handler;
 };
 
-// TODO remove TimerImpl
-struct TimerImpl {
-  TimerImpl(Reactor *reactor) : reactor_(reactor), base_(nullptr) {}
-  virtual ~TimerImpl() = default;
-  /// @brief schedule a new timer
-  /// @param period, timer timeout
-  /// @retval nullptr if start failed
-  /// @retval event ctx if succeed
-  virtual EventCtx* start(Period period, std::shared_ptr<EventHandler> handler) = 0;
-  virtual EventCtx *start(Period period, std::shared_ptr<std::any> data,
-                          Timer::TimerCallBackT cb) = 0;
-  virtual EventCtx* snooze(EventCtx* ctx, Period period) = 0;
-  virtual int stop(EventCtx* ctx) = 0;
-  void set_base(Timer *base) { base_ = base; }
-  Timer::Options &get_opts() { return base_->get_opts(); }
-
-protected:
-  Reactor* reactor_;
-  Timer* base_;
-};
-
 }

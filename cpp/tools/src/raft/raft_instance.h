@@ -1,4 +1,5 @@
 #pragma once
+#include <chrono>
 #include <grpcpp/support/status.h>
 #include <memory>
 #include <string>
@@ -150,8 +151,16 @@ public:
   void flush();
 };
 
+struct RaftOptions {
+  std::chrono::milliseconds failure_detection_interval;
+};
 
-class RaftInstance : public IRaftProtocol {
+/// @brief callback func when failure detection timer triggered
+/// @note that this function will be invoked in timer thread
+void failure_detection_callcb(std::shared_ptr<RaftInstance> self);
+
+class RaftInstance : public IRaftProtocol,
+                     public std::enable_shared_from_this<RaftInstance> {
   Uuid uuid_;
   std::string listen_addr_;
   PeerMap peers_;
@@ -164,13 +173,15 @@ class RaftInstance : public IRaftProtocol {
   std::unique_ptr<raft_pb::RaftPeerConfig> local_peer_pb_;
   std::weak_ptr<reactor::Reactor> reactor_;
   std::unique_ptr<reactor::Timer> timer_;
+  RaftOptions opts_;
 
   void grant(const raft_pb::VoteRequest &request, raft_pb::VoteReply &reply);
   void deny(const raft_pb::VoteRequest &request, raft_pb::VoteReply &reply);
 
 public:
   RaftInstance(const Uuid &uuid, const std::string &listen_addr,
-               std::shared_ptr<reactor::Reactor> reactor);
+               std::shared_ptr<reactor::Reactor> reactor,
+               const RaftOptions &ros);
   // @brief add one peer into the raft instance
   // @param peer the peer to add
   // @ret false if already existed, true otherwise

@@ -31,35 +31,17 @@ struct EventConnectEventCtx : public ConnectEventCtx {
 
 EventTimerImpl::EventTimerImpl(Reactor *reactor) : TimerImpl(reactor) {}
 
-EventCtx *EventTimerImpl::start(Period period, std::shared_ptr<EventHandler> handler) {
+EventCtx *EventTimerImpl::start(Period period,
+                                std::shared_ptr<EventHandler> handler,
+                                bool internal_handler) {
   auto *teos =
       EventReactorImpl::new_timeout_event_opt(handler, period);
   std::shared_ptr<EventOptions> ptr_guard{teos};
   get_opts().period = period;
-  return reactor_->register_event(-1, *ptr_guard.get());
-}
-
-EventCtx * EventTimerImpl::start(Period period, std::shared_ptr<std::any> data,
-        Timer::TimerCallBackT cb) {
-  struct InternalTimerHandler : public reactor::EventHandler {
-    virtual void handle_timeout() {
-      if (auto d = data.lock()) {
-        cb(d);
-      }
-    }
-    std::weak_ptr<std::any> data;
-    Timer::TimerCallBackT cb;
-  };
-  auto *handler = new InternalTimerHandler();
-  std::shared_ptr<EventHandler> internal_handler{handler};
-  auto *teos = EventReactorImpl::new_timeout_event_opt(0, period);
-  std::shared_ptr<EventOptions> ptr_guard{teos};
-  get_opts().period = period;
   auto ctx = reactor_->register_event(-1, *ptr_guard.get());
-
-  if (ctx) {
-    TimeoutEventCtx* tctx = (TimeoutEventCtx*)ctx;
-    tctx->internal_handler = internal_handler;
+  if (internal_handler && ctx) {
+    auto* tctx = (TimeoutEventCtx*)ctx;
+    tctx->internal_handler = handler;
   }
   return ctx;
 }
@@ -69,7 +51,7 @@ EventCtx *EventTimerImpl::snooze(EventCtx *ctx, Period period) {
   auto handler = teos->handler.lock();
   auto ret = reactor_->unregister_event(ctx);
   if (ret == 0 && handler) {
-    return start(period, handler);
+    return start(period, handler, false);
   }
   return nullptr;
 }
