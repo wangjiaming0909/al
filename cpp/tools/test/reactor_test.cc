@@ -112,9 +112,9 @@ TEST(reactor, timer) {
   auto default_handler = new DefaultEventHandler(r.get());
   default_handler->name = "test for schedule timeouts";
   auto handler = std::shared_ptr<EventHandler>(default_handler);
-  Timer::Options opts{handler, timeout};
+  Timer::Options opts{timeout};
   auto timer = Timer::create(opts, new EventTimerImpl{r.get()});
-  timer->start(timeout);
+  timer->start(timeout, handler);
   std::this_thread::sleep_for(1s);
   ASSERT_TRUE(default_handler->timeout_triggered);
 
@@ -123,9 +123,8 @@ TEST(reactor, timer) {
   auto timer_handler2 = new DefaultEventHandler(r.get());
   timer_handler2->name = "test for snooze timeouts";
   handler = std::shared_ptr<EventHandler>(timer_handler2);
-  opts.handler = handler;
   timer->set_opts(opts);
-  auto ctx = timer->start(1s);
+  auto ctx = timer->start(1s, handler);
   std::this_thread::sleep_for(500ms);
   timer->snooze(ctx, 1s);
   std::this_thread::sleep_for(1.1s);
@@ -136,9 +135,8 @@ TEST(reactor, timer) {
   auto timer_handler3 = new DefaultEventHandler(r.get());
   timer_handler3->name = "test for stop timeouts";
   handler = std::shared_ptr<EventHandler>(timer_handler3);
-  opts.handler= handler;
   timer->set_opts(opts);
-  ctx = timer->start(1s);
+  ctx = timer->start(1s, handler);
   std::this_thread::sleep_for(500ms);
   timer->stop(ctx);
   std::this_thread::sleep_for(600ms);

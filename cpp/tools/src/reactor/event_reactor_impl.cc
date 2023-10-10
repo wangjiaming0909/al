@@ -31,18 +31,20 @@ struct EventConnectEventCtx : public ConnectEventCtx {
 
 EventTimerImpl::EventTimerImpl(Reactor *reactor) : TimerImpl(reactor) {}
 
-EventCtx *EventTimerImpl::start(Period period) {
+EventCtx *EventTimerImpl::start(Period period, std::shared_ptr<EventHandler> handler) {
   auto *teos =
-      EventReactorImpl::new_timeout_event_opt(get_opts().handler, period);
+      EventReactorImpl::new_timeout_event_opt(handler, period);
   std::shared_ptr<EventOptions> ptr_guard{teos};
   get_opts().period = period;
   return reactor_->register_event(-1, *ptr_guard.get());
 }
 
 EventCtx *EventTimerImpl::snooze(EventCtx *ctx, Period period) {
+  auto *teos = (TimeoutEventOptions*)ctx->eos;
+  auto handler = teos->handler.lock();
   auto ret = reactor_->unregister_event(ctx);
-  if (ret == 0) {
-    return start(period);
+  if (ret == 0 && handler) {
+    return start(period, handler);
   }
   return nullptr;
 }

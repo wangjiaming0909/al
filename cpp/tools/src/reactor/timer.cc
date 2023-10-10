@@ -10,7 +10,9 @@ std::shared_ptr<Timer> Timer::create(const Options &opts, TimerImpl* impl) {
 
 Timer::~Timer() {}
 
-EventCtx* Timer::start(Period period) { return impl_->start(period); }
+EventCtx *Timer::start(Period period, std::shared_ptr<EventHandler> handler) {
+  return impl_->start(period, handler);
+}
 
 EventCtx* Timer::snooze(EventCtx* ctx, Period period) { return impl_->snooze(ctx, period); }
 
