@@ -16,7 +16,9 @@ int EventMap::add_event(EventCtx* ctx) {
 EventCtx* EventMap::remove_event(EventCtx* ctx) {
   auto it = s_.find(ctx);
   if (it == s_.end()) return nullptr;
-  return *it;
+  auto ret = *it;
+  s_.erase(it);
+  return ret;
 }
 
 }

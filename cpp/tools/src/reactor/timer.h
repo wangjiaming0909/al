@@ -27,10 +27,11 @@ public:
   static std::shared_ptr<Timer> create(const Options &opts, TimerImpl* impl);
 
   ~Timer();
-  void start(Period period);
-  void snooze(Period period);
-  void stop();
+  EventCtx *start(Period period);
+  EventCtx *snooze(EventCtx* ctx, Period period);
+  void stop(EventCtx *ctx);
   const Options &get_opts() const { return opts_; }
+  void set_opts(const Options &opts) { opts_ = opts; }
 
 protected:
   Options& get_opts() {return opts_;}

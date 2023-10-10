@@ -39,12 +39,16 @@ EventCtx *EventTimerImpl::start(Period period) {
   return reactor_->register_event(-1, *ptr_guard.get());
 }
 
-EventCtx* EventTimerImpl::snooze(Period period) {
-  return 0;
+EventCtx *EventTimerImpl::snooze(EventCtx *ctx, Period period) {
+  auto ret = reactor_->unregister_event(ctx);
+  if (ret == 0) {
+    return start(period);
+  }
+  return nullptr;
 }
 
-int EventTimerImpl::stop() {
-  return -1;
+int EventTimerImpl::stop(EventCtx* ctx) {
+  return reactor_->unregister_event(ctx);
 }
 
 EventReactorImpl::EventReactorImpl() : base_(nullptr), stopped_(false) {
@@ -244,6 +248,7 @@ EventReactorImpl::register_timeout_event(int, const TimeoutEventOptions &teos) {
   auto *et = evtimer_new(base_, te_cb, ctx.get());
   if (!et)
     return nullptr;
+  //LOG(INFO) << "create timer: " << et;
   struct timeval t = {.tv_sec = 0, .tv_usec = 0};
   t.tv_usec = get_usecs(teos.timeout);
   if (0 != evtimer_add(et, &t)) {
@@ -257,6 +262,7 @@ EventReactorImpl::register_timeout_event(int, const TimeoutEventOptions &teos) {
   ctx->ec_deleter = [](void *ec) {
     if (ec) {
       auto *et = (event *)ec;
+      //LOG(INFO) << "del timer: " << et;
       evtimer_del(et);
       event_free(et);
     }

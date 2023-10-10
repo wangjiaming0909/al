@@ -172,8 +172,8 @@ struct TimerImpl {
   /// @retval nullptr if start failed
   /// @retval event ctx if succeed
   virtual EventCtx* start(Period period) = 0;
-  virtual EventCtx* snooze(Period period) = 0;
-  virtual int stop() = 0;
+  virtual EventCtx* snooze(EventCtx* ctx, Period period) = 0;
+  virtual int stop(EventCtx* ctx) = 0;
   void set_base(Timer *base) { base_ = base; }
   Timer::Options &get_opts() { return base_->get_opts(); }
 

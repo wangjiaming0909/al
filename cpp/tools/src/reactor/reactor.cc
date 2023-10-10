@@ -76,7 +76,7 @@ EventCtx* Reactor::register_event(int fd, const EventOptions &eos) {
   }
   case Event::TIMEOUT:
     ret = impl_->register_timeout_event(fd, (const TimeoutEventOptions &)eos);
-    if (ret) LOG(INFO) << "register timeout event: " << ret->fd;
+    if (ret) LOG(INFO) << "register timeout event: " << ret->fd << " ctx: " << ret;
     break;
   }
   if (ret) {
@@ -89,7 +89,8 @@ EventCtx* Reactor::register_event(int fd, const EventOptions &eos) {
 }
 
 int Reactor::unregister_event(EventCtx* ctx) {
-  LOG(INFO) << "unregister e: " << int(ctx->eos->e_type) << " for fd: " << ctx->fd;
+  LOG(INFO) << "unregister e: " << int(ctx->eos->e_type)
+            << " for fd: " << ctx->fd << " ctx: " << ctx;
   EventCtx *ret = em_->remove_event(ctx);
   if (ret) {
     delete ret;
