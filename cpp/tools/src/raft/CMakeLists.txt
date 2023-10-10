@@ -9,6 +9,7 @@ add_library(raft
   ${SOURCES})
 
 target_link_libraries(raft
+  reactor
   raft_grpc_proto
   glog
   ${_REFLECTION}

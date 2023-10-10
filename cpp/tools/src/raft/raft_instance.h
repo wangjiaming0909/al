@@ -187,10 +187,6 @@ public:
   void shtudown_server() { return rpc_server_->shutdown(); }
 };
 
-class Timer {
-
-};
-
 class LeaderElection;
 
 class LeaderElectionResult {
