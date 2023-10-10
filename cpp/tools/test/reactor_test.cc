@@ -1,6 +1,7 @@
 #include "event2/bufferevent.h"
 #include "event2/event.h"
 #include "event2/thread.h"
+#include "raft_test_util.h"
 #include "reactor/reactor.h"
 #include "reactor/event_reactor_impl.h"
 #include "uv.h"
@@ -52,13 +53,6 @@ struct DefaultEventHandler
   bool timeout_triggered = false;
   std::string name;
 };
-using namespace reactor;
-std::shared_ptr<Reactor> create_reactor_and_run() {
-  EventReactorImpl* impl = new EventReactorImpl{};
-  Reactor*r = new Reactor{impl};
-  r->runAsync();
-  return std::shared_ptr<Reactor>{r};
-}
 
 TEST(reactor, normal) {
   using namespace reactor;

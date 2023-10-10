@@ -50,9 +50,9 @@ message VoteReply {
 }
 
 message ConsensusRequest {
-  required string id = 1;
-  required bytes caller_uuid = 2;
-  required int64 caller_term = 3;
+  string id = 1;
+  bytes caller_uuid = 2;
+  int64 caller_term = 3;
 }
 
 message ConsensusResponse {

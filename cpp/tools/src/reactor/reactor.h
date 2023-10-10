@@ -31,11 +31,11 @@ public:
   EventHandler() = default;
   virtual ~EventHandler() = default;
 
-  virtual void handle_accept(int fd) = 0;
-  virtual void handle_event(int fd, int what) = 0;
-  virtual void handle_read(void *buffer, size_t len) = 0;
-  virtual void handle_write(const char *&bp, size_t*) = 0;
-  virtual void handle_timeout() = 0;
+  virtual void handle_accept(int fd) {}
+  virtual void handle_event(int fd, int what) {}
+  virtual void handle_read(void *buffer, size_t len) {}
+  virtual void handle_write(const char *&bp, size_t*) {}
+  virtual void handle_timeout() {}
 };
 
 enum class Event : int {

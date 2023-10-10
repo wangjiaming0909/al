@@ -3,6 +3,7 @@
 #include <boost/noncopyable.hpp>
 #include <chrono>
 #include <memory>
+#include <any>
 
 namespace reactor {
 
@@ -27,6 +28,8 @@ public:
 
   ~Timer();
   EventCtx *start(Period period, std::shared_ptr<EventHandler> handler);
+  using TimerCallBackT = void(*)(std::shared_ptr<std::any> data);
+  EventCtx *start(Period period, std::shared_ptr<std::any> data, TimerCallBackT cb);
   EventCtx *snooze(EventCtx* ctx, Period period);
   void stop(EventCtx *ctx);
   const Options &get_opts() const { return opts_; }

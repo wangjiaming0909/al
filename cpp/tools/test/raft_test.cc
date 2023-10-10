@@ -1,10 +1,10 @@
 #include "raft.grpc.pb.h"
+#include "raft/raft_instance.h"
 #include "raft_test_util.h"
 #include <glog/logging.h>
 #include <grpcpp/server_builder.h>
 #include <gtest/gtest.h>
 #include <memory>
-#include "raft/raft_instance.h"
 #include <thread_pool.h>
 
 TEST(raft, example) {
@@ -37,15 +37,16 @@ TEST(raft, config) {
 }
 
 TEST(raft, instance) {
+  auto reactor = create_reactor_and_run();
   std::shared_ptr<raft::RaftInstance> instance1 =
-      std::make_shared<raft::RaftInstance>(peer1.id_, peer1.addr_);
+      std::make_shared<raft::RaftInstance>(peer1.id_, peer1.addr_, reactor);
   instance1->add_peer(peer2.id_, peer2.addr_);
   instance1->add_peer(peer3.id_, peer3.addr_);
 
-  auto instance2 = std::make_shared<raft::RaftInstance>(peer2.id_, peer2.addr_);
+  auto instance2 = std::make_shared<raft::RaftInstance>(peer2.id_, peer2.addr_, reactor);
   instance2->add_peer(peer1.id_, peer1.addr_);
   instance2->add_peer(peer3.id_, peer3.addr_);
-  auto instance3 = std::make_shared<raft::RaftInstance>(peer3.id_, peer3.addr_);
+  auto instance3 = std::make_shared<raft::RaftInstance>(peer3.id_, peer3.addr_, reactor);
   instance3->add_peer(peer1.id_, peer1.addr_);
   instance3->add_peer(peer2.id_, peer2.addr_);
 
@@ -61,19 +62,19 @@ TEST(raft, instance) {
   ASSERT_EQ(it->second->uuid(), peer3.id_);
   ASSERT_EQ(it->second->addr(), peer3.addr_);
 
-  instance1->start_server();
-  run_in_pool([&]() { instance1->wait_server(); });
-  instance2->start_server();
-  run_in_pool([&]() { instance2->wait_server(); });
-  instance3->start_server();
-  run_in_pool([&]() { instance3->wait_server(); });
+  instance1->start();
+  run_in_pool([&]() { instance1->wait(); });
+  instance2->start();
+  run_in_pool([&]() { instance2->wait(); });
+  instance3->start();
+  run_in_pool([&]() { instance3->wait(); });
 
   raft::LeaderElection election{instance1};
 
   auto result = election.elect();
   ASSERT_TRUE(result.granted());
 
-  instance1->shtudown_server();
-  instance2->shtudown_server();
-  instance3->shtudown_server();
+  instance1->shutdown();
+  instance2->shutdown();
+  instance3->shutdown();
 }

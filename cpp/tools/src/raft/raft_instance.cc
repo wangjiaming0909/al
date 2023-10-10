@@ -1,17 +1,22 @@
 #include "raft_instance.h"
 #include "raft.grpc.pb.h"
+#include "reactor/timer.h"
 #include <glog/logging.h>
 #include <grpcpp/grpcpp.h>
 #include <grpcpp/server_builder.h>
 
 namespace raft {
-using std::make_unique;
-
 RaftInstance::~RaftInstance() {}
-RaftInstance::RaftInstance(const Uuid &uuid, const std::string &listen_addr)
+
+RaftInstance::RaftInstance(const Uuid &uuid, const std::string &listen_addr,
+                           std::shared_ptr<reactor::Reactor> reactor)
     : uuid_(uuid), listen_addr_(listen_addr), peers_(), role_(Role::Candidate),
       term_id_(0), master_uuid_(), master_term_id_(0),
-      rpc_server_(new RaftRpcServer(this, listen_addr_)) {}
+      rpc_server_(new RaftRpcServer(this, listen_addr_)), reactor_(reactor),
+      timer_(nullptr) {
+  using namespace std::chrono_literals;
+  reactor::Timer::Options opts{1s};
+}
 
 PeerInfo::PeerInfo(const Uuid &uuid, const std::string &addr)
     : addr_(addr), id_(uuid) {}
@@ -86,6 +91,24 @@ grpc::Status RaftInstance::request_vote(const raft_pb::VoteRequest &request,
   return ::grpc::Status::OK;
 }
 
+int RaftInstance::start() {
+  // start service
+  auto ret = start_server();
+  if (ret != 0) {
+    return ret;
+  }
+
+  // start timer for failure detection
+}
+
+void RaftInstance::wait() {
+  wait_server();
+}
+
+void RaftInstance::shutdown() {
+  shutdown_server();
+}
+
 grpc::Status Peer::request_vote(const raft_pb::VoteRequest &request,
                                 raft_pb::VoteReply &reply) {
   return client_->request_vote(request, reply);
@@ -122,14 +145,19 @@ RaftRpcServer::RaftRpcServer(RaftInstance *instance,
     : service_(this), server_{nullptr}, listen_addr_(listen_addr),
       uid_(instance->uuid()), raft_instance_(instance) {}
 
-void RaftRpcServer::start() {
+RaftRpcServer::~RaftRpcServer() {}
+
+int RaftRpcServer::start() {
   if (server_) {
-    return;
+    return 0;
   }
   grpc::ServerBuilder builder;
   builder.RegisterService(service_.get_service());
   builder.AddListeningPort(listen_addr_, grpc::InsecureServerCredentials());
   server_ = std::move(builder.BuildAndStart());
+  if (server_) return 0;
+  LOG(ERROR) << "start rpc server failed: " << strerror(errno);
+  return -1;
 }
 
 void RaftRpcServer::wait() { server_->Wait(); }

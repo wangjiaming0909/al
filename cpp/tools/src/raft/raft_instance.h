@@ -5,6 +5,11 @@
 #include <unordered_map>
 #include <unordered_set>
 
+namespace reactor {
+class Reactor;
+class Timer;
+}
+
 namespace grpc {
 class ChannelInterface;
 class Server;
@@ -54,10 +59,10 @@ class RaftRpcServer {
 
 public:
   RaftRpcServer(RaftInstance *instance, const std::string &listen_addr);
-  ~RaftRpcServer() {}
+  ~RaftRpcServer();
   inline const Uuid &uuid() const { return uid_; }
   inline RaftInstance *raft_instance() { return raft_instance_; }
-  void start();
+  int start();
   void wait();
   void shutdown();
 };
@@ -157,12 +162,15 @@ class RaftInstance : public IRaftProtocol {
   std::unique_ptr<RaftRpcServer> rpc_server_;
   std::unique_ptr<RaftMetadata> metadata_;
   std::unique_ptr<raft_pb::RaftPeerConfig> local_peer_pb_;
+  std::weak_ptr<reactor::Reactor> reactor_;
+  std::unique_ptr<reactor::Timer> timer_;
 
   void grant(const raft_pb::VoteRequest &request, raft_pb::VoteReply &reply);
   void deny(const raft_pb::VoteRequest &request, raft_pb::VoteReply &reply);
 
 public:
-  RaftInstance(const Uuid &uuid, const std::string &listen_addr);
+  RaftInstance(const Uuid &uuid, const std::string &listen_addr,
+               std::shared_ptr<reactor::Reactor> reactor);
   // @brief add one peer into the raft instance
   // @param peer the peer to add
   // @ret false if already existed, true otherwise
@@ -182,9 +190,13 @@ public:
   virtual grpc::Status request_vote(const raft_pb::VoteRequest &request,
                                     raft_pb::VoteReply &reply);
 
-  void start_server() { return rpc_server_->start(); }
+  int start();
+  void wait();
+  void shutdown();
+private:
+  int start_server() { return rpc_server_->start(); }
   void wait_server() { return rpc_server_->wait(); }
-  void shtudown_server() { return rpc_server_->shutdown(); }
+  void shutdown_server() { return rpc_server_->shutdown(); }
 };
 
 class LeaderElection;
