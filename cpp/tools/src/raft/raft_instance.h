@@ -9,6 +9,7 @@
 namespace reactor {
 class Reactor;
 class Timer;
+struct EventCtx;
 }
 
 namespace grpc {
@@ -41,6 +42,8 @@ struct IRaftProtocol {
 
 class RaftServiceImpl;
 class RaftRpcServer;
+class LeaderElection;
+
 class RaftService {
   RaftServiceImpl *impl_;
 
@@ -157,7 +160,7 @@ struct RaftOptions {
 
 /// @brief callback func when failure detection timer triggered
 /// @note that this function will be invoked in timer thread
-void failure_detection_callcb(std::shared_ptr<RaftInstance> self);
+void failure_detection_cb(std::shared_ptr<RaftInstance> self);
 
 class RaftInstance : public IRaftProtocol,
                      public std::enable_shared_from_this<RaftInstance> {
@@ -173,12 +176,16 @@ class RaftInstance : public IRaftProtocol,
   std::unique_ptr<raft_pb::RaftPeerConfig> local_peer_pb_;
   std::weak_ptr<reactor::Reactor> reactor_;
   std::unique_ptr<reactor::Timer> timer_;
+  reactor::EventCtx *timer_ctx_;
   RaftOptions opts_;
+
+  std::unique_ptr<LeaderElection> leader_election_;
 
   void grant(const raft_pb::VoteRequest &request, raft_pb::VoteReply &reply);
   void deny(const raft_pb::VoteRequest &request, raft_pb::VoteReply &reply);
 
 public:
+  friend void failure_detection_cb(std::shared_ptr<RaftInstance> self);
   RaftInstance(const Uuid &uuid, const std::string &listen_addr,
                std::shared_ptr<reactor::Reactor> reactor,
                const RaftOptions &ros);
@@ -209,8 +216,6 @@ private:
   void wait_server() { return rpc_server_->wait(); }
   void shutdown_server() { return rpc_server_->shutdown(); }
 };
-
-class LeaderElection;
 
 class LeaderElectionResult {
   size_t voter_num_;

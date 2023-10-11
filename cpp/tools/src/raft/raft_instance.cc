@@ -103,8 +103,15 @@ int RaftInstance::start() {
 
   // start timer for failure detection
   using namespace std::placeholders;
-  reactor::Timer::TimerCallBackT<typeof(*this)> cb = failure_detection_callcb;
-  timer_->start(opts_.failure_detection_interval, shared_from_this(), cb);
+  reactor::Timer::TimerCallBackT<typeof(*this)> cb = failure_detection_cb;
+  timer_ctx_ =
+      timer_->start(opts_.failure_detection_interval, shared_from_this(), cb);
+  if (!timer_ctx_) {
+    LOG(ERROR) << "raft instance start failure detection timer failed: "
+               << strerror(errno);
+    return -1;
+  }
+  return 0;
 }
 
 void RaftInstance::wait() {
@@ -284,8 +291,15 @@ bool LeaderElectionResult::denied() const {
   return (denied_peers_.size() + err_peers_.size()) >= majority_num();
 }
 
-void failure_detection_callcb(std::shared_ptr<RaftInstance> self) {
-
+void failure_detection_cb(std::shared_ptr<RaftInstance> self) {
+  LOG(INFO) << "leader failure detected, leader: " << self->master_uuid_
+            << " self: " << self->uuid_;
+  // start to do leader election
+  LOG(INFO) << self->uuid_ << " start to leader election";
+  if (!self->leader_election_) {
+    self->leader_election_.reset(new LeaderElection{self});
+  }
+  auto election_res = self->leader_election_->elect();
 }
 
 } // namespace raft

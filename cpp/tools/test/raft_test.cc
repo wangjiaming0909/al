@@ -41,7 +41,7 @@ TEST(raft, config) {
 TEST(raft, instance) {
   auto reactor = create_reactor_and_run();
   raft::RaftOptions opts;
-  opts.failure_detection_interval = 10s;
+  opts.failure_detection_interval = 5s;
   std::shared_ptr<raft::RaftInstance> instance1 =
       std::make_shared<raft::RaftInstance>(peer1.id_, peer1.addr_, reactor,
                                            opts);
