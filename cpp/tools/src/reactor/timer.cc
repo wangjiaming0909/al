@@ -10,20 +10,16 @@ std::unique_ptr<Timer> Timer::create(const Options &opts, TimerImpl* impl) {
 
 Timer::~Timer() {}
 
-EventCtx *Timer::start(Period period, std::shared_ptr<EventHandler> handler) {
+std::weak_ptr<EventCtx> Timer::start(Period period, std::shared_ptr<EventHandler> handler) {
   return impl_->start(period, handler);
 }
 
-/*
-template <typename T>
-EventCtx *Timer::start(Period period, std::shared_ptr<T> data,
-                       TimerCallBackT<T> timer_cb) {
-  return impl_->start(period, data, timer_cb);
-} */
+std::weak_ptr<EventCtx> Timer::snooze(std::shared_ptr<EventCtx> ctx,
+                                        Period period) {
+  return impl_->snooze(ctx, period);
+}
 
-EventCtx* Timer::snooze(EventCtx* ctx, Period period) { return impl_->snooze(ctx, period); }
-
-void Timer::stop(EventCtx* ctx) { impl_->stop(ctx); }
+void Timer::stop(std::shared_ptr<EventCtx> ctx) { impl_->stop(ctx); }
 
 Timer::Timer(const Options &opts, TimerImpl *impl) : opts_(opts) {
   impl_.reset(impl);

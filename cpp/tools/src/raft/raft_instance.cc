@@ -106,7 +106,7 @@ int RaftInstance::start() {
   reactor::Timer::TimerCallBackT<typeof(*this)> cb = failure_detection_cb;
   timer_ctx_ =
       timer_->start(opts_.failure_detection_interval, shared_from_this(), cb);
-  if (!timer_ctx_) {
+  if (!timer_ctx_.lock()) {
     LOG(ERROR) << "raft instance start failure detection timer failed: "
                << strerror(errno);
     return -1;
@@ -188,30 +188,23 @@ public:
             addr, ::grpc::InsecureChannelCredentials()))) {}
 
   inline virtual ::grpc::Status
-  request_vote(const raft_pb::VoteRequest &request, raft_pb::VoteReply &reply) {
+  request_vote(const raft_pb::VoteRequest &request,
+               raft_pb::VoteReply &reply) override {
     ::grpc::ClientContext context;
     return stub_->request_vote(&context, request, &reply);
   }
 };
 
-RaftRpcClient::RaftRpcClient(const std::string &addr) : stub_(new Stub(addr)) {}
-
-::grpc::Status
-RaftRpcClient::Stub::request_vote(const raft_pb::VoteRequest &request,
-                                  raft_pb::VoteReply &reply) {
-  return stub_->request_vote(request, reply);
-}
+RaftRpcClient::RaftRpcClient(const std::string &addr)
+    : stub_(new RaftStubImpl(addr)) {}
 
 grpc::Status RaftRpcClient::request_vote(const raft_pb::VoteRequest &request,
                                          raft_pb::VoteReply &reply) {
-  return this->stub_->request_vote(request, reply);
+  return stub_->request_vote(request, reply);
 }
 
 RaftRpcClient::~RaftRpcClient() {}
 
-RaftRpcClient::Stub::Stub(const std::string &addr)
-    : stub_(new RaftStubImpl{addr}) {}
-RaftRpcClient::Stub::~Stub() {}
 /**********Raft Client*********/
 
 /******************leader election****************/

@@ -73,16 +73,7 @@ public:
 
 class RaftStubImpl;
 class RaftRpcClient : public IRaftProtocol {
-  class Stub : public IRaftProtocol {
-    std::unique_ptr<RaftStubImpl> stub_;
-
-  public:
-    Stub(const std::string &addr);
-    ~Stub();
-    virtual grpc::Status request_vote(const raft_pb::VoteRequest &request,
-                                      raft_pb::VoteReply &reply);
-  };
-  std::unique_ptr<Stub> stub_;
+  std::unique_ptr<IRaftProtocol> stub_;
 
 public:
   RaftRpcClient(const std::string &addr);
@@ -176,7 +167,7 @@ class RaftInstance : public IRaftProtocol,
   std::unique_ptr<raft_pb::RaftPeerConfig> local_peer_pb_;
   std::weak_ptr<reactor::Reactor> reactor_;
   std::unique_ptr<reactor::Timer> timer_;
-  reactor::EventCtx *timer_ctx_;
+  std::weak_ptr<reactor::EventCtx> timer_ctx_;
   RaftOptions opts_;
 
   std::unique_ptr<LeaderElection> leader_election_;

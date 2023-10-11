@@ -69,11 +69,11 @@ struct Reactor {
   /// @param eos, the opts for this event
   /// @retval the ctx for this registerd event
   /// @retval NULL if register failed, check errno
-  EventCtx* register_event(int fd, const EventOptions& eos);
+  std::weak_ptr<EventCtx> register_event(int fd, const EventOptions& eos);
   /// @brief unregister a event from reactor, if succeeded, ctx is deleted
   /// @param ctx, the ret pointer when register_event
   /// @retval 0 if success, -1 for ctx not found
-  int unregister_event(EventCtx* ctx);
+  int unregister_event(std::shared_ptr<EventCtx> ctx);
 
 private:
   EventMap* em_;
