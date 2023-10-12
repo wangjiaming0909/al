@@ -13,12 +13,13 @@ RaftInstance::RaftInstance(const Uuid &uuid, const std::string &listen_addr,
                            std::shared_ptr<reactor::Reactor> reactor,
                            const RaftOptions &ros)
     : uuid_(uuid), listen_addr_(listen_addr), peers_(), role_(Role::Candidate),
-      term_id_(0), master_uuid_(), master_term_id_(0),
+      term_id_(0), leader_uuid_(), leader_term_id_(0),
       rpc_server_(new RaftRpcServer(this, listen_addr_)), reactor_(reactor),
-      timer_(nullptr), opts_(ros) {
+      failure_detection_timer_(nullptr), opts_(ros) {
   using namespace std::chrono_literals;
   reactor::Timer::Options opts{ros.failure_detection_interval};
-  timer_ = reactor::Timer::create(opts, new reactor::EventTimerImpl{reactor.get()});
+  failure_detection_timer_ = reactor::Timer::create(opts, new reactor::EventTimerImpl{reactor.get()});
+  metadata_.reset(new RaftMetadata(uuid));
 }
 
 PeerInfo::PeerInfo(const Uuid &uuid, const std::string &addr)
@@ -50,11 +51,11 @@ bool RaftInstance::add_peer(const Uuid &uuid, const std::string &addr) {
 void RaftInstance::grant(const raft_pb::VoteRequest &request,
                          raft_pb::VoteReply &reply) {
   role_ = Role::Learner;
-  master_uuid_ = request.candidate_id();
-  master_term_id_ = request.candidate_term_id();
+  leader_uuid_ = request.candidate_id();
+  leader_term_id_ = request.candidate_term_id();
 
-  LOG(INFO) << uuid() << " granted " << master_uuid_
-            << " to be leader, master term id: " << master_term_id_;
+  LOG(INFO) << uuid() << " granted " << leader_uuid_
+            << " to be leader, master term id: " << leader_term_id_;
 
   // prepare the reply
   reply.set_responder_uuid(uuid_);
@@ -64,7 +65,7 @@ void RaftInstance::grant(const raft_pb::VoteRequest &request,
 
 void RaftInstance::deny(const raft_pb::VoteRequest &request,
                         raft_pb::VoteReply &reply) {
-  LOG(INFO) << uuid() << " denied " << master_uuid_
+  LOG(INFO) << uuid() << " denied " << request.candidate_id()
             << " to be leader my term id: " << term_id_
             << " candidate term id: " << request.candidate_term_id();
   // prepare the reply
@@ -76,17 +77,31 @@ void RaftInstance::deny(const raft_pb::VoteRequest &request,
 grpc::Status RaftInstance::request_vote(const raft_pb::VoteRequest &request,
                                         raft_pb::VoteReply &reply) {
   assert(request.dest_id() == uuid_);
-  auto term_id = request.candidate_term_id();
+  auto candidate_term_id = request.candidate_term_id();
   // 1. if we have leader and uuid is not same as the candidate uuid, we deny
   // this vote
-
-  // 2. if candidate is fall behind, we deny this vote
-  if (term_id <= term_id_)
+  if (!leader_uuid_.empty() && leader_uuid_ != request.candidate_id()) {
     deny(request, reply);
+    return grpc::Status::OK;
+  }
+  // 2. if candidate is fall behind, we deny this vote
+  if (candidate_term_id <= term_id_) {
+    deny(request, reply);
+    return grpc::Status::OK;
+  }
 
   // 3. if we have no leader, but we already granted someone
   //   a. if same as candidate, we grant again
   //   b. if not, we deny it
+  if (leader_uuid_.empty() && metadata_->has_voted_for()) {
+    if (metadata_->get_voted_for() == request.candidate_id()) {
+      grant(request, reply);
+      return grpc::Status::OK;
+    } else {
+      deny(request, reply);
+      return grpc::Status::OK;
+    }
+  }
 
   // 4. check last oper id of candidate
 
@@ -100,15 +115,16 @@ int RaftInstance::start() {
   if (ret != 0) {
     return ret;
   }
-
+  election_res_.reset(new LeaderElectionResult{peers_.size()});
   // start timer for failure detection
   using namespace std::placeholders;
   reactor::Timer::TimerCallBackT<typeof(*this)> cb = failure_detection_cb;
-  timer_ctx_ =
-      timer_->start(opts_.failure_detection_interval, shared_from_this(), cb);
-  if (!timer_ctx_.lock()) {
+  failure_detection_timer_ctx_ =
+      failure_detection_timer_->start(opts_.failure_detection_interval, shared_from_this(), cb);
+  if (!failure_detection_timer_ctx_.lock()) {
     LOG(ERROR) << "raft instance start failure detection timer failed: "
                << strerror(errno);
+    shutdown_server();
     return -1;
   }
   return 0;
@@ -312,6 +328,31 @@ LeaderElectionResult LeaderElection::elect() {
 
 void LeaderElection::request_vote_cb(::grpc::Status status, Uuid peer_id,
                                      std::shared_ptr<LeaderElection> self) {
+  std::shared_ptr<RaftInstance> ins = instance_.lock();
+  if (!ins) {
+    LOG(WARNING) << "receive vote reply from: " << peer_id
+                 << " but ins: " << ins->uuid() << " has been released";
+    return;
+  }
+  LOG(INFO) << "instance: " << ins->uuid()
+            << " receive vote reply from: " << peer_id;
+  auto state_it = peer_states_.find(peer_id);
+  if (state_it == peer_states_.end()) {
+    LOG(WARNING) << "instance: " << ins->uuid()
+                 << " peer_state not found for: " << peer_id;
+    return;
+  }
+  auto& res = *ins->get_election_res().get();
+  handle_reply(status, *state_it->second.reply.get(),
+               res);
+
+  if (res.granted()) {
+    LOG(INFO) << "ins: " << ins->uuid()
+              << " leader election succeed, going to be leader";
+  } else if (res.denied()) {
+    LOG(INFO) << "ins: " << ins->uuid() << " leader election failed";
+  } else {
+  }
 }
 
 void LeaderElection::handle_reply(::grpc::Status rpc_status,
@@ -354,14 +395,38 @@ bool LeaderElectionResult::denied() const {
 }
 
 void failure_detection_cb(std::shared_ptr<RaftInstance> self) {
-  LOG(INFO) << "leader failure detected, leader: " << self->master_uuid_
+  LOG(INFO) << "leader failure detected, leader: " << self->leader_uuid_
             << " self: " << self->uuid_;
   // start to do leader election
   LOG(INFO) << self->uuid_ << " start to leader election";
   if (!self->leader_election_) {
     self->leader_election_ = LeaderElection::create_election(self);
   }
-  auto election_res = self->leader_election_->elect();
+  self->leader_election_->elect();
+}
+
+RaftMetadata::RaftMetadata(const Uuid &local_id)
+    : leader_uuid_(), active_role_(Role::Candidate),
+      meta_pb_(new ::raft_pb::RaftMetadata{}) {}
+
+void RaftMetadata::set_commited_config(const raft_pb::RaftConfig& config) {
+
+}
+
+void RaftMetadata::set_current_term(int64_t term) {
+
+}
+
+void RaftMetadata::set_voted_for(Uuid id) {
+  meta_pb_->set_voted_for(id);
+}
+
+bool RaftMetadata::has_voted_for() const {
+  return meta_pb_->has_voted_for();
+}
+
+Uuid RaftMetadata::get_voted_for() const {
+  return meta_pb_->voted_for();
 }
 
 } // namespace raft

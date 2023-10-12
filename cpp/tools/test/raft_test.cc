@@ -41,17 +41,20 @@ TEST(raft, config) {
 TEST(raft, instance) {
   auto reactor = create_reactor_and_run();
   raft::RaftOptions opts;
-  opts.failure_detection_interval = 5s;
+  opts.failure_detection_interval = 1s;
   std::shared_ptr<raft::RaftInstance> instance1 =
       std::make_shared<raft::RaftInstance>(peer1.id_, peer1.addr_, reactor,
                                            opts);
   instance1->add_peer(peer2.id_, peer2.addr_);
   instance1->add_peer(peer3.id_, peer3.addr_);
 
+  opts.failure_detection_interval = 2s;
   auto instance2 = std::make_shared<raft::RaftInstance>(peer2.id_, peer2.addr_,
                                                         reactor, opts);
   instance2->add_peer(peer1.id_, peer1.addr_);
   instance2->add_peer(peer3.id_, peer3.addr_);
+
+  opts.failure_detection_interval = 3s;
   auto instance3 = std::make_shared<raft::RaftInstance>(peer3.id_, peer3.addr_,
                                                         reactor, opts);
   instance3->add_peer(peer1.id_, peer1.addr_);
@@ -75,11 +78,6 @@ TEST(raft, instance) {
   run_in_pool([&]() { instance2->wait(); });
   instance3->start();
   run_in_pool([&]() { instance3->wait(); });
-
-  std::shared_ptr<raft::LeaderElection> election =
-      raft::LeaderElection::create_election(instance1);
-
-  election->elect();
 
   std::this_thread::sleep_for(2s);
 

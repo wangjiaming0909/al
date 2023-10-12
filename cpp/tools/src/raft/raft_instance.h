@@ -61,6 +61,7 @@ struct IRaftProtocol {
 class RaftServiceImpl;
 class RaftRpcServer;
 class LeaderElection;
+class LeaderElectionResult;
 
 class RaftService {
   RaftServiceImpl *impl_;
@@ -180,6 +181,9 @@ public:
 
   void set_commited_config(const raft_pb::RaftConfig& config);
   void set_current_term(int64_t term);
+  void set_voted_for(Uuid id);
+  bool has_voted_for() const;
+  Uuid get_voted_for() const;
   void flush();
 };
 
@@ -197,18 +201,21 @@ class RaftInstance : public std::enable_shared_from_this<RaftInstance> {
   PeerMap peers_;
   Role role_;
   uint64_t term_id_;
-  Uuid master_uuid_;
-  uint64_t master_term_id_;
+  Uuid leader_uuid_;
+  uint64_t leader_term_id_;
   std::unique_ptr<RaftRpcServer> rpc_server_;
   std::unique_ptr<RaftMetadata> metadata_;
   std::unique_ptr<raft_pb::RaftPeerConfig> local_peer_pb_;
-  std::weak_ptr<reactor::Reactor> reactor_;
-  std::unique_ptr<reactor::Timer> timer_;
-  std::weak_ptr<reactor::EventCtx> timer_ctx_;
   RaftOptions opts_;
+
+  // failure detection timer related
+  std::weak_ptr<reactor::Reactor> reactor_;
+  std::unique_ptr<reactor::Timer> failure_detection_timer_;
+  std::weak_ptr<reactor::EventCtx> failure_detection_timer_ctx_;
 
   // TODO use shared_ptr, election callback will ref this object
   std::shared_ptr<LeaderElection> leader_election_;
+  std::shared_ptr<LeaderElectionResult> election_res_;
 
   void grant(const raft_pb::VoteRequest &request, raft_pb::VoteReply &reply);
   void deny(const raft_pb::VoteRequest &request, raft_pb::VoteReply &reply);
@@ -233,6 +240,9 @@ public:
   inline const Uuid &uuid() const;
   inline uint64_t term_id() const { return term_id_; }
   void inc_term_id() { term_id_++; }
+  inline std::shared_ptr<LeaderElectionResult> get_election_res() {
+    return election_res_;
+  }
 
   grpc::Status request_vote(const raft_pb::VoteRequest &request,
                             raft_pb::VoteReply &reply);

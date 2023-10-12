@@ -27,6 +27,7 @@ message RaftConfig {
   repeated RaftPeerConfig peers = 2;
 };
 
+// persisted in local storage for every RaftInstance
 message RaftMetadata {
   RaftConfig commited_config = 1;
   int64 current_term = 2;
