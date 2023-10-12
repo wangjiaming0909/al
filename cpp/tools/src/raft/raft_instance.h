@@ -1,5 +1,6 @@
 #pragma once
 #include <chrono>
+#include <functional>
 #include <grpcpp/support/status.h>
 #include <memory>
 #include <string>
@@ -23,6 +24,8 @@ class RaftMetadata;
 class RaftRpc;
 class RaftPeerConfig;
 class RaftConfig;
+class ConsensusRequest;
+class ConsensusResponse;
 } // namespace raft_pb
 namespace google {
 namespace protobuf {
@@ -38,6 +41,16 @@ using Uuid = std::string;
 struct IRaftProtocol {
   virtual grpc::Status request_vote(const raft_pb::VoteRequest &request,
                                     raft_pb::VoteReply &reply) = 0;
+  virtual void request_vote_async(const raft_pb::VoteRequest &req,
+                                  raft_pb::VoteReply &resp,
+                                  std::function<void(::grpc::Status)> f) = 0;
+
+  virtual ::grpc::Status update_consensus(const raft_pb::ConsensusRequest &req,
+                                          raft_pb::ConsensusResponse &resp) = 0;
+  virtual void
+  update_consensus_async(const raft_pb::ConsensusRequest &req,
+                         raft_pb::ConsensusResponse &resp,
+                         std::function<void(::grpc::Status)> f) = 0;
 };
 
 class RaftServiceImpl;
@@ -80,7 +93,18 @@ public:
   ~RaftRpcClient();
 
   virtual grpc::Status request_vote(const raft_pb::VoteRequest &request,
-                                    raft_pb::VoteReply &reply);
+                                    raft_pb::VoteReply &reply) override;
+  virtual void
+  request_vote_async(const raft_pb::VoteRequest &req, raft_pb::VoteReply &resp,
+                     std::function<void(::grpc::Status)> f) override;
+
+  virtual ::grpc::Status
+  update_consensus(const raft_pb::ConsensusRequest &req,
+                   raft_pb::ConsensusResponse &resp) override;
+  virtual void
+  update_consensus_async(const raft_pb::ConsensusRequest &req,
+                         raft_pb::ConsensusResponse &resp,
+                         std::function<void(::grpc::Status)> f) override;
 };
 
 struct PeerInfo {
@@ -90,7 +114,7 @@ struct PeerInfo {
   std::string addr_;
 };
 
-class Peer : public IRaftProtocol {
+class Peer {
   PeerInfo info_;
   std::unique_ptr<RaftRpcClient> client_;
   std::unique_ptr<raft_pb::RaftPeerConfig> local_peer_conf_;
@@ -98,7 +122,7 @@ class Peer : public IRaftProtocol {
 public:
   Peer(const PeerInfo &info);
   ~Peer();
-  virtual grpc::Status request_vote(const raft_pb::VoteRequest &request,
+  grpc::Status request_vote(const raft_pb::VoteRequest &request,
                                     raft_pb::VoteReply &reply);
   const Uuid &uuid() const { return info_.id_; }
   const std::string &addr() const { return info_.addr_; }
@@ -153,8 +177,7 @@ struct RaftOptions {
 /// @note that this function will be invoked in timer thread
 void failure_detection_cb(std::shared_ptr<RaftInstance> self);
 
-class RaftInstance : public IRaftProtocol,
-                     public std::enable_shared_from_this<RaftInstance> {
+class RaftInstance : public std::enable_shared_from_this<RaftInstance> {
   Uuid uuid_;
   std::string listen_addr_;
   PeerMap peers_;
@@ -170,6 +193,7 @@ class RaftInstance : public IRaftProtocol,
   std::weak_ptr<reactor::EventCtx> timer_ctx_;
   RaftOptions opts_;
 
+  // TODO use shared_ptr, election callback will ref this object
   std::unique_ptr<LeaderElection> leader_election_;
 
   void grant(const raft_pb::VoteRequest &request, raft_pb::VoteReply &reply);
@@ -196,8 +220,8 @@ public:
   inline uint64_t term_id() const { return term_id_; }
   void inc_term_id() { term_id_++; }
 
-  virtual grpc::Status request_vote(const raft_pb::VoteRequest &request,
-                                    raft_pb::VoteReply &reply);
+  grpc::Status request_vote(const raft_pb::VoteRequest &request,
+                            raft_pb::VoteReply &reply);
 
   int start();
   void wait();

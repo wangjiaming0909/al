@@ -193,6 +193,27 @@ public:
     ::grpc::ClientContext context;
     return stub_->request_vote(&context, request, &reply);
   }
+  inline void
+  request_vote_async(const raft_pb::VoteRequest &req, raft_pb::VoteReply &resp,
+                     std::function<void(::grpc::Status)> f) override {
+    ::grpc::ClientContext ctx;
+    stub_->async()->request_vote(&ctx, &req, &resp, f);
+  }
+
+  inline virtual ::grpc::Status
+  update_consensus(const raft_pb::ConsensusRequest &req,
+                   raft_pb::ConsensusResponse &resp) override {
+    ::grpc::ClientContext ctx;
+    return stub_->update_consensus(&ctx, req, &resp);
+  }
+
+  inline void
+  update_consensus_async(const raft_pb::ConsensusRequest &req,
+                         raft_pb::ConsensusResponse &resp,
+                         std::function<void(::grpc::Status)> f) override {
+    ::grpc::ClientContext ctx;
+    stub_->async()->update_consensus(&ctx, &req, &resp, f);
+  }
 };
 
 RaftRpcClient::RaftRpcClient(const std::string &addr)
@@ -201,6 +222,24 @@ RaftRpcClient::RaftRpcClient(const std::string &addr)
 grpc::Status RaftRpcClient::request_vote(const raft_pb::VoteRequest &request,
                                          raft_pb::VoteReply &reply) {
   return stub_->request_vote(request, reply);
+}
+
+void RaftRpcClient::request_vote_async(const raft_pb::VoteRequest &req,
+                                  raft_pb::VoteReply &resp,
+                                  std::function<void(::grpc::Status)> f) {
+  stub_->request_vote_async(req, resp, f);
+}
+
+::grpc::Status
+RaftRpcClient::update_consensus(const raft_pb::ConsensusRequest &req,
+                                raft_pb::ConsensusResponse &resp) {
+  return stub_->update_consensus(req, resp);
+}
+
+void RaftRpcClient::update_consensus_async(
+    const raft_pb::ConsensusRequest &req, raft_pb::ConsensusResponse &resp,
+    std::function<void(::grpc::Status)> f) {
+  stub_->update_consensus_async(req, resp, f);
 }
 
 RaftRpcClient::~RaftRpcClient() {}
