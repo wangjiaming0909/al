@@ -49,6 +49,7 @@ int Reactor::runAsync() {
 }
 
 int Reactor::stop() {
+  LOG(INFO) << "stop reactor: " << this;
   return impl_->stop();
 }
 

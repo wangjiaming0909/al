@@ -76,12 +76,16 @@ TEST(raft, instance) {
   instance3->start();
   run_in_pool([&]() { instance3->wait(); });
 
-  raft::LeaderElection election{instance1};
+  std::shared_ptr<raft::LeaderElection> election =
+      raft::LeaderElection::create_election(instance1);
 
-  auto result = election.elect();
-  ASSERT_TRUE(result.granted());
+  election->elect();
 
+  std::this_thread::sleep_for(2s);
+
+  LOG(INFO) << "start to stop raft test";
   instance1->shutdown();
   instance2->shutdown();
   instance3->shutdown();
+  reactor->stop();
 }

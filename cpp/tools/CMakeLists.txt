@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.26)
 project(tool C CXX)
+set(ABSL_ENABLE_INSTALL ON)
 include(./cmake/common.cmake)
 include(./cmake/proto.cmake)
 

@@ -16,6 +16,7 @@ struct EventCtx;
 namespace grpc {
 class ChannelInterface;
 class Server;
+class ClientContext;
 } // namespace grpc
 namespace raft_pb {
 class VoteRequest;
@@ -39,16 +40,20 @@ enum class Role { Candidate, Master, Follower, Learner, Oberserver };
 using Uuid = std::string;
 
 struct IRaftProtocol {
-  virtual grpc::Status request_vote(const raft_pb::VoteRequest &request,
+  virtual grpc::Status request_vote(::grpc::ClientContext *ctx,
+                                    const raft_pb::VoteRequest &request,
                                     raft_pb::VoteReply &reply) = 0;
-  virtual void request_vote_async(const raft_pb::VoteRequest &req,
+  virtual void request_vote_async(::grpc::ClientContext *ctx,
+                                  const raft_pb::VoteRequest &req,
                                   raft_pb::VoteReply &resp,
                                   std::function<void(::grpc::Status)> f) = 0;
 
-  virtual ::grpc::Status update_consensus(const raft_pb::ConsensusRequest &req,
+  virtual ::grpc::Status update_consensus(::grpc::ClientContext *ctx,
+                                          const raft_pb::ConsensusRequest &req,
                                           raft_pb::ConsensusResponse &resp) = 0;
   virtual void
-  update_consensus_async(const raft_pb::ConsensusRequest &req,
+  update_consensus_async(::grpc::ClientContext *ctx,
+                         const raft_pb::ConsensusRequest &req,
                          raft_pb::ConsensusResponse &resp,
                          std::function<void(::grpc::Status)> f) = 0;
 };
@@ -92,17 +97,21 @@ public:
   RaftRpcClient(const std::string &addr);
   ~RaftRpcClient();
 
-  virtual grpc::Status request_vote(const raft_pb::VoteRequest &request,
+  virtual grpc::Status request_vote(::grpc::ClientContext *ctx,
+                                    const raft_pb::VoteRequest &request,
                                     raft_pb::VoteReply &reply) override;
   virtual void
-  request_vote_async(const raft_pb::VoteRequest &req, raft_pb::VoteReply &resp,
+  request_vote_async(::grpc::ClientContext *ctx,
+                     const raft_pb::VoteRequest &req, raft_pb::VoteReply &resp,
                      std::function<void(::grpc::Status)> f) override;
 
   virtual ::grpc::Status
-  update_consensus(const raft_pb::ConsensusRequest &req,
+  update_consensus(::grpc::ClientContext *ctx,
+                   const raft_pb::ConsensusRequest &req,
                    raft_pb::ConsensusResponse &resp) override;
   virtual void
-  update_consensus_async(const raft_pb::ConsensusRequest &req,
+  update_consensus_async(::grpc::ClientContext *ctx,
+                         const raft_pb::ConsensusRequest &req,
                          raft_pb::ConsensusResponse &resp,
                          std::function<void(::grpc::Status)> f) override;
 };
@@ -122,9 +131,11 @@ class Peer {
 public:
   Peer(const PeerInfo &info);
   ~Peer();
-  ::grpc::Status request_vote(const raft_pb::VoteRequest &request,
+  ::grpc::Status request_vote(::grpc::ClientContext *ctx,
+                              const raft_pb::VoteRequest &request,
                               raft_pb::VoteReply &reply);
-  void request_vote_async(const raft_pb::VoteRequest &req,
+  void request_vote_async(::grpc::ClientContext *ctx,
+                          const raft_pb::VoteRequest &req,
                           raft_pb::VoteReply &resp,
                           std::function<void(::grpc::Status)> f);
   const Uuid &uuid() const { return info_.id_; }
@@ -263,15 +274,17 @@ class LeaderElection : public std::enable_shared_from_this<LeaderElection> {
                     LeaderElectionResult &res);
 
 public:
-  LeaderElection(std::shared_ptr<RaftInstance> instance);
-
+  ~LeaderElection() = default;
   LeaderElectionResult elect();
+  static std::shared_ptr<LeaderElection> create_election(std::shared_ptr<RaftInstance> ins);
 
   void request_vote_cb(::grpc::Status status, Uuid from_peer_id, std::shared_ptr<LeaderElection> self);
 
 private:
+  LeaderElection(std::shared_ptr<RaftInstance> instance);
   struct VoteState {
     std::unique_ptr<::raft_pb::VoteReply> reply;
+    std::unique_ptr<::grpc::ClientContext> cctx_;
   };
   std::weak_ptr<RaftInstance> instance_;
   std::unordered_map<Uuid, VoteState> peer_states_;

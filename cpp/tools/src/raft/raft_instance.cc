@@ -122,15 +122,17 @@ void RaftInstance::shutdown() {
   shutdown_server();
 }
 
-grpc::Status Peer::request_vote(const raft_pb::VoteRequest &request,
+grpc::Status Peer::request_vote(::grpc::ClientContext *ctx,
+                                const raft_pb::VoteRequest &request,
                                 raft_pb::VoteReply &reply) {
-  return client_->request_vote(request, reply);
+  return client_->request_vote(ctx, request, reply);
 }
 
-void Peer::request_vote_async(const raft_pb::VoteRequest &req,
-                          raft_pb::VoteReply &resp,
-                          std::function<void(::grpc::Status)> f) {
-  return client_->request_vote_async(req, resp, f);
+void Peer::request_vote_async(::grpc::ClientContext *ctx,
+                              const raft_pb::VoteRequest &req,
+                              raft_pb::VoteReply &resp,
+                              std::function<void(::grpc::Status)> f) {
+  return client_->request_vote_async(ctx, req, resp, f);
 }
 
 Peer::Peer(const PeerInfo &info)
@@ -194,58 +196,60 @@ public:
             addr, ::grpc::InsecureChannelCredentials()))) {}
 
   inline virtual ::grpc::Status
-  request_vote(const raft_pb::VoteRequest &request,
+  request_vote(::grpc::ClientContext *ctx, const raft_pb::VoteRequest &request,
                raft_pb::VoteReply &reply) override {
-    ::grpc::ClientContext context;
-    return stub_->request_vote(&context, request, &reply);
+    return stub_->request_vote(ctx, request, &reply);
   }
   inline void
-  request_vote_async(const raft_pb::VoteRequest &req, raft_pb::VoteReply &resp,
+  request_vote_async(::grpc::ClientContext *ctx,
+                     const raft_pb::VoteRequest &req, raft_pb::VoteReply &resp,
                      std::function<void(::grpc::Status)> f) override {
-    ::grpc::ClientContext ctx;
-    stub_->async()->request_vote(&ctx, &req, &resp, f);
+    stub_->async()->request_vote(ctx, &req, &resp, f);
   }
 
   inline virtual ::grpc::Status
-  update_consensus(const raft_pb::ConsensusRequest &req,
+  update_consensus(::grpc::ClientContext *ctx,
+                   const raft_pb::ConsensusRequest &req,
                    raft_pb::ConsensusResponse &resp) override {
-    ::grpc::ClientContext ctx;
-    return stub_->update_consensus(&ctx, req, &resp);
+    return stub_->update_consensus(ctx, req, &resp);
   }
 
   inline void
-  update_consensus_async(const raft_pb::ConsensusRequest &req,
+  update_consensus_async(::grpc::ClientContext *ctx,
+                         const raft_pb::ConsensusRequest &req,
                          raft_pb::ConsensusResponse &resp,
                          std::function<void(::grpc::Status)> f) override {
-    ::grpc::ClientContext ctx;
-    stub_->async()->update_consensus(&ctx, &req, &resp, f);
+    stub_->async()->update_consensus(ctx, &req, &resp, f);
   }
 };
 
 RaftRpcClient::RaftRpcClient(const std::string &addr)
     : stub_(new RaftStubImpl(addr)) {}
 
-grpc::Status RaftRpcClient::request_vote(const raft_pb::VoteRequest &request,
+grpc::Status RaftRpcClient::request_vote(::grpc::ClientContext *ctx,
+                                         const raft_pb::VoteRequest &request,
                                          raft_pb::VoteReply &reply) {
-  return stub_->request_vote(request, reply);
+  return stub_->request_vote(ctx, request, reply);
 }
 
-void RaftRpcClient::request_vote_async(const raft_pb::VoteRequest &req,
-                                  raft_pb::VoteReply &resp,
-                                  std::function<void(::grpc::Status)> f) {
-  stub_->request_vote_async(req, resp, f);
+void RaftRpcClient::request_vote_async(::grpc::ClientContext *ctx,
+                                       const raft_pb::VoteRequest &req,
+                                       raft_pb::VoteReply &resp,
+                                       std::function<void(::grpc::Status)> f) {
+  stub_->request_vote_async(ctx, req, resp, f);
 }
 
 ::grpc::Status
-RaftRpcClient::update_consensus(const raft_pb::ConsensusRequest &req,
+RaftRpcClient::update_consensus(::grpc::ClientContext *ctx,
+                                const raft_pb::ConsensusRequest &req,
                                 raft_pb::ConsensusResponse &resp) {
-  return stub_->update_consensus(req, resp);
+  return stub_->update_consensus(ctx, req, resp);
 }
 
 void RaftRpcClient::update_consensus_async(
-    const raft_pb::ConsensusRequest &req, raft_pb::ConsensusResponse &resp,
-    std::function<void(::grpc::Status)> f) {
-  stub_->update_consensus_async(req, resp, f);
+    ::grpc::ClientContext *ctx, const raft_pb::ConsensusRequest &req,
+    raft_pb::ConsensusResponse &resp, std::function<void(::grpc::Status)> f) {
+  stub_->update_consensus_async(ctx, req, resp, f);
 }
 
 RaftRpcClient::~RaftRpcClient() {}
@@ -259,6 +263,11 @@ LeaderElectionResult::LeaderElectionResult(size_t voter_num)
 
 LeaderElection::LeaderElection(std::shared_ptr<RaftInstance> instance)
     : instance_(instance) {}
+
+std::shared_ptr<LeaderElection>
+LeaderElection::create_election(std::shared_ptr<RaftInstance> ins) {
+  return std::shared_ptr<LeaderElection>(new LeaderElection{ins});
+}
 
 LeaderElectionResult LeaderElection::elect() {
   auto ins = instance_.lock();
@@ -286,14 +295,15 @@ LeaderElectionResult LeaderElection::elect() {
       state_it =
           peer_states_
               .emplace(peer.second->uuid(),
-                       VoteState{std::make_unique<::raft_pb::VoteReply>()})
+                       VoteState{std::make_unique<::raft_pb::VoteReply>(),
+                                 std::make_unique<::grpc::ClientContext>()})
               .first;
     }
     req.set_candidate_id(ins->uuid());
     req.set_candidate_term_id(ins->term_id());
     req.set_dest_id(peer.first);
     peer.second->request_vote_async(
-        req, *state_it->second.reply.get(),
+        state_it->second.cctx_.get(), req, *state_it->second.reply.get(),
         std::bind(&LeaderElection::request_vote_cb, this, std::placeholders::_1,
                   peer.second->uuid(), shared_from_this()));
   }
@@ -349,7 +359,7 @@ void failure_detection_cb(std::shared_ptr<RaftInstance> self) {
   // start to do leader election
   LOG(INFO) << self->uuid_ << " start to leader election";
   if (!self->leader_election_) {
-    self->leader_election_.reset(new LeaderElection{self});
+    self->leader_election_ = LeaderElection::create_election(self);
   }
   auto election_res = self->leader_election_->elect();
 }
