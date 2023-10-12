@@ -122,8 +122,11 @@ class Peer {
 public:
   Peer(const PeerInfo &info);
   ~Peer();
-  grpc::Status request_vote(const raft_pb::VoteRequest &request,
-                                    raft_pb::VoteReply &reply);
+  ::grpc::Status request_vote(const raft_pb::VoteRequest &request,
+                              raft_pb::VoteReply &reply);
+  void request_vote_async(const raft_pb::VoteRequest &req,
+                          raft_pb::VoteReply &resp,
+                          std::function<void(::grpc::Status)> f);
   const Uuid &uuid() const { return info_.id_; }
   const std::string &addr() const { return info_.addr_; }
 
@@ -194,7 +197,7 @@ class RaftInstance : public std::enable_shared_from_this<RaftInstance> {
   RaftOptions opts_;
 
   // TODO use shared_ptr, election callback will ref this object
-  std::unique_ptr<LeaderElection> leader_election_;
+  std::shared_ptr<LeaderElection> leader_election_;
 
   void grant(const raft_pb::VoteRequest &request, raft_pb::VoteReply &reply);
   void deny(const raft_pb::VoteRequest &request, raft_pb::VoteReply &reply);
@@ -251,7 +254,7 @@ public:
   bool denied() const;
 };
 
-class LeaderElection {
+class LeaderElection : public std::enable_shared_from_this<LeaderElection> {
   /// @brief generate leader result accoring to the rpc status and reply
   /// @param rpc_status the rpc call status of request vote
   /// @param reply the reply of requestvote from remote server
@@ -264,8 +267,14 @@ public:
 
   LeaderElectionResult elect();
 
+  void request_vote_cb(::grpc::Status status, Uuid from_peer_id, std::shared_ptr<LeaderElection> self);
+
 private:
+  struct VoteState {
+    std::unique_ptr<::raft_pb::VoteReply> reply;
+  };
   std::weak_ptr<RaftInstance> instance_;
+  std::unordered_map<Uuid, VoteState> peer_states_;
 };
 
 } /* namespace raft */

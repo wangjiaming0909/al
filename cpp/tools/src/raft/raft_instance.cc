@@ -127,6 +127,12 @@ grpc::Status Peer::request_vote(const raft_pb::VoteRequest &request,
   return client_->request_vote(request, reply);
 }
 
+void Peer::request_vote_async(const raft_pb::VoteRequest &req,
+                          raft_pb::VoteReply &resp,
+                          std::function<void(::grpc::Status)> f) {
+  return client_->request_vote_async(req, resp, f);
+}
+
 Peer::Peer(const PeerInfo &info)
     : info_(info), client_(new RaftRpcClient{info.addr_}) {}
 
@@ -270,18 +276,32 @@ LeaderElectionResult LeaderElection::elect() {
     return res;
 
   // start to request_vote sync
+  // TODO need lock peer_map
+  // TODO or copy out from ins, to avoid locking
   for (auto &peer : ins->peer_map()) {
     raft_pb::VoteRequest req;
-    raft_pb::VoteReply reply;
+    // TODO find first, use the already created state
+    auto state_it = peer_states_.find(peer.second->uuid());
+    if (state_it == peer_states_.end()) {
+      state_it =
+          peer_states_
+              .emplace(peer.second->uuid(),
+                       VoteState{std::make_unique<::raft_pb::VoteReply>()})
+              .first;
+    }
     req.set_candidate_id(ins->uuid());
     req.set_candidate_term_id(ins->term_id());
     req.set_dest_id(peer.first);
-    ::grpc::Status status = peer.second->request_vote(req, reply);
-
-    handle_reply(status, reply, res);
+    peer.second->request_vote_async(
+        req, *state_it->second.reply.get(),
+        std::bind(&LeaderElection::request_vote_cb, this, std::placeholders::_1,
+                  peer.second->uuid(), shared_from_this()));
   }
-
   return res;
+}
+
+void LeaderElection::request_vote_cb(::grpc::Status status, Uuid peer_id,
+                                     std::shared_ptr<LeaderElection> self) {
 }
 
 void LeaderElection::handle_reply(::grpc::Status rpc_status,
