@@ -106,20 +106,17 @@ struct TimeoutEventOptions : public EventOptions {
 };
 
 struct EventCtx {
-  friend class Reactor;
-  friend class EventMap;
   EventCtx() : eos(0), fd(-1), ec(0) {}
-  EventOptions* eos;
-  int fd;
-  void* ec;
-  std::function<void(void*ec)> ec_deleter;
-
-protected:
   virtual ~EventCtx() {
     delete eos;
     if (ec_deleter) ec_deleter(ec);
     ec = nullptr;
   }
+  EventOptions* eos;
+  int fd;
+  void* ec;
+  std::function<void(void*ec)> ec_deleter;
+
 };
 
 class EventMap {
@@ -127,10 +124,11 @@ public:
   EventMap() = default;
   ~EventMap();
 
-  int add_event(EventCtx* data);
-  EventCtx* remove_event(EventCtx* ctx);
+  int add_event(std::shared_ptr<EventCtx> data);
+  std::shared_ptr<EventCtx> remove_event(std::shared_ptr<EventCtx> ctx);
+
 private:
-  std::unordered_set<EventCtx*> s_;
+  std::unordered_set<std::shared_ptr<EventCtx>> s_;
 };
 
 struct ListenEventCtx : public EventCtx{
@@ -161,25 +159,7 @@ struct TimeoutEventCtx : public EventCtx {
   TimeoutEventCtx() : EventCtx() {
     eos = new TimeoutEventOptions();
   }
-};
-
-// TODO remove TimerImpl
-struct TimerImpl {
-  TimerImpl(Reactor *reactor) : reactor_(reactor), base_(nullptr) {}
-  virtual ~TimerImpl() = default;
-  /// @brief schedule a new timer
-  /// @param period, timer timeout
-  /// @retval nullptr if start failed
-  /// @retval event ctx if succeed
-  virtual EventCtx* start(Period period, std::shared_ptr<EventHandler> handler) = 0;
-  virtual EventCtx* snooze(EventCtx* ctx, Period period) = 0;
-  virtual int stop(EventCtx* ctx) = 0;
-  void set_base(Timer *base) { base_ = base; }
-  Timer::Options &get_opts() { return base_->get_opts(); }
-
-protected:
-  Reactor* reactor_;
-  Timer* base_;
+  std::shared_ptr<EventHandler> internal_handler;
 };
 
 }

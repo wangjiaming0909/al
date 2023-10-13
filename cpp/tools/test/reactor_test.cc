@@ -1,6 +1,7 @@
 #include "event2/bufferevent.h"
 #include "event2/event.h"
 #include "event2/thread.h"
+#include "raft_test_util.h"
 #include "reactor/reactor.h"
 #include "reactor/event_reactor_impl.h"
 #include "uv.h"
@@ -22,7 +23,9 @@ struct DefaultEventHandler
     fds.push_back(fd);
     auto* weos = reactor::EventReactorImpl::new_write_event_opt(shared_from_this());
     auto weos_ptr = std::shared_ptr<reactor::EventOptions>(weos);
-    ASSERT_EQ(fd, reactor->register_event(fd, *weos)->fd);
+    auto ctx = reactor->register_event(fd, *weos);
+    ASSERT_TRUE(ctx.lock());
+    ASSERT_EQ(ctx.lock()->fd, fd);
   }
   virtual void handle_event(int fd, int what) override {
     if (what & BEV_EVENT_CONNECTED) {
@@ -52,13 +55,6 @@ struct DefaultEventHandler
   bool timeout_triggered = false;
   std::string name;
 };
-using namespace reactor;
-std::shared_ptr<Reactor> create_reactor_and_run() {
-  EventReactorImpl* impl = new EventReactorImpl{};
-  Reactor*r = new Reactor{impl};
-  r->runAsync();
-  return std::shared_ptr<Reactor>{r};
-}
 
 TEST(reactor, normal) {
   using namespace reactor;
@@ -85,8 +81,8 @@ TEST(reactor, normal) {
   auto leo_ptr_guard = std::shared_ptr<EventOptions>(leo);
 
   auto ctx = r->register_event(0, *leo);
-  ASSERT_TRUE(ctx != nullptr);
-  ASSERT_TRUE(ctx->fd != -1);
+  ASSERT_TRUE(ctx.lock());
+  ASSERT_TRUE(ctx.lock()->fd != -1);
 
   EventOptions *ceo;
   ceo = EventReactorImpl::new_connect_event_opt(
@@ -126,7 +122,7 @@ TEST(reactor, timer) {
   timer->set_opts(opts);
   auto ctx = timer->start(1s, handler);
   std::this_thread::sleep_for(500ms);
-  timer->snooze(ctx, 1s);
+  timer->snooze(ctx.lock(), 1s);
   std::this_thread::sleep_for(1.1s);
   ASSERT_TRUE(timer_handler2->timeout_triggered);
 
@@ -138,7 +134,7 @@ TEST(reactor, timer) {
   timer->set_opts(opts);
   ctx = timer->start(1s, handler);
   std::this_thread::sleep_for(500ms);
-  timer->stop(ctx);
+  timer->stop(ctx.lock());
   std::this_thread::sleep_for(600ms);
   ASSERT_FALSE(timer_handler3->timeout_triggered);
 

@@ -3,17 +3,14 @@
 namespace reactor {
 
 EventMap::~EventMap() {
-  for (auto &p : s_) {
-    delete p;
-  }
 }
 
-int EventMap::add_event(EventCtx* ctx) {
+int EventMap::add_event(std::shared_ptr<EventCtx> ctx) {
   s_.insert(ctx);
   return 0;
 }
 
-EventCtx* EventMap::remove_event(EventCtx* ctx) {
+std::shared_ptr<EventCtx> EventMap::remove_event(std::shared_ptr<EventCtx> ctx) {
   auto it = s_.find(ctx);
   if (it == s_.end()) return nullptr;
   auto ret = *it;

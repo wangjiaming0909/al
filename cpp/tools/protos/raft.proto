@@ -27,6 +27,7 @@ message RaftConfig {
   repeated RaftPeerConfig peers = 2;
 };
 
+// persisted in local storage for every RaftInstance
 message RaftMetadata {
   RaftConfig commited_config = 1;
   int64 current_term = 2;
@@ -49,14 +50,18 @@ message VoteReply {
   string responder_uuid = 3;
 }
 
-message HeartBeat {
-
+message ConsensusRequest {
+  string id = 1;
+  bytes caller_uuid = 2;
+  int64 caller_term = 3;
 }
 
-message HeartBeatReply {
-
+message ConsensusResponse {
+  optional bytes responder_uuid = 1;
+  optional int64 responder_term = 2;
 }
 
 service RaftRpc {
   rpc request_vote(VoteRequest) returns (VoteReply) {}
+  rpc update_consensus(ConsensusRequest) returns (ConsensusResponse) {}
 }

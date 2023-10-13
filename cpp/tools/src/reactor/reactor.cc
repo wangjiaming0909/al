@@ -49,38 +49,41 @@ int Reactor::runAsync() {
 }
 
 int Reactor::stop() {
+  LOG(INFO) << "stop reactor: " << this;
   return impl_->stop();
 }
 
-EventCtx* Reactor::register_event(int fd, const EventOptions &eos) {
-  EventCtx *ret = nullptr;
+std::weak_ptr<EventCtx> Reactor::register_event(int fd, const EventOptions &eos) {
+  EventCtx *ctx = nullptr;
+  std::shared_ptr<EventCtx> ret{nullptr};
   switch (eos.e_type) {
   case Event::LISTEN:
-    ret = impl_->register_listen_event(fd, (const ListenEventOptions &)eos);
-    if (ret)
-      LOG(INFO) << "register listen event: " << ret->fd;
+    ctx = impl_->register_listen_event(fd, (const ListenEventOptions &)eos);
+    if (ctx)
+      LOG(INFO) << "register listen event: " << ctx->fd;
     break;
   case Event::CONNECT:
-    ret = impl_->register_connect_event(fd, (const ConnectEventOptions &)eos);
-    if (ret)
-      LOG(INFO) << "register connect event: " << ret->fd;
+    ctx = impl_->register_connect_event(fd, (const ConnectEventOptions &)eos);
+    if (ctx)
+      LOG(INFO) << "register connect event: " << ctx->fd;
     break;
   case Event::READ:
     LOG(INFO) << "register read event: " << fd;
-    ret = impl_->register_read_event(fd, (const ReadEventOptions &)eos);
+    ctx = impl_->register_read_event(fd, (const ReadEventOptions &)eos);
     break;
   case Event::WRITE: {
     LOG(INFO) << "register write event: " << fd;
-    ret = impl_->register_write_event(fd, (const WriteEventOptions &)eos);
+    ctx = impl_->register_write_event(fd, (const WriteEventOptions &)eos);
     break;
   }
   case Event::TIMEOUT:
-    ret = impl_->register_timeout_event(fd, (const TimeoutEventOptions &)eos);
-    if (ret) LOG(INFO) << "register timeout event: " << ret->fd << " ctx: " << ret;
+    ctx = impl_->register_timeout_event(fd, (const TimeoutEventOptions &)eos);
+    if (ctx) LOG(INFO) << "register timeout event: " << ctx->fd << " ctx: " << ctx;
     break;
   }
-  if (ret) {
-    fd = ret->fd;
+  if (ctx) {
+    ret.reset(ctx);
+    fd = ctx->fd;
     em_->add_event(ret);
   } else {
     LOG(ERROR) << "register event failed: " << strerror(errno);
@@ -88,15 +91,10 @@ EventCtx* Reactor::register_event(int fd, const EventOptions &eos) {
   return ret;
 }
 
-int Reactor::unregister_event(EventCtx* ctx) {
+int Reactor::unregister_event(std::shared_ptr<EventCtx> ctx) {
   LOG(INFO) << "unregister e: " << int(ctx->eos->e_type)
             << " for fd: " << ctx->fd << " ctx: " << ctx;
-  EventCtx *ret = em_->remove_event(ctx);
-  if (ret) {
-    delete ret;
-    return 0;
-  }
-  return -1;
+  return em_->remove_event(ctx) ? 0 : -1;
 }
 
 } // namespace reactor
