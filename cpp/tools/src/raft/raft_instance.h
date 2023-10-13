@@ -40,6 +40,7 @@ enum class Role { Candidate, Master, Follower, Learner, Oberserver };
 using Uuid = std::string;
 
 struct IRaftProtocol {
+  virtual ~IRaftProtocol() {}
   virtual grpc::Status request_vote(::grpc::ClientContext *ctx,
                                     const raft_pb::VoteRequest &request,
                                     raft_pb::VoteReply &reply) = 0;

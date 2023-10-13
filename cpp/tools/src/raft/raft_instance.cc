@@ -74,6 +74,7 @@ void RaftInstance::deny(const raft_pb::VoteRequest &request,
   reply.set_responder_term_id(term_id_);
 }
 
+// TODO do we need to snooze the failure detection timer
 grpc::Status RaftInstance::request_vote(const raft_pb::VoteRequest &request,
                                         raft_pb::VoteReply &reply) {
   assert(request.dest_id() == uuid_);
@@ -305,7 +306,6 @@ LeaderElectionResult LeaderElection::elect() {
   // TODO or copy out from ins, to avoid locking
   for (auto &peer : ins->peer_map()) {
     raft_pb::VoteRequest req;
-    // TODO find first, use the already created state
     auto state_it = peer_states_.find(peer.second->uuid());
     if (state_it == peer_states_.end()) {
       state_it =
@@ -331,11 +331,10 @@ void LeaderElection::request_vote_cb(::grpc::Status status, Uuid peer_id,
   std::shared_ptr<RaftInstance> ins = instance_.lock();
   if (!ins) {
     LOG(WARNING) << "receive vote reply from: " << peer_id
-                 << " but ins: " << ins->uuid() << " has been released";
+                 << " but ins: has been released";
     return;
   }
-  LOG(INFO) << "instance: " << ins->uuid()
-            << " receive vote reply from: " << peer_id;
+  LOG(INFO) << ins->uuid() << " receive vote reply from: " << peer_id;
   auto state_it = peer_states_.find(peer_id);
   if (state_it == peer_states_.end()) {
     LOG(WARNING) << "instance: " << ins->uuid()
@@ -347,10 +346,9 @@ void LeaderElection::request_vote_cb(::grpc::Status status, Uuid peer_id,
                res);
 
   if (res.granted()) {
-    LOG(INFO) << "ins: " << ins->uuid()
-              << " leader election succeed, going to be leader";
+    LOG(INFO) << ins->uuid() << " leader election succeed, going to be leader";
   } else if (res.denied()) {
-    LOG(INFO) << "ins: " << ins->uuid() << " leader election failed";
+    LOG(INFO) << ins->uuid() << " leader election failed";
   } else {
   }
 }
@@ -358,27 +356,28 @@ void LeaderElection::request_vote_cb(::grpc::Status status, Uuid peer_id,
 void LeaderElection::handle_reply(::grpc::Status rpc_status,
                                   const raft_pb::VoteReply &reply,
                                   LeaderElectionResult &res) {
-  LOG(INFO) << "handle reply from: [" << reply.responder_uuid()
-            << "] rpc_status: [" << rpc_status.error_message() << "] reply: ["
-            << reply.DebugString() << "]";
   auto ins = instance_.lock();
   if (!ins) {
     LOG(ERROR) << "instance has been deleted...";
     return;
   }
+  /*LOG(INFO) << ins->uuid() << " handle reply from: [" <<
+     reply.responder_uuid()
+            << "] rpc_status: [" << rpc_status.error_message() << "] reply: ["
+            << reply.DebugString() << "]";*/
   if (rpc_status.ok()) {
     if (reply.vote_granted()) {
       res.grant(reply.responder_uuid());
-      LOG(INFO) << "leader granted for [" << ins->uuid() << "] from: ["
+      LOG(INFO) << ins->uuid() << " receive leader granted from: ["
                 << reply.responder_uuid() << "]";
     } else {
       res.deny(reply.responder_uuid());
-      LOG(INFO) << "leader denied for [" << ins->uuid() << "] from: ["
+      LOG(INFO) << ins->uuid() << " receive leader denied from: ["
                 << reply.responder_uuid() << "]";
     }
   } else {
     res.deny(reply.responder_uuid());
-    LOG(INFO) << "leader denied for [" << ins->uuid() << "] from: ["
+    LOG(INFO) << ins->uuid() << " receive leader denied from: ["
               << reply.responder_uuid() << "] err: ["
               << rpc_status.error_message() << "]";
   }
@@ -395,8 +394,8 @@ bool LeaderElectionResult::denied() const {
 }
 
 void failure_detection_cb(std::shared_ptr<RaftInstance> self) {
-  LOG(INFO) << "leader failure detected, leader: " << self->leader_uuid_
-            << " self: " << self->uuid_;
+  LOG(INFO) << self->uuid()
+            << " leader failure detected, cur leader: " << self->leader_uuid_;
   // start to do leader election
   LOG(INFO) << self->uuid_ << " start to leader election";
   if (!self->leader_election_) {

@@ -48,13 +48,13 @@ TEST(raft, instance) {
   instance1->add_peer(peer2.id_, peer2.addr_);
   instance1->add_peer(peer3.id_, peer3.addr_);
 
-  opts.failure_detection_interval = 2s;
+  opts.failure_detection_interval = 1100ms;
   auto instance2 = std::make_shared<raft::RaftInstance>(peer2.id_, peer2.addr_,
                                                         reactor, opts);
   instance2->add_peer(peer1.id_, peer1.addr_);
   instance2->add_peer(peer3.id_, peer3.addr_);
 
-  opts.failure_detection_interval = 3s;
+  opts.failure_detection_interval = 1200ms;
   auto instance3 = std::make_shared<raft::RaftInstance>(peer3.id_, peer3.addr_,
                                                         reactor, opts);
   instance3->add_peer(peer1.id_, peer1.addr_);
